@@ -1,3 +1,4 @@
+import 'package:chips_choice/chips_choice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,6 +22,7 @@ class CompleteProfile extends ConsumerStatefulWidget {
 
 class _CompleteProfileState extends ConsumerState<CompleteProfile> {
   final controller = PageController();
+  Gender gender = Gender.male;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,58 +58,192 @@ class _CompleteProfileState extends ConsumerState<CompleteProfile> {
         ),
         body: Padding(
           padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: PageView(
+            controller: controller,
+            scrollDirection: Axis.horizontal,
             children: [
-              const YarisaText(
-                text: AppStrings.tellusabout,
-                type: TextType.heading,
-                weight: FontWeight.w600,
-                spacing: -1,
-                height: 1.1,
-                size: YarisaDimens.headlineMedium + 3,
-              ),
-              10.hgap,
-              const YarisaText(
-                text: AppStrings.tellusaboutsubtitle,
-                type: TextType.bodySmall,
-                // spacing: 0,
-                color: Colors.grey,
-              ),
-              20.hgap,
-              Expanded(
-                child: PageView(
-                  controller: controller,
-                  scrollDirection: Axis.horizontal,
+              SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(vertical: 30),
-                      child: Column(
-                        children: [
-                          FormTextField(
-                              controller: TextEditingController(),
-                              hint: "name@example.com",
-                              label: "Email Address"),
-                        ],
-                      ),
+                    const YarisaText(
+                      text: AppStrings.tellusabout,
+                      type: TextType.heading,
+                      weight: FontWeight.w600,
+                      spacing: -1,
+                      height: 1.1,
+                      size: YarisaDimens.headlineMedium + 3,
                     ),
-                    SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 30, horizontal: 10),
-                      child: Column(
-                        children: [
-                          FormTextField(
-                              controller: TextEditingController(),
-                              hint: "name@example.com",
-                              label: "Email Address"),
-                        ],
-                      ),
+                    10.hgap,
+                    const YarisaText(
+                      text: AppStrings.tellusaboutsubtitle,
+                      type: TextType.bodySmall,
+                      // spacing: 0,
+                      color: Colors.grey,
                     ),
+                    50.hgap,
+                    Row(
+                      children: [
+                        ChipWidget(
+                          onSelected: () {
+                            gender = Gender.male;
+                            setState(() {});
+                          },
+                          label: "Male",
+                          icon: "🙋🏽‍♂️",
+                          isSelected: gender == Gender.male,
+                        ),
+                        ChipWidget(
+                          onSelected: () {
+                            gender = Gender.female;
+                            setState(() {});
+                          },
+                          label: "Female",
+                          icon: "🙋🏽‍♀️",
+                          isSelected: gender == Gender.female,
+                        ),
+                        ChipWidget(
+                          onSelected: () {
+                            gender = Gender.other;
+                            setState(() {});
+                          },
+                          label: "Other",
+                          icon: "✨",
+                          isSelected: gender == Gender.other,
+                        ),
+                      ],
+                    ),
+                    30.hgap,
+                    FormTextField(
+                        radius: 100,
+                        controller: TextEditingController(),
+                        labeled: false,
+                        hint: "Email Address"),
+                    15.hgap,
+                    FormTextField(
+                        radius: 100,
+                        controller: TextEditingController(),
+                        labeled: false,
+                        hint: "Email Address"),
+                    15.hgap,
+                    FormTextField(
+                        radius: 100,
+                        controller: TextEditingController(),
+                        labeled: false,
+                        hint: "Email Address"),
+                    15.hgap,
+                    FormTextField(
+                        radius: 100,
+                        controller: TextEditingController(),
+                        labeled: false,
+                        hint: "Email Address"),
+                  ],
+                ),
+              ),
+              SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const YarisaText(
+                      text: AppStrings.tellusaboutcareer,
+                      type: TextType.heading,
+                      weight: FontWeight.w600,
+                      spacing: -1,
+                      height: 1.1,
+                      size: YarisaDimens.headlineMedium + 3,
+                    ),
+                    10.hgap,
+                    const YarisaText(
+                      text: AppStrings.tellusaboutsubtitle,
+                      type: TextType.bodySmall,
+                      // spacing: 0,
+                      color: Colors.grey,
+                    ),
+                    50.hgap,
+                    FormTextField(
+                      radius: 100,
+                      controller: TextEditingController(),
+                      hint: "name@example.com",
+                      labeled: false,
+                    ),
+                    15.hgap,
+                    FormTextField(
+                        radius: 100,
+                        controller: TextEditingController(),
+                        labeled: false,
+                        hint: "Email Address"),
+                    15.hgap,
+                    FormTextField(
+                        radius: 100,
+                        controller: TextEditingController(),
+                        labeled: false,
+                        hint: "Email Address"),
+                    15.hgap,
+                    FormTextField(
+                        radius: 100,
+                        controller: TextEditingController(),
+                        labeled: false,
+                        hint: "Email Address"),
                   ],
                 ),
               ),
             ],
           ),
         ));
+  }
+}
+
+class ChipWidget extends StatelessWidget {
+  const ChipWidget({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.onSelected,
+  });
+
+  final String label, icon;
+  final bool isSelected;
+  final Function() onSelected;
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(100),
+        onTap: onSelected,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          margin: const EdgeInsets.symmetric(horizontal: 5),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+              color: isSelected
+                  ? YarisaColors.primaryColor.withOpacity(.2)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(100),
+              border: Border.all(
+                  width: isSelected ? 2 : 1,
+                  color: isSelected
+                      ? YarisaColors.primaryColor
+                      : Colors.grey.withOpacity(.2))),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              YarisaText(text: icon, type: TextType.title),
+              10.wgap,
+              Flexible(
+                child: YarisaText(
+                  text: label,
+                  type: TextType.bodySmall,
+                  weight: FontWeight.w500,
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

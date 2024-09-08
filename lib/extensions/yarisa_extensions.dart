@@ -96,7 +96,7 @@ extension WidgetMarginX on Widget {
 
 extension SizedBoxExtensions on num {
   SizedBox get hgap => SizedBox(height: toDouble());
-  SizedBox get wgap => SizedBox(height: toDouble());
+  SizedBox get wgap => SizedBox(width: toDouble());
 }
 
 extension ListIntSumExtensions on List<int> {

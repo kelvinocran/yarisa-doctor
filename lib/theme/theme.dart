@@ -94,11 +94,14 @@ class YarisaTheme {
         dividerTheme: DividerThemeData(color: Colors.grey.withOpacity(.2)),
         outlinedButtonTheme: OutlinedButtonThemeData(
             style: OutlinedButton.styleFrom(
-                textStyle: context.bodyMedium,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(100)),
-                side: const BorderSide(color: Colors.grey),
-                foregroundColor: Colors.black)),
+          textStyle: const TextStyle(
+              fontSize: YarisaDimens.bodyMedium,
+              fontWeight: FontWeight.w500,
+              fontFamily: YarisaConstants.poppins),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+          // side: const BorderSide(color: Colors.grey),
+        )),
         elevatedButtonTheme: ElevatedButtonThemeData(
             style: ButtonStyle(
                 padding: const WidgetStatePropertyAll(EdgeInsets.all(15)),

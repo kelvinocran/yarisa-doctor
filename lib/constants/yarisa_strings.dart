@@ -15,6 +15,7 @@ class AppStrings {
       "Welcome back to Yarisa. Let's continue from where we left off.";
   static const String signintoaccount = "Sign in to your\nAccount.";
   static const String tellusabout = "Tell Us About You.";
+  static const String tellusaboutcareer = "Tell Us About Career";
   static const String tellusaboutsubtitle =
       "Complete your profile to get noticed for\nconsultations & appointments.";
   static const String joinyarisa = "Join Yarisa Health\nProviders Today!";

@@ -1,3 +1,7 @@
+animated_checkmark
+2.12
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/animated_checkmark-1.0.1/
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/animated_checkmark-1.0.1/lib/
 archive
 3.0
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/archive-3.6.1/
@@ -22,6 +26,10 @@ characters
 2.12
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/characters-1.3.0/
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/characters-1.3.0/lib/
+chips_choice
+2.14
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/chips_choice-3.0.1/
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/chips_choice-3.0.1/lib/
 clock
 2.12
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/clock-1.1.1/
@@ -50,6 +58,10 @@ ffi
 3.3
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/ffi-2.1.3/
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/ffi-2.1.3/lib/
+flexi_chip
+2.13
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/flexi_chip-1.0.8/
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/flexi_chip-1.0.8/lib/
 flutter_lints
 3.1
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/flutter_lints-4.0.0/
@@ -302,6 +314,10 @@ web
 3.4
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/web-1.0.0/
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/web-1.0.0/lib/
+widget_event
+2.17
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/widget_event-1.11.0/
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/widget_event-1.11.0/lib/
 xdg_directories
 3.0
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/xdg_directories-1.0.4/

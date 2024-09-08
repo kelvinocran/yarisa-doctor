@@ -11,17 +11,22 @@ class YarisaText extends StatelessWidget {
       this.color,
       this.size,
       this.height,
-      this.spacing});
+      this.spacing,
+      this.lines});
 
   final String text;
   final TextType type;
   final FontWeight? weight;
   final Color? color;
+
   final double? size, height, spacing;
+  final int? lines;
 
   @override
   Widget build(BuildContext context) {
     return Text(text,
+        maxLines: lines,
+        overflow: TextOverflow.ellipsis,
         style: switch (type) {
           TextType.heading => context.headlineMedium?.copyWith(
               fontWeight: weight,
