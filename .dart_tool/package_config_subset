@@ -38,6 +38,10 @@ collection
 2.18
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/collection-1.18.0/
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/collection-1.18.0/lib/
+country_picker
+2.12
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/country_picker-2.0.26/
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/country_picker-2.0.26/lib/
 crypto
 3.4
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/crypto-3.0.5/
@@ -46,6 +50,14 @@ cupertino_icons
 3.1
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/cupertino_icons-1.0.8/
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/cupertino_icons-1.0.8/lib/
+dotted_border
+2.12
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/dotted_border-2.1.0/
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/dotted_border-2.1.0/lib/
+dropdown_button2
+2.17
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/dropdown_button2-2.3.9/
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/dropdown_button2-2.3.9/lib/
 enefty_icons
 3.1
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/enefty_icons-1.0.7/
@@ -166,6 +178,10 @@ path
 3.0
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/path-1.9.0/
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/path-1.9.0/lib/
+path_drawing
+2.12
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/path_drawing-1.0.1/
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/path_drawing-1.0.1/lib/
 path_parsing
 2.12
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/path_parsing-1.0.1/
@@ -290,6 +306,10 @@ uicons_solid_straight
 2.18
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/uicons_solid_straight-1.0.0/
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/uicons_solid_straight-1.0.0/lib/
+universal_io
+2.17
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/universal_io-2.2.2/
+file:///Users/m1pro/.pub-cache/hosted/pub.dev/universal_io-2.2.2/lib/
 vector_graphics
 2.17
 file:///Users/m1pro/.pub-cache/hosted/pub.dev/vector_graphics-1.1.11+1/

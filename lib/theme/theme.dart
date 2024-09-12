@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:yarisa_doctor/extensions/yarisa_extensions.dart';
-
 import '../constants/yarisa_colors.dart';
 import '../constants/yarisa_constants.dart';
 
@@ -80,6 +78,15 @@ class YarisaTheme {
               fontWeight: FontWeight.w600,
             )),
         focusColor: YarisaColors.primaryColor,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: YarisaColors.primaryColor,
+          brightness: Brightness.light,
+        ),
+        dialogBackgroundColor: const Color(0xFFF5F5F5),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+            shape: const CircleBorder(),
+            backgroundColor: YarisaColors.primaryColor,
+            foregroundColor: Colors.white),
         appBarTheme: AppBarTheme(
             titleTextStyle: const TextStyle(
                 fontFamily: YarisaConstants.poppins,
@@ -91,6 +98,9 @@ class YarisaTheme {
             iconTheme: IconThemeData(color: YarisaColors.textLightBodyColor)),
         scaffoldBackgroundColor: YarisaColors.lightBackgroundColor,
         listTileTheme: ListTileThemeData(tileColor: Colors.grey.shade200),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+            backgroundColor: const Color(0xFFFFFFFF),
+            selectedItemColor: YarisaColors.primaryColor),
         dividerTheme: DividerThemeData(color: Colors.grey.withOpacity(.2)),
         outlinedButtonTheme: OutlinedButtonThemeData(
             style: OutlinedButton.styleFrom(
@@ -175,7 +185,7 @@ class YarisaTheme {
         useMaterial3: true,
         brightness: Brightness.dark,
         fontFamily: YarisaConstants.poppins,
-        primaryColor: YarisaColors.tertiaryColor,
+        primaryColor: YarisaColors.alternateColor,
         textTheme: const TextTheme(
             bodyLarge: TextStyle(
               color: Colors.white,
@@ -243,8 +253,25 @@ class YarisaTheme {
         listTileTheme: ListTileThemeData(
           tileColor: Colors.grey.shade900,
         ),
+        colorScheme: ColorScheme.fromSeed(
+            seedColor: YarisaColors.alternateColor,
+            brightness: Brightness.dark),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+            shape: const CircleBorder(),
+            backgroundColor: YarisaColors.alternateColor,
+            foregroundColor: Colors.white),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+            selectedItemColor: YarisaColors.alternateColor,
+            backgroundColor: const Color(0xff0e0e0e)),
         dividerColor: Colors.grey.withOpacity(.2),
-        focusColor: YarisaColors.primaryColor,
+        focusColor: YarisaColors.alternateColor,
+        dialogBackgroundColor: const Color(0xFF252525),
+        dropdownMenuTheme: DropdownMenuThemeData(
+            inputDecorationTheme: InputDecorationTheme(
+                filled: true, fillColor: Colors.grey.withOpacity(.2)),
+            menuStyle: const MenuStyle(
+                surfaceTintColor: WidgetStatePropertyAll(Color(0xFF222222)),
+                backgroundColor: WidgetStatePropertyAll(Color(0xFF222222)))),
         appBarTheme: AppBarTheme(
             titleTextStyle: const TextStyle(
                 fontFamily: YarisaConstants.poppins,
@@ -276,7 +303,7 @@ class YarisaTheme {
                   } else if (states.contains(WidgetState.hovered)) {
                     return YarisaColors.hoverColor;
                   } else {
-                    return YarisaColors.primaryColor;
+                    return YarisaColors.alternateColor;
                   }
                 }),
                 surfaceTintColor:
@@ -286,7 +313,7 @@ class YarisaTheme {
                   } else if (states.contains(WidgetState.hovered)) {
                     return YarisaColors.shadowColor;
                   } else {
-                    return YarisaColors.primaryColor;
+                    return YarisaColors.alternateColor;
                   }
                 }),
                 shadowColor:
@@ -308,18 +335,15 @@ class YarisaTheme {
                 shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(100))),
                 padding: const WidgetStatePropertyAll(EdgeInsets.all(15)),
-                textStyle: const WidgetStatePropertyAll(TextStyle(
-                    fontSize: YarisaDimens.bodyMedium,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: YarisaConstants.poppins)),
-                foregroundColor:
-                    WidgetStateProperty.resolveWith((Set<WidgetState> states) {
+                textStyle: const WidgetStatePropertyAll(
+                    TextStyle(fontSize: YarisaDimens.bodyMedium, fontWeight: FontWeight.w500, fontFamily: YarisaConstants.poppins)),
+                foregroundColor: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
                   if (states.contains(WidgetState.disabled)) {
                     return Colors.grey.shade600;
                   } else if (states.contains(WidgetState.hovered)) {
                     return Colors.white;
                   } else {
-                    return YarisaColors.tertiaryColor;
+                    return YarisaColors.alternateColor;
                   }
                 }))));
   }

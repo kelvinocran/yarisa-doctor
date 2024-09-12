@@ -1,9 +1,21 @@
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:yarisa_doctor/screens/main/appointment_screen.dart';
+import 'package:yarisa_doctor/screens/main/availability_screen.dart';
+import 'package:yarisa_doctor/screens/main/home_screen.dart';
+import 'package:yarisa_doctor/screens/main/patients_screen.dart';
 
 class YarisaConstants {
   static const visueltPro = "VisueltPro";
   static const poppins = "Poppins";
   static final font = GoogleFonts.poppins();
+
+  static final List<Widget> basePages = [
+    const HomeScreen(),
+    const AppointmentScreen(),
+    const AvailabilityScreen(),
+    const PatientsScreen()
+  ];
 }
 
 class YarisaDimens {

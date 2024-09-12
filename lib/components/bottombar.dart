@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
 
 class BottomBar extends StatefulWidget {
   final List<BottomBarItem> items;
@@ -95,7 +93,7 @@ class _BottomBarState extends State<BottomBar>
             ...widget.items.map((item) {
               final selectedColor = item.selectedColor ??
                   widget.selectedItemColor ??
-                  theme.iconTheme.color!;
+                  theme.bottomNavigationBarTheme.selectedItemColor!;
 
               final unselectedColor = item.unselectedColor ??
                   widget.unselectedItemColor ??
@@ -128,7 +126,7 @@ class _BottomBarState extends State<BottomBar>
                                 data: IconThemeData(
                                   color: Color.lerp(
                                       unselectedColor, selectedColor, t),
-                                  size: Get.width > 800 ? 14 : 22,
+                                  size: 25,
                                 ),
                                 child:
                                     widget.items.indexOf(item) == widget.index
@@ -143,7 +141,7 @@ class _BottomBarState extends State<BottomBar>
                                     textAlign: TextAlign.center,
                                     style: Theme.of(context)
                                         .textTheme
-                                        .bodyMedium!
+                                        .bodySmall!
                                         .copyWith(
                                           color: Color.lerp(
                                               widget.showAllTitles
@@ -158,23 +156,6 @@ class _BottomBarState extends State<BottomBar>
                                 ],
                               ),
                             ),
-                            Visibility(
-                                visible: widget.showDot ||
-                                    widget.items.indexOf(item) != widget.index,
-                                child: Column(
-                                  children: [
-                                    const SizedBox(height: 5),
-                                    CircleAvatar(
-                                      radius: 2,
-                                      backgroundColor: Color.lerp(
-                                          widget.showAllTitles
-                                              ? Colors.grey
-                                              : selectedColor.withOpacity(0.0),
-                                          selectedColor,
-                                          t),
-                                    ),
-                                  ],
-                                )),
                           ],
                         ),
                       ),

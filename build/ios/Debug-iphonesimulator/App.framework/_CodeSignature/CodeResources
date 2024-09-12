@@ -10,23 +10,23 @@
 		</data>
 		<key>flutter_assets/AssetManifest.bin</key>
 		<data>
-		oWeGH5xy7apRBJk+nb/PRLF5mTs=
+		HP0i0DFXbWGRxU6Q/WItw8DyHcM=
 		</data>
 		<key>flutter_assets/AssetManifest.json</key>
 		<data>
-		z6DKwUj6U+/vmrKXrCb69YEaeew=
+		oOFiHnq8Rs3BaXzIRqV7BtsZ5wA=
 		</data>
 		<key>flutter_assets/FontManifest.json</key>
 		<data>
-		xKqEBLqQz6j92D2B1e1TaXqnkbo=
+		QepStG95wOmS+uDgKlZkcBC9gGM=
 		</data>
 		<key>flutter_assets/NOTICES.Z</key>
 		<data>
-		PyWlK6cdEDygmz+Q7t0Dv5gFG4g=
+		NaeyInq1GkV2AktLmf7OhJCnq3I=
 		</data>
 		<key>flutter_assets/assets/.DS_Store</key>
 		<data>
-		7TW9I9sLdLqVWp/7EsRZDoeXAbg=
+		DVKTTDJqWt78XyezALELSRLM4zw=
 		</data>
 		<key>flutter_assets/assets/animations/23601-medical-loading.json</key>
 		<data>
@@ -91,6 +91,14 @@
 		<key>flutter_assets/fonts/Poppins/Poppins-Regular.ttf</key>
 		<data>
 		/dMALn2BTuR8HBuEh8csa7s6LQA=
+		</data>
+		<key>flutter_assets/fonts/Poppins/Poppins-SemiBold.ttf</key>
+		<data>
+		ikrOk5LQa8t/jqL1FpsH5MODqQ0=
+		</data>
+		<key>flutter_assets/fonts/Poppins/Poppins-SemiBoldItalic.ttf</key>
+		<data>
+		DIvtCllCsjiNNrEcEVaF2fAXALA=
 		</data>
 		<key>flutter_assets/fonts/Poppins/Poppins-Thin.ttf</key>
 		<data>
@@ -162,7 +170,7 @@
 		</data>
 		<key>flutter_assets/kernel_blob.bin</key>
 		<data>
-		erYaQnKEUWqcfDZ0+aZQ+Gsy7q0=
+		J3499VHtKQL/mF+5WC3rbgz5NR0=
 		</data>
 		<key>flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf</key>
 		<data>
@@ -215,28 +223,28 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			wEsKVkLHIgYwWkpmfNwWHSjt2c4AFQkHrXDUzzhw5MI=
+			xp8WwK7yABoDwOgWZOBhu3WOeFmBXypCPNv/XkYKES8=
 			</data>
 		</dict>
 		<key>flutter_assets/AssetManifest.json</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			rFP/LvYuEjljuhaHLhbHuklLWq5CwlruyaUXAEwl+Rw=
+			PCjH8XtU3yJ/nV33YdkrdVlMzyfOn2dm8d0N8ol4i7k=
 			</data>
 		</dict>
 		<key>flutter_assets/FontManifest.json</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			fIKzfMQg7t1BEAc1fuOYyLOnms1uIHipGv5xUViHjoo=
+			4WOt4sNsuLfxzQZsW42c21GcQyH9igXsYgVY/lOaSiY=
 			</data>
 		</dict>
 		<key>flutter_assets/NOTICES.Z</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			tSBAkaTTfHiclOKhh8Mt2APbFW1M+Is/rPI7crJdjpk=
+			i8PDe90FuVkVUC0Nq0N7ZkOhYQvZf4XSNYqViECkB18=
 			</data>
 		</dict>
 		<key>flutter_assets/assets/animations/23601-medical-loading.json</key>
@@ -349,6 +357,20 @@
 			<key>hash2</key>
 			<data>
 			cH/cXIurV6kAYcao7Xtw1f+4L8gQ6ZTnn5C6zokMJVo=
+			</data>
+		</dict>
+		<key>flutter_assets/fonts/Poppins/Poppins-SemiBold.ttf</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			JIwCRLNQ7GiICZaqa+bXeWJ0tJmS1fy77+JRkGqk6jY=
+			</data>
+		</dict>
+		<key>flutter_assets/fonts/Poppins/Poppins-SemiBoldItalic.ttf</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			dLMcvCnckMLWMOd2c+e29xT/m7AeXUJGcLxhyoW2CTo=
 			</data>
 		</dict>
 		<key>flutter_assets/fonts/Poppins/Poppins-Thin.ttf</key>
@@ -474,7 +496,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			FtzRoukz87/bdtd68KgzLzgZF7DeVsOJXecz+dQQ/EQ=
+			/ZGUyoYIOVfsPadxTOUMRQrLdU7Qw/Vok7YVpKg1Tgw=
 			</data>
 		</dict>
 		<key>flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf</key>

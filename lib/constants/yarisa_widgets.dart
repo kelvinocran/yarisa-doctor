@@ -1,6 +1,8 @@
+import 'package:enefty_icons/enefty_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:yarisa_doctor/constants/yarisa_enums.dart';
 import 'package:yarisa_doctor/extensions/yarisa_extensions.dart';
+import 'package:yarisa_doctor/screens/settings_screen.dart';
 
 class YarisaText extends StatelessWidget {
   const YarisaText(
@@ -12,9 +14,11 @@ class YarisaText extends StatelessWidget {
       this.size,
       this.height,
       this.spacing,
-      this.lines});
+      this.lines,
+      this.align});
 
   final String text;
+  final TextAlign? align;
   final TextType type;
   final FontWeight? weight;
   final Color? color;
@@ -26,6 +30,7 @@ class YarisaText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(text,
         maxLines: lines,
+        textAlign: align,
         overflow: TextOverflow.ellipsis,
         style: switch (type) {
           TextType.heading => context.headlineMedium?.copyWith(
@@ -70,6 +75,48 @@ class YarisaText extends StatelessWidget {
               fontSize: size,
               height: height,
               letterSpacing: spacing),
+          TextType.appbar => context.titleLarge?.copyWith(
+              fontWeight: weight ?? FontWeight.w700,
+              color: color,
+              fontSize: size ?? 24,
+              height: height,
+              letterSpacing: spacing),
         });
   }
 }
+
+AppBar yarisaAppBar(BuildContext context,
+        {String? title,
+        List<Widget>? actions,
+        Widget? titleWidget,
+        Widget? leading,
+        double? titleSpacing,
+        double? fontSize,
+        bool autoShowBackButton = true,
+        bool centerTitle = false}) =>
+    AppBar(
+      centerTitle: centerTitle,
+      actions: actions ??
+          [
+            IconButton(
+                onPressed: () {},
+                icon: const Icon(EneftyIcons.notification_outline)),
+            IconButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const SettingsScreen()));
+                },
+                icon: const Icon(EneftyIcons.setting_2_outline))
+          ],
+      leading: leading,
+      titleSpacing: titleSpacing,
+      automaticallyImplyLeading: autoShowBackButton,
+      title: titleWidget ??
+          YarisaText(
+            text: title ?? "",
+            type: TextType.appbar,
+            size: fontSize,
+          ),
+    );

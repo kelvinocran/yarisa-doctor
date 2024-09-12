@@ -27,6 +27,7 @@ class FormTextField extends StatelessWidget {
     this.minlines,
     this.radius,
     this.fontSize,
+    this.iconSize,
     this.spacing,
     this.leading,
     this.obscure,
@@ -62,7 +63,7 @@ class FormTextField extends StatelessWidget {
   final Function()? endIconFunction;
   final FocusNode? focusNode;
   final int? lines, minlines;
-  final double? radius, fontSize, spacing;
+  final double? radius, fontSize, spacing, iconSize;
   final double vpadding, hpadding;
   final Widget? leading;
   final List<TextInputFormatter>? formatters;
@@ -75,6 +76,7 @@ class FormTextField extends StatelessWidget {
     final theme = Theme.of(context);
     return TextFormField(
       autofocus: autoFocus,
+      // expands: true,
       validator: validator,
       controller: controller,
       autofillHints: autoHints,
@@ -99,7 +101,9 @@ class FormTextField extends StatelessWidget {
           letterSpacing: spacing,
           fontWeight: FontWeight.w600),
       textInputAction: action,
+      textAlignVertical: TextAlignVertical.top,
       decoration: InputDecoration(
+        
         contentPadding:
             EdgeInsets.symmetric(horizontal: hpadding, vertical: vpadding),
         isDense: isDense,
@@ -131,8 +135,11 @@ class FormTextField extends StatelessWidget {
         ),
         prefixIcon: icon != null
             ? Padding(
-                padding: const EdgeInsets.only(left: 10, right: 10),
-                child: Icon(icon, size: fontSize, color: Colors.grey),
+                padding: const EdgeInsets.only(
+                  left: 10,
+                  right: 10,
+                ),
+                child: Icon(icon, size: iconSize, color: Colors.grey),
               )
             : leading,
         suffixIcon: endicon != null
