@@ -32,6 +32,24 @@
       "languageVersion": "2.17"
     },
     {
+      "name": "cached_network_image",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/cached_network_image-3.4.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "cached_network_image_platform_interface",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/cached_network_image_platform_interface-4.1.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "cached_network_image_web",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/cached_network_image_web-1.3.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
       "name": "change_app_package_name",
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/change_app_package_name-1.3.0",
       "packageUri": "lib/",
@@ -110,6 +128,18 @@
       "languageVersion": "3.3"
     },
     {
+      "name": "file",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/file-7.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "fixnum",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/fixnum-1.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.19"
+    },
+    {
       "name": "flexi_chip",
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/flexi_chip-1.0.8",
       "packageUri": "lib/",
@@ -122,6 +152,24 @@
       "languageVersion": "3.3"
     },
     {
+      "name": "flutter_animate",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/flutter_animate-4.5.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.17"
+    },
+    {
+      "name": "flutter_cache_manager",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/flutter_cache_manager-3.4.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "flutter_custom_carousel",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/flutter_custom_carousel-0.1.0+1",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
       "name": "flutter_lints",
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/flutter_lints-4.0.0",
       "packageUri": "lib/",
@@ -132,6 +180,12 @@
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/flutter_riverpod-2.5.1",
       "packageUri": "lib/",
       "languageVersion": "2.17"
+    },
+    {
+      "name": "flutter_shaders",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/flutter_shaders-0.1.2",
+      "packageUri": "lib/",
+      "languageVersion": "2.19"
     },
     {
       "name": "flutter_svg",
@@ -284,6 +338,12 @@
       "languageVersion": "2.12"
     },
     {
+      "name": "octo_image",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/octo_image-2.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
       "name": "path",
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/path-1.9.0",
       "packageUri": "lib/",
@@ -356,10 +416,28 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "quiver",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/quiver-3.2.2",
+      "packageUri": "lib/",
+      "languageVersion": "2.17"
+    },
+    {
+      "name": "responsive_grid_list",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/responsive_grid_list-1.4.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.17"
+    },
+    {
       "name": "riverpod",
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/riverpod-2.5.1",
       "packageUri": "lib/",
       "languageVersion": "2.17"
+    },
+    {
+      "name": "rxdart",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/rxdart-0.28.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
     },
     {
       "name": "sign_in_with_apple",
@@ -398,6 +476,24 @@
       "languageVersion": "2.18"
     },
     {
+      "name": "sprintf",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/sprintf-7.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "sqflite",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/sqflite-2.3.3+1",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "sqflite_common",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/sqflite_common-2.5.4+3",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
       "name": "stack_trace",
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/stack_trace-1.11.1",
       "packageUri": "lib/",
@@ -420,6 +516,12 @@
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/string_scanner-1.2.0",
       "packageUri": "lib/",
       "languageVersion": "2.18"
+    },
+    {
+      "name": "synchronized",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/synchronized-3.3.0+2",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
     },
     {
       "name": "term_glyph",
@@ -494,6 +596,12 @@
       "languageVersion": "2.17"
     },
     {
+      "name": "uuid",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/uuid-4.5.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
       "name": "vector_graphics",
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/vector_graphics-1.1.11+1",
       "packageUri": "lib/",
@@ -554,7 +662,7 @@
       "languageVersion": "3.5"
     }
   ],
-  "generated": "2024-09-10T20:24:48.846558Z",
+  "generated": "2024-09-18T22:16:42.257807Z",
   "generator": "pub",
   "generatorVersion": "3.5.1",
   "flutterRoot": "file:///Users/m1pro/Development/flutter",
