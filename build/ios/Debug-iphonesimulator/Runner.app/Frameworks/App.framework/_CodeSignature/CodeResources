@@ -10,11 +10,11 @@
 		</data>
 		<key>flutter_assets/AssetManifest.bin</key>
 		<data>
-		HP0i0DFXbWGRxU6Q/WItw8DyHcM=
+		Yk9gi3DM9mziygIOiYJcnlK4S8Y=
 		</data>
 		<key>flutter_assets/AssetManifest.json</key>
 		<data>
-		oOFiHnq8Rs3BaXzIRqV7BtsZ5wA=
+		Up+zActJPknLRrxHGzNvmEOxVgY=
 		</data>
 		<key>flutter_assets/FontManifest.json</key>
 		<data>
@@ -22,7 +22,7 @@
 		</data>
 		<key>flutter_assets/NOTICES.Z</key>
 		<data>
-		EausIgIMDYyl6xZ8B14AccGcnWA=
+		lbnOs3lemNi4voTF2iWQin7jN4E=
 		</data>
 		<key>flutter_assets/assets/.DS_Store</key>
 		<data>
@@ -35,6 +35,10 @@
 		<key>flutter_assets/assets/animations/health.json</key>
 		<data>
 		q0ypbhkHMGbiGbEh1swYh0tnA9Q=
+		</data>
+		<key>flutter_assets/assets/animations/typing.json</key>
+		<data>
+		n+W9l/5Mmi0NOtbCtHbMfxrOgIM=
 		</data>
 		<key>flutter_assets/assets/icons/heartbeat.svg</key>
 		<data>
@@ -170,7 +174,7 @@
 		</data>
 		<key>flutter_assets/kernel_blob.bin</key>
 		<data>
-		/1BXNbXRoj19Z31w5YxYGtdGhTE=
+		otkODqCrH41/wfmIHYW7Zcmvgw4=
 		</data>
 		<key>flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf</key>
 		<data>
@@ -223,14 +227,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			xp8WwK7yABoDwOgWZOBhu3WOeFmBXypCPNv/XkYKES8=
+			XXqL9cniVHHnr/OQpolWPcaVTkJYjW0P9vt7obMJWuU=
 			</data>
 		</dict>
 		<key>flutter_assets/AssetManifest.json</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			PCjH8XtU3yJ/nV33YdkrdVlMzyfOn2dm8d0N8ol4i7k=
+			oiFCDtNjOfwZX0+9XF57G7IjNUnEVGyiFzXKkr9ER60=
 			</data>
 		</dict>
 		<key>flutter_assets/FontManifest.json</key>
@@ -244,7 +248,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			UoJYiCH3uZx3WTEeyGWVVzExVmibFLiNh/Ix4HExxeE=
+			E1Thaax9gGqDfOH/SNGi+RmKTVpBgeB8st0SvwyEF2s=
 			</data>
 		</dict>
 		<key>flutter_assets/assets/animations/23601-medical-loading.json</key>
@@ -259,6 +263,13 @@
 			<key>hash2</key>
 			<data>
 			wKwOoZ83LQRD17VfpKpZMZzvkT+YAo5I4QYdR0Ne/go=
+			</data>
+		</dict>
+		<key>flutter_assets/assets/animations/typing.json</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			wKzX4Nb2Qyk93G68FOenE9F/CUS9oGgBSgkjovsghQc=
 			</data>
 		</dict>
 		<key>flutter_assets/assets/icons/heartbeat.svg</key>
@@ -496,7 +507,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			ZDS39okmQ5F9cMahU/gNQ4LeDspgF7XQsiREU+Fv57A=
+			Ahq4hXw/wmzUeWPN3LzI3W8hIru5k1p5Hj7KP7OeviU=
 			</data>
 		</dict>
 		<key>flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf</key>

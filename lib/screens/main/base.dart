@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yarisa_doctor/components/bottombar.dart';
 import 'package:yarisa_doctor/constants/yarisa_constants.dart';
+import 'package:yarisa_doctor/screens/chat_view.dart';
 
 class BaseScreen extends ConsumerStatefulWidget {
   const BaseScreen({super.key});
@@ -16,10 +17,19 @@ class _BaseScreenState extends ConsumerState<BaseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        child: const Icon(EneftyIcons.message_outline),
-      ),
+      floatingActionButton: selectedIndex != 2
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ChatView(
+                            patientName: "Richard",
+                            patientId: "oB9qSfcOtmPUcoXGYfsDJLKiKb12")));
+              },
+              child: const Icon(EneftyIcons.message_outline),
+            )
+          : null,
       body: YarisaConstants.basePages.elementAt(selectedIndex),
       bottomNavigationBar: BottomBar(
           index: selectedIndex,

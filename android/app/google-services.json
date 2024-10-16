@@ -1,0 +1,151 @@
+{
+  "project_info": {
+    "project_number": "815327431922",
+    "firebase_url": "https://mobile-doctors-5dea5.firebaseio.com",
+    "project_id": "mobile-doctors-5dea5",
+    "storage_bucket": "mobile-doctors-5dea5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:815327431922:android:cee84dfd55700b69f4546b",
+        "android_client_info": {
+          "package_name": "com.buris.yarisadoctors.yarisa_doctor"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "815327431922-hpts15kf8rr2d2389ubqgq5qcdjdg77r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzG_UJs1VHbDOTJKRvMrFRqVNK8MCuFUU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "815327431922-hpts15kf8rr2d2389ubqgq5qcdjdg77r.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "815327431922-3b3ftht2u5a6qib5tu5n1j9cp6icc5i1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.buris.yarisadoctors.yarisaDoctor"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:815327431922:android:dad1193bcf8bcdedf4546b",
+        "android_client_info": {
+          "package_name": "com.phalcon.mobiledoctors"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "815327431922-9i5qii72v9su9t256sp79svjnt8qcfqi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.phalcon.mobiledoctors",
+            "certificate_hash": "f53bc0f2a266f252aa8b37d9ca4171951ede41c1"
+          }
+        },
+        {
+          "client_id": "815327431922-denivi9id5ah8i2kmt0dr427q0v3v0hn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.phalcon.mobiledoctors",
+            "certificate_hash": "a301ec51ff1e4d36fd013cff4b82597bf0e5c52a"
+          }
+        },
+        {
+          "client_id": "815327431922-f1mtk6esc780usqgs8ue681drv0o9qtl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.phalcon.mobiledoctors",
+            "certificate_hash": "9dca5b6666be7d2f12de5f6e09b02d0a5f7d9354"
+          }
+        },
+        {
+          "client_id": "815327431922-hpts15kf8rr2d2389ubqgq5qcdjdg77r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzG_UJs1VHbDOTJKRvMrFRqVNK8MCuFUU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "815327431922-hpts15kf8rr2d2389ubqgq5qcdjdg77r.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "815327431922-3b3ftht2u5a6qib5tu5n1j9cp6icc5i1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.buris.yarisadoctors.yarisaDoctor"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:815327431922:android:a9f0c727b619c47df4546b",
+        "android_client_info": {
+          "package_name": "com.phalcon.yarisadoctors"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "815327431922-8dfdn5v4f6lj7312et5rv9t1qovtq2gm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.phalcon.yarisadoctors",
+            "certificate_hash": "f53bc0f2a266f252aa8b37d9ca4171951ede41c1"
+          }
+        },
+        {
+          "client_id": "815327431922-hpts15kf8rr2d2389ubqgq5qcdjdg77r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzG_UJs1VHbDOTJKRvMrFRqVNK8MCuFUU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "815327431922-hpts15kf8rr2d2389ubqgq5qcdjdg77r.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "815327431922-3b3ftht2u5a6qib5tu5n1j9cp6icc5i1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.buris.yarisadoctors.yarisaDoctor"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

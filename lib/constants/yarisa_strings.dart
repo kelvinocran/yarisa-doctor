@@ -47,7 +47,7 @@ class AppStrings {
       "Please enter your password to continue";
   static const String invalidpassword =
       "Password must contain more than 6 characters.";
-  static const String validemail = "Please provide a valid email address.";
+  static const String invalidemail = "Please provide a valid email address.";
   static const String forgotyourpassword = "Forgot your password?";
   static const String requestlink = "Request reset link";
   static const String forgotpasswordsubtitle =
@@ -64,4 +64,11 @@ class AppStrings {
   static const String afternoon = "Good Afternoon";
   static const String evening = "Good Evening";
   static const String night = "Good Night";
+  static const String manageavailabilty = "Manage Availability";
+  static const String toggleyouravailability = "Toggle your availability on this day.";
+  static const String slots = "Slots";
+  static const String starttime = "Start Time";
+  static const String endtime = "End Time";
+  static const String save = "Save";
+  static const String cancel = "Cancel";
 }

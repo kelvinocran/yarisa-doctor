@@ -57,7 +57,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         return AppStrings.provideemail;
                       }
                       if (p0.isEmail) {
-                        return AppStrings.validemail;
+                        return AppStrings.invalidemail;
                       }
                       return null;
                     },

@@ -2,6 +2,12 @@
   "configVersion": 2,
   "packages": [
     {
+      "name": "_flutterfire_internals",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/_flutterfire_internals-1.3.44",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
       "name": "animated_checkmark",
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/animated_checkmark-1.0.1",
       "packageUri": "lib/",
@@ -50,6 +56,12 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "calendar_timeline",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/calendar_timeline-1.1.3",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "change_app_package_name",
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/change_app_package_name-1.3.0",
       "packageUri": "lib/",
@@ -58,6 +70,12 @@
     {
       "name": "characters",
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/characters-1.3.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "charcode",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/charcode-1.3.1",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },
@@ -74,6 +92,24 @@
       "languageVersion": "2.12"
     },
     {
+      "name": "cloud_firestore",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/cloud_firestore-5.4.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "cloud_firestore_platform_interface",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/cloud_firestore_platform_interface-6.4.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "cloud_firestore_web",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/cloud_firestore_web-4.3.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
       "name": "collection",
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/collection-1.18.0",
       "packageUri": "lib/",
@@ -86,10 +122,22 @@
       "languageVersion": "2.12"
     },
     {
+      "name": "cross_file",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/cross_file-0.3.4+2",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
       "name": "crypto",
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/crypto-3.0.5",
       "packageUri": "lib/",
       "languageVersion": "3.4"
+    },
+    {
+      "name": "csslib",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/csslib-1.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.19"
     },
     {
       "name": "cupertino_icons",
@@ -116,6 +164,12 @@
       "languageVersion": "3.1"
     },
     {
+      "name": "event_bus",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/event_bus-2.0.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "fake_async",
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/fake_async-1.3.1",
       "packageUri": "lib/",
@@ -132,6 +186,48 @@
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/file-7.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.0"
+    },
+    {
+      "name": "file_picker",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/file_picker-8.1.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "firebase_auth",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/firebase_auth-5.3.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "firebase_auth_platform_interface",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/firebase_auth_platform_interface-7.4.7",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "firebase_auth_web",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/firebase_auth_web-5.13.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "firebase_core",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/firebase_core-3.6.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "firebase_core_platform_interface",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/firebase_core_platform_interface-5.3.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "firebase_core_web",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/firebase_core_web-2.18.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
     },
     {
       "name": "fixnum",
@@ -174,6 +270,12 @@
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/flutter_lints-4.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.1"
+    },
+    {
+      "name": "flutter_plugin_android_lifecycle",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/flutter_plugin_android_lifecycle-2.0.23",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
     },
     {
       "name": "flutter_riverpod",
@@ -260,6 +362,12 @@
       "languageVersion": "3.3"
     },
     {
+      "name": "html",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/html-0.15.4",
+      "packageUri": "lib/",
+      "languageVersion": "2.19"
+    },
+    {
       "name": "http",
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/http-1.2.2",
       "packageUri": "lib/",
@@ -268,6 +376,12 @@
     {
       "name": "http_parser",
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/http_parser-4.0.2",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "images_picker",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/images_picker-1.2.11",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },
@@ -336,6 +450,12 @@
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/meta-1.15.0",
       "packageUri": "lib/",
       "languageVersion": "2.12"
+    },
+    {
+      "name": "mqtt_client",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/mqtt_client-10.5.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
     },
     {
       "name": "octo_image",
@@ -438,6 +558,12 @@
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/rxdart-0.28.0",
       "packageUri": "lib/",
       "languageVersion": "2.12"
+    },
+    {
+      "name": "scrollable_positioned_list",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/scrollable_positioned_list-0.3.8",
+      "packageUri": "lib/",
+      "languageVersion": "2.15"
     },
     {
       "name": "sign_in_with_apple",
@@ -590,6 +716,12 @@
       "languageVersion": "2.18"
     },
     {
+      "name": "universal_html",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/universal_html-2.2.4",
+      "packageUri": "lib/",
+      "languageVersion": "2.17"
+    },
+    {
       "name": "universal_io",
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/universal_io-2.2.2",
       "packageUri": "lib/",
@@ -644,6 +776,12 @@
       "languageVersion": "2.17"
     },
     {
+      "name": "win32",
+      "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/win32-5.5.5",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
       "name": "xdg_directories",
       "rootUri": "file:///Users/m1pro/.pub-cache/hosted/pub.dev/xdg_directories-1.0.4",
       "packageUri": "lib/",
@@ -662,7 +800,7 @@
       "languageVersion": "3.5"
     }
   ],
-  "generated": "2024-09-18T22:16:42.257807Z",
+  "generated": "2024-10-06T16:07:52.925224Z",
   "generator": "pub",
   "generatorVersion": "3.5.1",
   "flutterRoot": "file:///Users/m1pro/Development/flutter",

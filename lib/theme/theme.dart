@@ -252,6 +252,7 @@ class YarisaTheme {
         scaffoldBackgroundColor: YarisaColors.darkBackgroundColor,
         listTileTheme: ListTileThemeData(
           tileColor: Colors.grey.shade900,
+
         ),
         colorScheme: ColorScheme.fromSeed(
             seedColor: YarisaColors.alternateColor,

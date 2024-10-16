@@ -10,7 +10,7 @@
 		</data>
 		<key>Headers/sign_in_with_apple-Swift.h</key>
 		<data>
-		i0MjbaiVFzx+pVt2TmLhkJOKcD0=
+		ITkn6DADa+mZ6IDuNubyz9sQypo=
 		</data>
 		<key>Headers/sign_in_with_apple-umbrella.h</key>
 		<data>
@@ -18,7 +18,7 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		VHw1wUCMNp3H11Pi0cUyGGRgLjI=
+		9+X8pBI/VRB6RRkyVD5iZRBftJA=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
@@ -26,35 +26,35 @@
 		</data>
 		<key>Modules/sign_in_with_apple.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		Wlx7O4Y38P9wdmV68gWA8yld4Eg=
+		GNmAkE9ZIJRTjNrOfP9Ql+un/Rs=
 		</data>
 		<key>Modules/sign_in_with_apple.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		rrD5Uaaauj94yKeLJfUY8guzBps=
+		mT6Z6dTUELYww+9dRBqzgtkYkUk=
 		</data>
 		<key>Modules/sign_in_with_apple.swiftmodule/arm64-apple-ios-simulator.abi.json</key>
 		<data>
-		FSPnLbho3G+LL9smI3XgVOqBIQ4=
+		gcwBsH4BgyFY4sVtNt+/xOKS3vY=
 		</data>
 		<key>Modules/sign_in_with_apple.swiftmodule/arm64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		S8zm8GwYGzrdhYzOavqUOft0Nj0=
+		N0Fh7HBJNlgQ3D+b0ZY0VG1gnYU=
 		</data>
 		<key>Modules/sign_in_with_apple.swiftmodule/arm64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		ZujE6IY4hwqVxBClfTEeEK6FTe8=
+		pquRn98Uve6onE8w7cG+skLPg8g=
 		</data>
 		<key>Modules/sign_in_with_apple.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
 		<data>
-		FSPnLbho3G+LL9smI3XgVOqBIQ4=
+		gcwBsH4BgyFY4sVtNt+/xOKS3vY=
 		</data>
 		<key>Modules/sign_in_with_apple.swiftmodule/x86_64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		7Zo7R2hHRoYNlOnFAE5se5a9b1k=
+		qvAAsKg6qIvFfXwp6sVBeMD7ty4=
 		</data>
 		<key>Modules/sign_in_with_apple.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		VFVEgEiF5nSy11wJmsxzZTr2X6E=
+		kLQkUFx4ukwUh2O/qAMRUxZ/Gu8=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -70,7 +70,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			k6FH7ELjnFns8LqPYT4se2MoIM7NNFHHDxSJFoc4gaY=
+			dR0ow/+z5qHzqpm/4lBRxHVb6gg6lgM50MoinM8miSs=
 			</data>
 		</dict>
 		<key>Headers/sign_in_with_apple-umbrella.h</key>
@@ -91,56 +91,56 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			kLhDA7+/Nf+XSx0pHI9TKxGMvLn3bLkAOOx1OKdjy4c=
+			7nOr0eCInS1lSfL1nQ8Z4hxe1u0qxy2MZnnfJ+hXtmE=
 			</data>
 		</dict>
 		<key>Modules/sign_in_with_apple.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			aeVs3QyZDpY9gjlUsCP68zDfOHo/qbWwUi89a1QMU5Y=
+			wcL9sJFal3XwfipdB0lzeq0PzTdqegvyfz67EJoCClU=
 			</data>
 		</dict>
 		<key>Modules/sign_in_with_apple.swiftmodule/arm64-apple-ios-simulator.abi.json</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			KnRdWE4y6t4QM5zi5JDptPdHFgJy1Tku+7GLkZS2aNM=
+			Qnesa0n4URGWAopawg9bGx36dUwkYV00BoCJ8LFzlyg=
 			</data>
 		</dict>
 		<key>Modules/sign_in_with_apple.swiftmodule/arm64-apple-ios-simulator.swiftdoc</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			0Zj2sSaFg2X6rCmN3f8KOAJSCcHNEaiI9y+RHxyAvVM=
+			A7mIHYUP64wK/PyvC66xum3b5+K9ju98PSb6pnvkL9A=
 			</data>
 		</dict>
 		<key>Modules/sign_in_with_apple.swiftmodule/arm64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			gTUpz+DokiRws65XZFsdjsjJTVIqMk4/GgR8JkGOdJ0=
+			wlZPY+COHmryUwALPRR9MOPAJ+2hQdbKgaxozdotJNs=
 			</data>
 		</dict>
 		<key>Modules/sign_in_with_apple.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			KnRdWE4y6t4QM5zi5JDptPdHFgJy1Tku+7GLkZS2aNM=
+			Qnesa0n4URGWAopawg9bGx36dUwkYV00BoCJ8LFzlyg=
 			</data>
 		</dict>
 		<key>Modules/sign_in_with_apple.swiftmodule/x86_64-apple-ios-simulator.swiftdoc</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			Dq8tmCMqVGXmVp1F28+vsltLMg+USScPi6qvUA1L4+k=
+			ZJkskcw29MWL5mmcK68FYK8wWcGO7K6F/QdhwYJiQuk=
 			</data>
 		</dict>
 		<key>Modules/sign_in_with_apple.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			33q1S0zB1+J1wOUi9KOfTociOPNry+PLyTGz+vzbWbs=
+			/nXt6nFyymNCsJe6PMtO8YcS+20oJc1pTGybvUsXs/Q=
 			</data>
 		</dict>
 	</dict>

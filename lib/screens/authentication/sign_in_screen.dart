@@ -5,12 +5,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:uicons_brands/uicons_brands.dart';
+import 'package:yarisa_doctor/api/api_methods.dart';
 import 'package:yarisa_doctor/components/formtextfield.dart';
 import 'package:yarisa_doctor/constants/yarisa_constants.dart';
 import 'package:yarisa_doctor/constants/yarisa_enums.dart';
 import 'package:yarisa_doctor/constants/yarisa_strings.dart';
 import 'package:yarisa_doctor/constants/yarisa_widgets.dart';
 import 'package:yarisa_doctor/extensions/yarisa_extensions.dart';
+import 'package:yarisa_doctor/screens/authentication/complete_profile.dart';
+import 'package:yarisa_doctor/screens/main/base.dart';
 
 import '../../api/config.dart';
 import 'forgot_password_screen.dart';
@@ -28,6 +31,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   final password = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    final authenticating = ref.watch(apimethods).authenticating;
     return Scaffold(
         appBar: AppBar(),
         body: SafeArea(
@@ -54,25 +58,43 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     color: Colors.grey,
                   ),
                   50.hgap,
-                  if (Platform.isAndroid)
-                    ElevatedButton.icon(
-                        onPressed: () {},
-                        icon: Icon(
-                          const UIconsBrands().google,
-                          size: 20,
-                        ),
-                        label: const Text(AppStrings.signinwithgoogle)),
+                  // if (Platform.isAndroid)
+                  ElevatedButton.icon(
+                      onPressed: authenticating ? null : () {},
+                      icon: Icon(
+                        const UIconsBrands().google,
+                        size: 20,
+                      ),
+                      style: ButtonStyle(
+                          elevation: const WidgetStatePropertyAll(0),
+                          foregroundColor:
+                              const WidgetStatePropertyAll(Colors.white),
+                          backgroundColor:
+                              WidgetStateColor.resolveWith((states) {
+                            if (states.contains(WidgetState.pressed)) {
+                              return Colors.grey.withOpacity(.5);
+                            }
+
+                            return Colors.red;
+                          }),
+                          minimumSize: const WidgetStatePropertyAll(
+                              Size(double.infinity, 50))),
+                      label: const Text(AppStrings.signinwithgoogle)),
+                  10.hgap,
                   if (Platform.isIOS)
                     ElevatedButton.icon(
-                        onPressed: () async {
-                          try {
-                            final cred =
-                                await ref.read(authConfig).signInWithApple();
-                            print(cred);
-                          } catch (e) {
-                            Logger().e(e);
-                          }
-                        },
+                        onPressed: authenticating
+                            ? null
+                            : () async {
+                                try {
+                                  final cred = await ref
+                                      .read(authConfig)
+                                      .signInWithApple();
+                                  print(cred);
+                                } catch (e) {
+                                  Logger().e(e);
+                                }
+                              },
                         style: ButtonStyle(
                             elevation: const WidgetStatePropertyAll(0),
                             foregroundColor: WidgetStatePropertyAll(
@@ -112,13 +134,15 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   FormTextField(
                       radius: 100,
                       controller: email,
+                      enabled: !authenticating,
+                      capitalization: TextCapitalization.none,
                       inputType: TextInputType.emailAddress,
                       validator: (p0) {
                         if (p0!.isEmpty) {
                           return AppStrings.provideemail;
                         }
                         if (!p0.isEmail) {
-                          return AppStrings.validemail;
+                          return AppStrings.invalidemail;
                         }
                         return null;
                       },
@@ -127,8 +151,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   10.hgap,
                   FormTextField(
                     radius: 100,
+                    enabled: !authenticating,
                     controller: password,
                     hint: AppStrings.password,
+                    capitalization: TextCapitalization.none,
                     inputType: TextInputType.visiblePassword,
                     validator: (p0) {
                       if (p0!.isEmpty) {
@@ -141,14 +167,47 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     },
                   ),
                   20.hgap,
-                  ElevatedButton.icon(
-                      onPressed: () async {},
-                      style: const ButtonStyle(
-                          elevation: WidgetStatePropertyAll(0),
-                          minimumSize: WidgetStatePropertyAll(
-                              Size(double.infinity, 50))),
-                      icon: const Icon(Icons.mark_email_read_outlined),
-                      label: const Text(AppStrings.signinwithemail)),
+                  Visibility(
+                    visible: !authenticating,
+                    replacement: const Center(
+                      child: Loader(),
+                    ),
+                    child: ElevatedButton.icon(
+                        onPressed: authenticating
+                            ? null
+                            : () async {
+                                if (key.currentState!.validate()) {
+                                  final api = ref.read(apimethods);
+                                  api.signInUserAccount(
+                                      email: email.text.trim(),
+                                      password: password.text.trim(),
+                                      onSuccess: (credential) async {
+                                        await api.getUserProfile(
+                                            onSuccess: (user) {
+                                          Navigator.pushAndRemoveUntil(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const BaseScreen()),
+                                              (route) => false);
+                                        }, onFailed: (user) {
+                                          Navigator.pushAndRemoveUntil(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const CompleteProfile()),
+                                              (route) => false);
+                                        });
+                                      });
+                                }
+                              },
+                        style: const ButtonStyle(
+                            elevation: WidgetStatePropertyAll(0),
+                            minimumSize: WidgetStatePropertyAll(
+                                Size(double.infinity, 50))),
+                        icon: const Icon(Icons.mark_email_read_outlined),
+                        label: const Text(AppStrings.signinwithemail)),
+                  ),
                   15.hgap,
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -174,3 +233,5 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         ));
   }
 }
+
+
