@@ -101,7 +101,7 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
               dayColor: Colors.grey,
               activeDayColor: Colors.white,
               activeBackgroundDayColor: Theme.of(context).primaryColor,
-              selectableDayPredicate: (date) => date.day != 23,
+              // selectableDayPredicate: (date) => date.day != 23,
               // locale: 'en_ISO',
             ),
           ),

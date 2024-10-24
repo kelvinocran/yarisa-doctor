@@ -16,6 +16,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: yarisaAppBar(context, title: AppStrings.settings, fontSize: 18),
-    );
+    ); 
   }
 }

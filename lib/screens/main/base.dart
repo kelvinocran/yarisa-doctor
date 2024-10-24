@@ -5,6 +5,8 @@ import 'package:yarisa_doctor/components/bottombar.dart';
 import 'package:yarisa_doctor/constants/yarisa_constants.dart';
 import 'package:yarisa_doctor/screens/chat_view.dart';
 
+import '../../services/mqtt_service.dart';
+
 class BaseScreen extends ConsumerStatefulWidget {
   const BaseScreen({super.key});
 
@@ -14,6 +16,15 @@ class BaseScreen extends ConsumerStatefulWidget {
 
 class _BaseScreenState extends ConsumerState<BaseScreen> {
   int selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await MQTTService.instance.connect();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

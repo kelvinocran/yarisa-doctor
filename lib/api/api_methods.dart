@@ -5,11 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 import 'package:yarisa_doctor/models/appointment_model.dart';
+
+import 'package:yarisa_doctor/models/personal_patients_model.dart';
 import 'package:yarisa_doctor/screens/authentication/welcome_screen.dart';
 import 'package:yarisa_doctor/screens/main/base.dart';
 
 import '../models/user_model.dart';
-import '../services/mqtt_service.dart';
 
 class ApiMethods extends ChangeNotifier {
   bool authenticating = false;
@@ -17,13 +18,14 @@ class ApiMethods extends ChangeNotifier {
   FirebaseAuth auth = FirebaseAuth.instance;
   FirebaseFirestore db = FirebaseFirestore.instance;
   User? user;
+  List<PersonalPatientsModel> mypatients = [];
   UserModel? userAccount;
   List<AppointmentModel> userAppointments = [];
 
   Future<void> checkAuthState(BuildContext context) async {
     if (auth.currentUser != null) {
-      await MQTTService.instance.connect();
       final userA = await getUserProfile();
+
       userAccount = userA;
       notifyListeners();
       Navigator.pushAndRemoveUntil(
@@ -78,6 +80,7 @@ class ApiMethods extends ChangeNotifier {
       notifyListeners();
       final profile =
           await db.collection("Doctors").doc(auth.currentUser?.uid).get();
+      await getMyPatients();
       if (profile.exists) {
         final data = UserModel.fromDocumentSnapshot(profile);
         if (kDebugMode) {
@@ -317,6 +320,55 @@ class ApiMethods extends ChangeNotifier {
       notifyListeners();
       onFailed?.call(null);
       return null;
+    }
+  }
+
+  Future<List<PersonalPatientsModel>> getMyPatients(
+      {void Function(List<PersonalPatientsModel>)? onSuccess,
+      void Function(List<PersonalPatientsModel>?)? onFailed}) async {
+    try {
+      authenticating = true;
+      notifyListeners();
+      final patients = await db
+          .collection("Doctors")
+          .doc(auth.currentUser?.uid)
+          .collection("Patients")
+          .get();
+      if (patients.docs.isNotEmpty) {
+        final data = patients.docs
+            .map((e) => PersonalPatientsModel.fromMap(e.data()))
+            .toList();
+        if (kDebugMode) {
+          print(data);
+        }
+        data.sort((a, b) => a.patientName!.compareTo(b.patientName!));
+        mypatients = data;
+        authenticating = false;
+        notifyListeners();
+        onSuccess?.call(data);
+        return data;
+      } else {
+        onFailed?.call([]);
+        mypatients = [];
+        authenticating = false;
+        notifyListeners();
+
+        return [];
+      }
+    } on FirebaseAuthException catch (e) {
+      Logger().e(e);
+      mypatients = [];
+      authenticating = false;
+      notifyListeners();
+      onFailed?.call([]);
+      return [];
+    } catch (e) {
+      Logger().e(e);
+      mypatients = [];
+      authenticating = false;
+      notifyListeners();
+      onFailed?.call([]);
+      return [];
     }
   }
 }
