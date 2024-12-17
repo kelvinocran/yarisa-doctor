@@ -18,15 +18,15 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		rvsjmu8LxK2iXpUfUIzs5M6mXRA=
+		3rMDOwDRqBnxymF1IzR+egO4cWQ=
 		</data>
 		<key>Modules/ZLPhotoBrowser.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		V10GfEOF8IxH+68GBcAPYheGSp0=
+		AJe3t+GpThrf3w+P5ROOJ5NNHLE=
 		</data>
 		<key>Modules/ZLPhotoBrowser.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		KYWUKcV2/fzbtMdNXl5HV9Cx3xI=
+		4t+XNYJotfQ3bh6dX0+oiAndn9k=
 		</data>
 		<key>Modules/ZLPhotoBrowser.swiftmodule/arm64-apple-ios-simulator.abi.json</key>
 		<data>
@@ -634,22 +634,22 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			V10GfEOF8IxH+68GBcAPYheGSp0=
+			AJe3t+GpThrf3w+P5ROOJ5NNHLE=
 			</data>
 			<key>hash2</key>
 			<data>
-			6mXSTflnRONfuvE9W0JBp4PQFizlRil/exUkK/v9T6k=
+			1iKjJ1pfJuXAMP9fSOiSQQC4a4ir1OQEZxwz4FMXU2A=
 			</data>
 		</dict>
 		<key>Modules/ZLPhotoBrowser.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			KYWUKcV2/fzbtMdNXl5HV9Cx3xI=
+			4t+XNYJotfQ3bh6dX0+oiAndn9k=
 			</data>
 			<key>hash2</key>
 			<data>
-			EttKOncAZYYTX8MK2Vu/04by5bZZKZukF6IGh4kAbY0=
+			5T026Q3H5uZrQ07z4gVze7I2igCGm94c7ewcLWL9170=
 			</data>
 		</dict>
 		<key>Modules/ZLPhotoBrowser.swiftmodule/arm64-apple-ios-simulator.abi.json</key>

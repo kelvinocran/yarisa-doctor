@@ -2,55 +2,101 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:yarisa_doctor/models/patient_model.dart';
+import 'package:yarisa_doctor/models/user_model.dart';
+
+
+import '../constants/yarisa_enums.dart';
 
 class AppointmentModel {
-  String? appointmentTime;
-  String? patientImage;
-  String? patientName;
-  String? patientId;
   String? id;
-  Timestamp? dateCreated;
-  Timestamp? appointmentDate;
-  AppointmentModel({
-    this.appointmentTime,
-    this.patientImage,
-    this.patientName,
-    this.patientId,
-    this.id,
-    this.dateCreated,
-    this.appointmentDate,
-  });
+  String? purpose;
+  String? type;
+  UserModel? doctor;
+  Patient? patient;
+  Timestamp? date;
+  String? time;
+  Timestamp? createdOn;
+  AppointmentStatus? status;
+  AppointmentModel(
+      {this.purpose,
+      this.doctor,
+      this.patient,
+      this.date,
+      this.time,
+      this.createdOn,
+      this.status,
+      this.type,this.id});
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'appointment_time': appointmentTime,
-      'patient_image': patientImage,
-      'patient_name': patientName,
-      'patient_id': patientId,
-      // 'id': id,
-      'date_created': dateCreated?.millisecondsSinceEpoch,
-      'appointment_date': appointmentDate?.millisecondsSinceEpoch,
+      'type': type,
+      'purpose': purpose,
+      'time': time,
+      'doctor': doctor?.toMap(),
+      'patient': patient?.toMap(),
+      'date': date?.millisecondsSinceEpoch,
+      'date_created': createdOn?.millisecondsSinceEpoch,
+      'status': status?.name,
     };
   }
 
-  factory AppointmentModel.fromMap(QueryDocumentSnapshot<Map<String, dynamic>> map) {
+  factory AppointmentModel.fromSnapshot(QueryDocumentSnapshot<Map<String, dynamic>> map) {
     return AppointmentModel(
-      appointmentTime: map['appointment_time'] != null ? map['appointment_time'] as String : null,
-      patientImage: map['patient_image'] != null ? map['patient_image'] as String : null,
-      patientName: map['patient_name'] != null ? map['patient_name'] as String : null,
-      patientId: map['patient_id'] != null ? map['patient_id'] as String : null,
       id: map.id,
-      dateCreated: map['date_created'] != null ? Timestamp.fromMillisecondsSinceEpoch(map['date_created'] as int) : null,
-      appointmentDate: map['appointmentDate'] != null ? Timestamp.fromMillisecondsSinceEpoch(map['appointment_date'] as int) : null,
+      type: map["type"],
+      purpose: map['purpose'],
+      time: map['time'],
+      doctor: map['doctor'] != null
+          ? UserModel.fromMap(map['doctor'] as Map<String, dynamic>)
+          : null,
+      patient: map['patient'] != null
+          ? Patient.fromMap(map['patient'] as Map<String, dynamic>)
+          : null,
+      date: map['date'] != null
+          ? map['date'] is int
+              ? (Timestamp.fromMillisecondsSinceEpoch(map['date']))
+              : (map['date'] as Timestamp)
+          : null,
+      createdOn: map['date_created'] != null
+          ? map['date_created'] is int
+              ? (Timestamp.fromMillisecondsSinceEpoch(map['date_created']))
+              : (map['date_created'] as Timestamp)
+          : null,
+      status:
+          AppointmentStatus.values.firstWhere((e) => e.name == map['status']),
+    );
+  }
+
+
+  factory AppointmentModel.fromMap(Map<String, dynamic> map) {
+    return AppointmentModel(
+      type: map["type"],
+      purpose: map['purpose'],
+      time: map['time'],
+      doctor: map['doctor'] != null
+          ? UserModel.fromMap(map['doctor'] as Map<String, dynamic>)
+          : null,
+      patient: map['patient'] != null
+          ? Patient.fromMap(map['patient'] as Map<String, dynamic>)
+          : null,
+      date: map['date'] != null
+          ? map['date'] is int
+              ? (Timestamp.fromMillisecondsSinceEpoch(map['date']))
+              : (map['date'] as Timestamp)
+          : null,
+      createdOn: map['date_created'] != null
+          ? map['date_created'] is int
+              ? (Timestamp.fromMillisecondsSinceEpoch(map['date_created']))
+              : (map['date_created'] as Timestamp)
+          : null,
+      status:
+          AppointmentStatus.values.firstWhere((e) => e.name == map['status']),
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory AppointmentModel.fromJson(String source) => AppointmentModel.fromMap(json.decode(source) as QueryDocumentSnapshot<Map<String, dynamic>>);
-
-  @override
-  String toString() {
-    return 'AppointmentModel(appointmentTime: $appointmentTime, patientImage: $patientImage, patientName: $patientName, patientId: $patientId, id: $id, dateCreated: $dateCreated, appointmentDate: $appointmentDate)';
-  }
+  factory AppointmentModel.fromJson(String source) =>
+      AppointmentModel.fromMap(json.decode(source) as Map<String, dynamic>);
 }

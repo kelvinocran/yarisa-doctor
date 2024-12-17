@@ -11,7 +11,7 @@ class Patient {
   String? digitalAddress;
   Timestamp? dateCreated;
   List<Allergies>? allergies;
-  List<PersonalInfo>? personalInfo;
+  PersonalInfo? personalInfo;
   Patient({
     this.photo,
     this.phone,
@@ -34,7 +34,7 @@ class Patient {
       'digital_address': digitalAddress,
       'date_created': dateCreated?.millisecondsSinceEpoch,
       'allergies': allergies?.map((x) => x.toMap()).toList(),
-      'personal_info': personalInfo?.map((x) => x.toMap()).toList(),
+      'personal_info': personalInfo?.toMap(),
     };
   }
 
@@ -61,11 +61,7 @@ class Patient {
             )
           : null,
       personalInfo: map['personal_info'] != null
-          ? List<PersonalInfo>.from(
-              (map['personal_info']).map<PersonalInfo?>(
-                (x) => PersonalInfo.fromMap(x as Map<String, dynamic>),
-              ),
-            )
+          ? PersonalInfo.fromMap(map['personal_info'] as Map<String, dynamic>)
           : null,
     );
   }

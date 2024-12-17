@@ -79,9 +79,9 @@ class YarisaTheme {
             )),
         focusColor: YarisaColors.primaryColor,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: YarisaColors.primaryColor,
-          brightness: Brightness.light,
-        ),
+            seedColor: YarisaColors.primaryColor,
+            brightness: Brightness.light,
+            surfaceContainerLow: Colors.white),
         dialogBackgroundColor: const Color(0xFFF5F5F5),
         floatingActionButtonTheme: FloatingActionButtonThemeData(
             shape: const CircleBorder(),
@@ -252,10 +252,10 @@ class YarisaTheme {
         scaffoldBackgroundColor: YarisaColors.darkBackgroundColor,
         listTileTheme: ListTileThemeData(
           tileColor: Colors.grey.shade900,
-
         ),
         colorScheme: ColorScheme.fromSeed(
             seedColor: YarisaColors.alternateColor,
+            surfaceContainerLow: const Color(0xFF181818),
             brightness: Brightness.dark),
         floatingActionButtonTheme: FloatingActionButtonThemeData(
             shape: const CircleBorder(),

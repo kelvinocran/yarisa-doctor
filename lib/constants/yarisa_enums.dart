@@ -10,3 +10,5 @@ enum TextType {
 }
 
 enum Gender { male, female, other }
+
+enum AppointmentStatus { pending, canceled, declined, approved }

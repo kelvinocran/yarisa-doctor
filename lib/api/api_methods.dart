@@ -126,7 +126,7 @@ class ApiMethods extends ChangeNotifier {
 
       final data = await db
           .collection("Doctors")
-          .doc(auth.currentUser?.uid)
+          .doc(FirebaseAuth.instance.currentUser?.uid)
           .collection("Availability")
           .where('date', isEqualTo: date)
           .get();
@@ -291,13 +291,13 @@ class ApiMethods extends ChangeNotifier {
       authenticating = true;
       notifyListeners();
       final appointments = await db
-          .collection("Doctors")
-          .doc(auth.currentUser?.uid)
           .collection('Appointments')
+          .where("doctor_id", isEqualTo: user?.uid)
           .get();
 
-      final data =
-          appointments.docs.map((e) => (AppointmentModel.fromMap(e))).toList();
+      final data = appointments.docs
+          .map((e) => (AppointmentModel.fromSnapshot(e)))
+          .toList();
       if (kDebugMode) {
         print(data);
       }

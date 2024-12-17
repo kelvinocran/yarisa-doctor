@@ -95,14 +95,11 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
                       );
                 }
               },
-
               leftMargin: 20,
               monthColor: Colors.grey,
               dayColor: Colors.grey,
               activeDayColor: Colors.white,
               activeBackgroundDayColor: Theme.of(context).primaryColor,
-              // selectableDayPredicate: (date) => date.day != 23,
-              // locale: 'en_ISO',
             ),
           ),
           10.hgap,
