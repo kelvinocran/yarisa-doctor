@@ -3,6 +3,7 @@ import 'package:enefty_icons/enefty_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yarisa_doctor/api/api_methods.dart';
+import 'package:yarisa_doctor/screens/main/patient_detail.dart';
 
 import '../../constants/yarisa_strings.dart';
 import '../../constants/yarisa_widgets.dart';
@@ -33,6 +34,11 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
                 itemBuilder: (context, index) {
                   final patient = mypatients[index];
                   return ListTile(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=> PatientDetailScreen(
+                        patient: patient
+                      )));
+                    },
                     contentPadding: EdgeInsets.zero,
                     tileColor: Colors.transparent,
                     leading: CircleAvatar(

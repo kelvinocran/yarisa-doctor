@@ -592,6 +592,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.19.0"
+  js:
+    dependency: transitive
+    description:
+      name: js
+      sha256: c1b2e9b5ea78c45e1a0788d29606ba27dc5f71f019f32ca5140f61ef071838cf
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.1"
   json_annotation:
     dependency: transitive
     description:
@@ -712,6 +720,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.0"
+  omni_jitsi_meet:
+    dependency: "direct main"
+    description:
+      name: omni_jitsi_meet
+      sha256: "05b8c467373b645e9a49a9237cb935cb84b1f746d0f24966a0a2bb6227237542"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.15"
+  omni_jitsi_meet_platform_interface:
+    dependency: transitive
+    description:
+      name: omni_jitsi_meet_platform_interface
+      sha256: f197675f2c836168a8a6ffa8808200039a875d501e5f6136d1b9666aeb018d5d
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.15"
+  omni_jitsi_meet_web_plugin:
+    dependency: transitive
+    description:
+      name: omni_jitsi_meet_web_plugin
+      sha256: f796f0b3abe6773780248fede3fcb4c7f2cc5def104115ffe22c3a0a3f07cabf
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.15"
   path:
     dependency: "direct main"
     description:
@@ -1223,4 +1255,4 @@ packages:
     version: "6.5.0"
 sdks:
   dart: ">=3.5.1 <4.0.0"
-  flutter: ">=3.24.0"
+  flutter: ">=3.24.1"

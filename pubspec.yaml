@@ -70,6 +70,7 @@ dependencies:
   flutter_link_previewer: ^3.2.2
   easy_pdf_viewer: ^1.0.8
   swipe_to_action: ^0.2.0
+  omni_jitsi_meet: ^1.0.15
 
 
 dev_dependencies:

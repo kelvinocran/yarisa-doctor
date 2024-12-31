@@ -46,7 +46,7 @@
 		</data>
 		<key>Frameworks/App.framework/App</key>
 		<data>
-		15oa9bzeU1mo3cSAxZDYHk87tjA=
+		A1+c9MDi3yQEnYzemkxQ7Dqw/0o=
 		</data>
 		<key>Frameworks/App.framework/Info.plist</key>
 		<data>
@@ -54,7 +54,7 @@
 		</data>
 		<key>Frameworks/App.framework/_CodeSignature/CodeResources</key>
 		<data>
-		vSb14kEXUryuoIgCLBi55BWMna8=
+		F3rxT2fTMHrwdXsIbYYCnc+9gv0=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/AssetManifest.bin</key>
 		<data>
@@ -70,7 +70,7 @@
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/NOTICES.Z</key>
 		<data>
-		xwGU3/Z7QZ7dsZMxYuTRkzD9ml4=
+		cvlzlgybebN2km3iIWbaLMcNG4o=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/assets/animations/23601-medical-loading.json</key>
 		<data>
@@ -218,7 +218,7 @@
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/kernel_blob.bin</key>
 		<data>
-		S7/q/GAzEFgCtOlWGhAOgs8/5Lo=
+		OOPqE8sYMWtqhOclopAS6Mo/pds=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf</key>
 		<data>
@@ -541,15 +541,15 @@
 		</data>
 		<key>Frameworks/FirebaseAppCheckInterop.framework/FirebaseAppCheckInterop</key>
 		<data>
-		VC2BOCxp9A7U4gRbdM/lDwGT1Ms=
+		5Pmp+SojqfMvTbr5K4hfItdVFw0=
 		</data>
 		<key>Frameworks/FirebaseAppCheckInterop.framework/Info.plist</key>
 		<data>
-		dNPr+s79vTMB49FA0A84mCJugVg=
+		jh56vDRbaOOSeqFrlSDWdxtUOOg=
 		</data>
 		<key>Frameworks/FirebaseAppCheckInterop.framework/_CodeSignature/CodeResources</key>
 		<data>
-		/RgKe6DhqvjiawXYm6UkJM5y5Rk=
+		WwwwfKuDIi3kSu8m+AImWLX+7pk=
 		</data>
 		<key>Frameworks/FirebaseAuth.framework/FirebaseAuth</key>
 		<data>
@@ -573,15 +573,15 @@
 		</data>
 		<key>Frameworks/FirebaseAuthInterop.framework/FirebaseAuthInterop</key>
 		<data>
-		ig2aqzgIAAfWJa+cbICaUy6+H1I=
+		9U2pf7ruXmB7StAAHUJpG+I002M=
 		</data>
 		<key>Frameworks/FirebaseAuthInterop.framework/Info.plist</key>
 		<data>
-		O1KMwRTy1VaxZ1OWI43pyvzwdKY=
+		mM2zPDnw8cahnAVEIvt4UtbNmD8=
 		</data>
 		<key>Frameworks/FirebaseAuthInterop.framework/_CodeSignature/CodeResources</key>
 		<data>
-		O8fo1Imta6BqQ3xMg12UHi9gHdM=
+		foREc9TFiYPaSVZOLfSusUvhavc=
 		</data>
 		<key>Frameworks/FirebaseCore.framework/FirebaseCore</key>
 		<data>
@@ -625,11 +625,11 @@
 		</data>
 		<key>Frameworks/FirebaseCoreInternal.framework/FirebaseCoreInternal</key>
 		<data>
-		0jZcURRd8YDfJmbwkUh9zgNZXBU=
+		zgxff3hcSTOx2xyytY7TvnidAgs=
 		</data>
 		<key>Frameworks/FirebaseCoreInternal.framework/FirebaseCoreInternal_Privacy.bundle/Info.plist</key>
 		<data>
-		dK/mYN5SMUWhVcTG0K/tUtdbJTU=
+		U+CJZGC5uEZA0TnMWxTSfq1UC0I=
 		</data>
 		<key>Frameworks/FirebaseCoreInternal.framework/FirebaseCoreInternal_Privacy.bundle/PrivacyInfo.xcprivacy</key>
 		<data>
@@ -637,11 +637,11 @@
 		</data>
 		<key>Frameworks/FirebaseCoreInternal.framework/Info.plist</key>
 		<data>
-		8mEuZZeMRNRG6yD0p+NbIFfaglw=
+		PD5X2Hc47ArSEMUxCw6qnILvoFc=
 		</data>
 		<key>Frameworks/FirebaseCoreInternal.framework/_CodeSignature/CodeResources</key>
 		<data>
-		YQrLQOXvPYx3KTrCDZNLL6JHEIk=
+		EjTX0Jg3J3oBUvuAOun0+aZESxE=
 		</data>
 		<key>Frameworks/FirebaseFirestore.framework/FirebaseFirestore</key>
 		<data>
@@ -685,15 +685,15 @@
 		</data>
 		<key>Frameworks/FirebaseSharedSwift.framework/FirebaseSharedSwift</key>
 		<data>
-		rt0CnUi0uSGEp0RisbIeBWAuOBQ=
+		XpqARWI7eUR67VQSLNWGfJUrHUY=
 		</data>
 		<key>Frameworks/FirebaseSharedSwift.framework/Info.plist</key>
 		<data>
-		unbqiySos/m4y0wz/n9SIvpzV9M=
+		TIM7x4BDzwjRVZHloOjYPcNAT/w=
 		</data>
 		<key>Frameworks/FirebaseSharedSwift.framework/_CodeSignature/CodeResources</key>
 		<data>
-		sO6wDm3sO0hREJdA6nzgf/rp0iU=
+		WkMKeok8QE6LHJKKJQmmFsIGWUg=
 		</data>
 		<key>Frameworks/FirebaseStorage.framework/FirebaseStorage</key>
 		<data>
@@ -842,6 +842,18 @@
 		<key>Frameworks/GTMSessionFetcher.framework/_CodeSignature/CodeResources</key>
 		<data>
 		BixMzrgfSIsAv0OwbS9L1ipaBdM=
+		</data>
+		<key>Frameworks/GiphyUISDK.framework/GiphyUISDK</key>
+		<data>
+		OQO0s71ug3/oIcx/RHAAofOw3P0=
+		</data>
+		<key>Frameworks/GiphyUISDK.framework/Info.plist</key>
+		<data>
+		hkiJMggx/fNiNw14W0b9rSplN78=
+		</data>
+		<key>Frameworks/GiphyUISDK.framework/_CodeSignature/CodeResources</key>
+		<data>
+		EUP+aLgp/btnxn730ijMbzPSvYU=
 		</data>
 		<key>Frameworks/GoogleSignIn.framework/GoogleSignIn</key>
 		<data>
@@ -1241,6 +1253,697 @@
 		<data>
 		4X1BCKBpbBGiQzoRW/jK/VvnA7Y=
 		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/AccessibilityResources.bundle/Info.plist</key>
+		<data>
+		0uHaINWOgv0doyd4kOTBrlqDbPQ=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/AccessibilityResources.bundle/en.lproj/Localizable.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			ha91OZw4TOgWUxuUT5BbsiwqaW0=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/CallKitIcon.png</key>
+		<data>
+		qU7OsCaFMpm2j24h/zSvv3VMZGY=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/ComodoRsaDomainValidationCA.der</key>
+		<data>
+		M5zdV8/VsUEWm2Ff8xQoeC0dpjk=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/Info.plist</key>
+		<data>
+		TaVP+o3tbB0y363Ow0yfZ0E7mF0=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/Roboto-Bold.ttf</key>
+		<data>
+		RzJ98PNefNfIZFh0iXp0SWl1RK4=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/ar.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			1U4RM14vSknB5uPRHwbBf2P3L9k=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/ca.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			GWFStbBzSsozR8ndnlnCGWrVgIE=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/cs.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			rkKd2a1WbhspF12uj7jbNaxdcsw=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/da.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			CH8u4ji0ph6g0lWmwFmjuWeHjcQ=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/de.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			h9KGBhz6GBwN3U8va+ZhDVBbEsk=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/el.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			Sa1DzFvme+rejqFjRGh0R8Wvi2U=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/en.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			abhi3BU5/ZWaUMKlntWlHWqGpfk=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/en_GB.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			iMO9o55MsPkZZzMfqxaQRohEIEs=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/es.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			M6+vCrtORDxDSYRfCs0EQa/NF7E=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/es_MX.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			rOsbQGNRZKkOBW4HhfQBTWwEQyI=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/fi.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			gWfyNCqhd30Y2+42oIuL/HWmczg=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/fr.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			uazilWliTrW6MuAL6umfC/8JA2w=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/fr_CA.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			Esz3mlwnuaEJRGq9Kux4r37SBuQ=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/google.png</key>
+		<data>
+		aRs/zX73YrSGLLTP8EMEDJQGeTs=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/google@2x.png</key>
+		<data>
+		xu0SOLMY2id0HRzRihn0qsuFhAc=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/google@3x.png</key>
+		<data>
+		xbEbn7T4aiYsnIp0S2SVilad3d0=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/he.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			ui2oaT67k0R8hevxOaYRPvkBncY=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/hi.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			kZvr7XJerhHMM69PkXbnvBFp03o=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/hr.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			f1AChdyqugygMHLDk8gT3Dci+JI=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/hu.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			BSoNTBIf4kWxwJJhk3j4LqTytTQ=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/id.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			Frdz7EAjoTfEGLrt45QOxezjzXY=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/it.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			ip22TOlHApPdL0R4Op+px9lnPt4=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/ja.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			sX0ftdSQz9WqdXlSCYZn0tktc/0=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/ko.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			MXfc9JCBsSmgxmJ3xfMpVntvLfE=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/ms.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			ZjmLydbxaQLSdIBGmX5LQQXMfhQ=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/nb.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			8kbG/vzCsprxXEBLWQPjsZYsmSM=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/nl.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			/CN7CHAVyaosf4bXVc5GxzC2Zbc=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/pl.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			IBrsi/T3mBKZccejeg+eKu+eLC8=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/pt.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			a2Crth0x+hSdaEGM4YAiNqZxYKg=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/pt_BR.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			a2Crth0x+hSdaEGM4YAiNqZxYKg=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/pt_PT.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			d90ZsiztKcH6gT0M2GNhS9budLg=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/ro.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			wH6Vf08sJ8KKd++qPXetaXtSSEg=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/ru.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			dzPNIKMH551ZsL1tfx25Qj7g2fs=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/sk.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			ltpfHSCCPpO3bQBP56jjt96+d90=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/sv.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			6zdaseAWNL3CgzM6rhievkeYLBY=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/th.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			jVVTwNkGABxQFM8h9aPRJ1fS2Pk=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/tr.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			4d5pvCFyTpDBY/o+3RsxJ8zqLdI=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/uk.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			7AbLARiohKfq0KKpDOoXJxq3L38=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/vi.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			QTbqZVk6kNI316gFQkdgXuOnQpw=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/zh_CN.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			Sf0rT0s1gLnj2sAnAlTyCH4vbP0=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/zh_TW.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			lC5m5fk6gdtQtz8GphGC/3aPagU=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/Info.plist</key>
+		<data>
+		K9LK0heRCn0lV/t6wQm2ziFkzgs=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/JitsiMeetSDK</key>
+		<data>
+		ticyUq06MN1j5WA1NlRDyJyKZk0=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/README.md</key>
+		<data>
+		hY/A0DqJnBqZgTgmITcGIvJrk28=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/_CodeSignature/CodeResources</key>
+		<data>
+		dYkQGNIPDct+bKEbpqD/zouvHDk=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/asked-unmute.mp3</key>
+		<data>
+		wD5cpN7nXY26hNsK8K9vWJHpH1I=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/asked-unmute.opus</key>
+		<data>
+		k/Sqan4X/5M4MMqEPr2KDDmDoek=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/GIPHY_icon.png</key>
+		<data>
+		RXtKCVwkY1q5/n35PdqCjEWJ02Y=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/GIPHY_logo.png</key>
+		<data>
+		34ZlX66tVsjue/mb6cIczASQ9+c=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/avatar.png</key>
+		<data>
+		QsFt583jiLwp+v9FUtGo1Zm+EuY=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/btn_google_signin_dark_normal.png</key>
+		<data>
+		vDLJVTKYDrduPRKle4QHleywrhY=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/downloadLocalRecording.png</key>
+		<data>
+		IILPKDzitBOrc+/oMU+rsAckMKk=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/dropboxLogo_square.png</key>
+		<data>
+		963TSklylFlSHuQZSvBcFw8eDEg=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/icon-cloud.png</key>
+		<data>
+		Xj55zLA5UpTv8DjsooTmpDxUPss=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/icon-info.png</key>
+		<data>
+		rgd/naxY8tHJs3iyto5+0nctDbw=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/icon-users.png</key>
+		<data>
+		i5KKHxhNhQ39jzaLKQTpiyBHp48=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/node_modules/@react-navigation/elements/src/assets/back-icon-mask.png</key>
+		<data>
+		/9xO1HOyvigG6Z0PaA0dLp/gDlY=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/node_modules/@react-navigation/elements/src/assets/back-icon.png</key>
+		<data>
+		keLOi1inJdXs0IRSKnXqyhW57Aw=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/node_modules/@react-navigation/elements/src/assets/back-icon@2x.png</key>
+		<data>
+		rSvG8m4uPMSItIcsIF+N2tDJD8U=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/node_modules/@react-navigation/elements/src/assets/back-icon@3x.png</key>
+		<data>
+		8kFG8Vv7Hfrw4yVcFrhUhbHieBA=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/e2eeOff.mp3</key>
+		<data>
+		vX0Vb0leIMyc1gcniQ56G8w+3Tc=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/e2eeOff.opus</key>
+		<data>
+		jqkhj9h3UOZw0cnIDtsHdfIBENs=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/e2eeOn.mp3</key>
+		<data>
+		YaKS1bYLIKH3zJwWy/CbCMeUVEQ=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/e2eeOn.opus</key>
+		<data>
+		sIY64oZqZ+Bsbjkmijud3TJnRQo=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/image-resize@2x.png</key>
+		<data>
+		fpJVwJDMfzGKpCkKXn6v05rCfqY=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/image-resize@3x.png</key>
+		<data>
+		jOgxm7AWvjeym7+HofcMy1MkZJ8=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/incomingMessage.mp3</key>
+		<data>
+		OP6Rih5PsonzPTO2+RwAhuChPr0=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/incomingMessage.opus</key>
+		<data>
+		wfhNGBmGNx9IOlKj1UcgkFk1m/4=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/incomingMessage.wav</key>
+		<data>
+		DjgfRkshtpmv+XZYvDXCmbSogVQ=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/joined.mp3</key>
+		<data>
+		/Kcnkk1hgUtTEU9ppOlLPaD1xGg=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/joined.opus</key>
+		<data>
+		hjTvIgJf6BvHOi99VeJqjAuE6zc=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/joined.wav</key>
+		<data>
+		x5acwPpL4xsKYcjxtFLZjCqj04A=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/knock.mp3</key>
+		<data>
+		YkOx0xb1KFLOMYa2ymGOIlcLCY0=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/knock.opus</key>
+		<data>
+		R4GnIdc9J9p/VhxI8vIM0wIe45k=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/left.mp3</key>
+		<data>
+		qkvGWarXCSYjuFDeXkHfQgLNCvU=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/left.opus</key>
+		<data>
+		AJPRY9pWe9JymqNN0BqpnXMhVP8=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/left.wav</key>
+		<data>
+		eIQKBt0QIYvkw8/8cTsN7cE3btw=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/liveStreamingOff.mp3</key>
+		<data>
+		QQDTmclxsXaam8KIlrftsHOKcss=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/liveStreamingOff.opus</key>
+		<data>
+		kK1MzhPKkqHYTASzLFqDezmWJQY=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/liveStreamingOn.mp3</key>
+		<data>
+		xjd6Z0ElMLthzzCfw5OsZIj0JO4=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/liveStreamingOn.opus</key>
+		<data>
+		ES2j1+nMfJWKumQN3G2hyEHzhkw=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/main.jsbundle</key>
+		<data>
+		49FUhEhNQtphxRqnQLv/czauqHQ=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/noAudioSignal.mp3</key>
+		<data>
+		yuXCVdqTMdRcW5ZknsZkyuDwwks=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/noAudioSignal.opus</key>
+		<data>
+		/4qQ6S94P0qHm4vBf2KzEQSciLU=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/noisyAudioInput.mp3</key>
+		<data>
+		yuXCVdqTMdRcW5ZknsZkyuDwwks=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/noisyAudioInput.opus</key>
+		<data>
+		hqGj97UmGfa50qT6HvJJyaTS/4I=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/outgoingRinging.mp3</key>
+		<data>
+		NfybRtSdGXznKE7od9hfiFEc85E=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/outgoingRinging.opus</key>
+		<data>
+		Cw5sLfNg4tEwnOtN4KmyTbQt+XU=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/outgoingRinging.wav</key>
+		<data>
+		d6uIyHBXCOsT0esieScsvX5O2XE=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/outgoingStart.mp3</key>
+		<data>
+		Vg2axHk2O/FhsNB0kb6rSGdqbDo=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/outgoingStart.opus</key>
+		<data>
+		bsWId049kivsKtbRO+43Fon9oN0=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/outgoingStart.wav</key>
+		<data>
+		P5BB9NApgN+OrOs/iOq9RDqR6TM=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-applause.mp3</key>
+		<data>
+		0HxCuLx1JH8nwlA+zhP9LsgGSbo=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-applause.opus</key>
+		<data>
+		DMHrdpNsd2git3hb88ZEUQdOIsM=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-boo.mp3</key>
+		<data>
+		YAW3WvKOZwD4rbgrMmitByZauFI=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-boo.opus</key>
+		<data>
+		wTr8iwRRh6izqUaah3vPm/pwOGk=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-crickets.mp3</key>
+		<data>
+		fFxUfkq4X6w1UMr2wrwx/dZFhfA=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-crickets.opus</key>
+		<data>
+		N7RE5/CbTme0P5EhIGtbtE5tbEg=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-laughter.mp3</key>
+		<data>
+		+gjLe3YNPRUb8ceVxGSUPKq/Uss=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-laughter.opus</key>
+		<data>
+		daagpK4Dh/Zg79OD/TvhWJCVi2o=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-raised-hand.mp3</key>
+		<data>
+		9Z9tv5uYHIhZNFr1ApU4ZNTF4nc=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-raised-hand.opus</key>
+		<data>
+		hypfDy/28hnts3LpeCv8s70KdE8=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-surprise.mp3</key>
+		<data>
+		cbdsAE6QbQMyA2wybujfr0OVH1o=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-surprise.opus</key>
+		<data>
+		KKnH7kEGNCGkptXh+B7bfKNZGnM=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-thumbs-up.mp3</key>
+		<data>
+		GpHo2wz+F0Krs8HfNE5PsRbKcXU=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-thumbs-up.opus</key>
+		<data>
+		Xa1t4vON6nX5syo1lZR2cVFHZ3M=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/recordingOff.mp3</key>
+		<data>
+		qXPvRHo5SBhRG0hBb/3EDl7+dBM=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/recordingOff.opus</key>
+		<data>
+		8DbnHNMXUlgmxWzZVJ99xlsCxiY=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/recordingOn.mp3</key>
+		<data>
+		KPp2jEzKD9nL4R/c6GY3RGafGBk=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/recordingOn.opus</key>
+		<data>
+		8bo3fQGV+/gcngckWX+rHVSq5bM=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/rejected.mp3</key>
+		<data>
+		gQjdmPjN1qgXx3jUZf6cgSlKHUE=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/rejected.opus</key>
+		<data>
+		ZQIDwRsKKVnxqNynJOC9RL3oBRk=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/rejected.wav</key>
+		<data>
+		m4GVNFynKDfhVppM1vc7OfIwOSQ=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/ring.mp3</key>
+		<data>
+		ktyn7jfgIITZQKCSe0WXnxyqmDQ=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/ring.opus</key>
+		<data>
+		9D42kr0XTmKZiRZe+21iN8D06lA=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/ring.wav</key>
+		<data>
+		ht5IyzdZ+KTa5cPdFtnffFx94sU=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/talkWhileMuted.mp3</key>
+		<data>
+		yuXCVdqTMdRcW5ZknsZkyuDwwks=
+		</data>
+		<key>Frameworks/JitsiMeetSDK.framework/talkWhileMuted.opus</key>
+		<data>
+		f080SaeV5boZEqynWfZfldv/b2g=
+		</data>
 		<key>Frameworks/RecaptchaInterop.framework/Info.plist</key>
 		<data>
 		M3ehVfdHWzl9zZWrObBtdNc8u0w=
@@ -1292,6 +1995,18 @@
 		<key>Frameworks/SwiftyGif.framework/_CodeSignature/CodeResources</key>
 		<data>
 		B3EU/8Yot2Zl5eQawBgoLeHzK0E=
+		</data>
+		<key>Frameworks/WebRTC.framework/Info.plist</key>
+		<data>
+		GE1f5qWpx2ur1bSbl+IQx5ozrcc=
+		</data>
+		<key>Frameworks/WebRTC.framework/WebRTC</key>
+		<data>
+		f/dYd6tufw3mxxQnEJRYzegzHoc=
+		</data>
+		<key>Frameworks/WebRTC.framework/_CodeSignature/CodeResources</key>
+		<data>
+		/19yo8Dp951CUHj0mSEWhjwRL4Q=
 		</data>
 		<key>Frameworks/ZLPhotoBrowser.framework/Info.plist</key>
 		<data>
@@ -1853,7 +2568,7 @@
 		</data>
 		<key>Frameworks/absl.framework/absl</key>
 		<data>
-		BFbEmpR+w+o3H8Xw3ekdfDB3hH8=
+		LewcDaK+fioWwu9kA+LS+eH5KpQ=
 		</data>
 		<key>Frameworks/absl.framework/xcprivacy.bundle/Info.plist</key>
 		<data>
@@ -1905,7 +2620,7 @@
 		</data>
 		<key>Frameworks/grpc.framework/grpc</key>
 		<data>
-		6wv3OdBFrKrWGlSsLlysHAIcfKw=
+		RcvO46Zi8NdSBXvNDsDHV6sUH3s=
 		</data>
 		<key>Frameworks/grpc.framework/grpc.bundle/Info.plist</key>
 		<data>
@@ -1975,6 +2690,18 @@
 		<data>
 		JTGYQTSkuJ7uGfD1SfjQTq3ngyk=
 		</data>
+		<key>Frameworks/libwebp.framework/Info.plist</key>
+		<data>
+		IrVaKfeUerWt29rwb4zy73mCE4w=
+		</data>
+		<key>Frameworks/libwebp.framework/_CodeSignature/CodeResources</key>
+		<data>
+		GeseU+6HKJ4SgjtB/MtrQ4t6lcA=
+		</data>
+		<key>Frameworks/libwebp.framework/libwebp</key>
+		<data>
+		Gh5RVgeful9hxvIkdrlSyVkgUYI=
+		</data>
 		<key>Frameworks/nanopb.framework/Info.plist</key>
 		<data>
 		FdEWMg7OqoxQ0azEiqD6YRIOWRI=
@@ -1994,6 +2721,18 @@
 		<key>Frameworks/nanopb.framework/nanopb_Privacy.bundle/PrivacyInfo.xcprivacy</key>
 		<data>
 		KY5lfwC2TvsgFj4wt7hkMmainbs=
+		</data>
+		<key>Frameworks/omni_jitsi_meet.framework/Info.plist</key>
+		<data>
+		QK+xH/4HBivnJfkPPhI93LLK3TM=
+		</data>
+		<key>Frameworks/omni_jitsi_meet.framework/_CodeSignature/CodeResources</key>
+		<data>
+		X4r9WdcQYg4CH98HSmnFgxgJBzY=
+		</data>
+		<key>Frameworks/omni_jitsi_meet.framework/omni_jitsi_meet</key>
+		<data>
+		TntoELEQugvOKYQ/Jt8JRfWQXnI=
 		</data>
 		<key>Frameworks/openssl_grpc.framework/Info.plist</key>
 		<data>
@@ -2101,7 +2840,7 @@
 		</data>
 		<key>Runner.debug.dylib</key>
 		<data>
-		aFr0knKPvOsPMT3JiANdt4P68zw=
+		E5Pqkg5OGJ132gl1Wvwqwdl7+Xw=
 		</data>
 		<key>__preview.dylib</key>
 		<data>
@@ -2192,7 +2931,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			ajm4dQpxpYfmu8kepFR7tycK8bcbAtfNiSgsjspd/1s=
+			d1C1t0TeC+hcwjwQbMwvSNMy3GlUGpjnldITdUUI4uc=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/Info.plist</key>
@@ -2206,7 +2945,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			YQ3/mJ7HRuU8iT006Km5tcxrNTNA1O+2yBH6PWOTf6w=
+			USFDaQ/EDmLq20YKm1yLhbNN9YbM5mNHgq45T+gnApg=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/AssetManifest.bin</key>
@@ -2234,7 +2973,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			wf55zT/akrsVyyJvv8FykJI9El04szzpLvlJU7kRRMg=
+			I4UJZI0peWhNr62TRRC9WoO00fnxKBd2t5fo/Z7GWUU=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/assets/animations/23601-medical-loading.json</key>
@@ -2493,7 +3232,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			6l6CrfA3JUzM/mH8qejXmUfESxNFxqSJlm7bkBS8zF0=
+			bqllnybJnR4kmgHeWAmyiQlZVfzdVwO6ipzQ5fFrmbo=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf</key>
@@ -2903,21 +3642,21 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			k/U0j+vJlXIotoXef55KzGo7VAYvtiaXd4w+013JBtw=
+			cvO9gED0uTnbCkmfHGrNgsI+EFMV6bUhhTXZtlewtXE=
 			</data>
 		</dict>
 		<key>Frameworks/FirebaseAppCheckInterop.framework/Info.plist</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			g/a2z8jaICI2+UHVJ5TgcMHIafpKGTGT0mg43DvqEC4=
+			C8EUTK5YN1rG8/rC9m3oy+6ZntqSaFF+kPZ0UMRCLYQ=
 			</data>
 		</dict>
 		<key>Frameworks/FirebaseAppCheckInterop.framework/_CodeSignature/CodeResources</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			zjSsatK2HPlm1g2i0HtAgDs0WyURQd+Aw+1v2Pti3Nc=
+			x6SGRwbVaBhrVwZdmnBHazeW/q9PiUqRXvfDahVlSzg=
 			</data>
 		</dict>
 		<key>Frameworks/FirebaseAuth.framework/FirebaseAuth</key>
@@ -2959,21 +3698,21 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			krK1p7GuGy3JIgC9AnwdTX+6shFL4vRQI/dtnx40szo=
+			4bRELu6g3pVeuP+teUiGw2ojk3Cd8IA9ZRYz36MGNHU=
 			</data>
 		</dict>
 		<key>Frameworks/FirebaseAuthInterop.framework/Info.plist</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			254gj8Z/9RZRyIw4gdQcd+U/Lq0TZN7eqARWA+3FIcA=
+			sD5idghI1IbVKbpi7XuJRiRUqueDRj0gs2DzSVp+DIU=
 			</data>
 		</dict>
 		<key>Frameworks/FirebaseAuthInterop.framework/_CodeSignature/CodeResources</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			Av7BnLZBDD2JaOM7aL+ASDQ6lA5YnMbQydDFOaK8KTY=
+			StRrnw/bzGBfQLNQ0plHehG3tmmXxlUT8xiBni5ohIU=
 			</data>
 		</dict>
 		<key>Frameworks/FirebaseCore.framework/FirebaseCore</key>
@@ -3050,14 +3789,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			frPtWJDt8A1nb9DzDlj8xxiDg1oFWADSURKgVaN1n8w=
+			SQvi6e3rM4hVJkLuvuTlJjDi6LQ1jQ92YvPoilI99Bc=
 			</data>
 		</dict>
 		<key>Frameworks/FirebaseCoreInternal.framework/FirebaseCoreInternal_Privacy.bundle/Info.plist</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			QEEZX5sNH/QLZoSrPHNoPt1cfmKwQxQQnrMx0aqVGwc=
+			ZGNoLJYwzmYX6aROKd+ig5y+IF/hLI2xo1KPgzdc6dc=
 			</data>
 		</dict>
 		<key>Frameworks/FirebaseCoreInternal.framework/FirebaseCoreInternal_Privacy.bundle/PrivacyInfo.xcprivacy</key>
@@ -3071,14 +3810,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			vO6Iie3hx/mFLtL4tvTTv25xFi9QLXcCKT2R7U/PoCI=
+			hfA6Y1f7QpIi3O263YsC7XpAS8pAZ0wPYsBVN9HOp4Y=
 			</data>
 		</dict>
 		<key>Frameworks/FirebaseCoreInternal.framework/_CodeSignature/CodeResources</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			jA6uRuiNh9QFtkRsFL1zJTPD1tHX2NBs6RmVl7OdWIg=
+			CU1LafDFbHxraq43YyXyzXWVzMp2uX8IydE93WCBDNg=
 			</data>
 		</dict>
 		<key>Frameworks/FirebaseFirestore.framework/FirebaseFirestore</key>
@@ -3155,21 +3894,21 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			bhB++3KxOK/HdihVk4x4D6YPE2YqXJxJt9XdyaiBmV4=
+			CJIxghCRAsGQT3/yAErGDvBg+/ie2+3if6Wo6bwG32Y=
 			</data>
 		</dict>
 		<key>Frameworks/FirebaseSharedSwift.framework/Info.plist</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			Il1cMVGMqHGcSffU5Q5/XIyc63ezqDLy0chxX8DCObY=
+			AJpCoe/53f0+ArnGfc80cCYvKqJKtqLlPYXRi1PjzV4=
 			</data>
 		</dict>
 		<key>Frameworks/FirebaseSharedSwift.framework/_CodeSignature/CodeResources</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			doFU2PqNrroFtBP7tvSxthL5s34CjrfSdFF9TWLkwWU=
+			FIoE51jrnCYdTkW2OPaZZ1RxPFq/7/ixI6iAqw5lnWE=
 			</data>
 		</dict>
 		<key>Frameworks/FirebaseStorage.framework/FirebaseStorage</key>
@@ -3429,6 +4168,27 @@
 			<key>hash2</key>
 			<data>
 			YXhYnE6kMAxPAjVopHEkUZBTXDYfaN7MumY/ffQlgKA=
+			</data>
+		</dict>
+		<key>Frameworks/GiphyUISDK.framework/GiphyUISDK</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			25YC/ciTmgF4b6+uW5k76q0wjKxNIAcpgmf5rr6hBJQ=
+			</data>
+		</dict>
+		<key>Frameworks/GiphyUISDK.framework/Info.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			BAV+Fd4KTXgs+E8gWuR5GiuT0UAuR57WsbPSpBYyq4s=
+			</data>
+		</dict>
+		<key>Frameworks/GiphyUISDK.framework/_CodeSignature/CodeResources</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			R14tpDQ1GnwUgYieCdoWfWUxsniqC6izd06m+FhCzgw=
 			</data>
 		</dict>
 		<key>Frameworks/GoogleSignIn.framework/GoogleSignIn</key>
@@ -3871,6 +4631,952 @@
 			kCmyrI314880IPzTNZm6xiyKOVCg1NPZNqV9WHYRZMc=
 			</data>
 		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/AccessibilityResources.bundle/Info.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			ihY0Tx9eGGk/n3iEWP14zMgB+aGBCoC5H0W+Wx2av1I=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/AccessibilityResources.bundle/en.lproj/Localizable.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			rM6zbBjCwQ4kWKt7KvhUq272nxb33Bj0GDkxdLuGekE=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/CallKitIcon.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			vlGGlNTQbYekZxUcdQvF8AYVe85O+PiMDQRnuHRlTjw=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/ComodoRsaDomainValidationCA.der</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			AqtX5OZ6DLSN0v80gw6KxA9EdvsIymvj9c2Eb2RoQPA=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/Info.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			6sO6h7DsZClpCOMiBKNgj1FfgKkBl7Q40RDyKAM8ivU=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/Roboto-Bold.ttf</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			WU10pJ4we+fMnh7l8QI2hOaCDPEbzJaL7lkDkeGtWlo=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/ar.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			ss+ejZ/IrQ+WELPlTvC4tJTwIbf6I6zvYJSyIFq+jHI=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/ca.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			M+iP9QDcPbJGLirJM8EcKJKfrTUfV7Pm1irERhCtYao=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/cs.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			UdoIYkwqed5HyBaDsp6KE0SkeIdWO+JW4ad6Z/a+NUQ=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/da.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			6CYblkbY6on3v3phpzrtzjD+UfaKqUfsvf6Mx+BNt9o=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/de.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			Fs1BPfGrd+UJ33b4c6Wmh//PNgsfFQdD2TTFqzN3wig=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/el.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			nMDBNJz2Zfx3MzDTGiYo9gCkPKqLXIgLA0pWZ/jw+rw=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/en.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			xyajnDguPxp8H1js9HD4EtomN0n5MNqH98DDqg7GSMI=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/en_GB.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			or14KgUbGgs8Q37Gox6b9/Z3iZWnKswyoOtKY5mtGsI=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/es.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			UB5ExPO7nAWxMpfGAkD9Dhbnn4pj5vslGYII3LlCHKY=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/es_MX.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			hNMnxxl7flSaHp6Ni7PhywLgKCxjI+X7Pd4KRzla9jQ=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/fi.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			DpnzGonq2MwPxyrWq9zISr0m9pkmXu/2GoibNznadzs=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/fr.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			tVE4d6zy15yPDq/3/N5KoWXzq7AWEbYGESYC/UQ3d7o=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/fr_CA.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			9xCSzz/bp+PgPQ2ZdIN4sRGUfKd6mRgw3dJMOZIrCG4=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/google.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			KZYAxsP5lgvGgLduEjF901DWOgDsv13keDEb2UPphvY=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/google@2x.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			YIMFDG4vd9yXjg4T1wcAtDC7Vreja1pcgKJzOsZgcqY=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/google@3x.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			VqPZ1AQqGKWVpnftZGTeoQXx6Noy4Hw8XIQErzqqh4w=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/he.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			KtB1FmX6YQB2EQfECgjfBJBnQA7X2NP7QuPuxFZ6YLA=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/hi.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			3UHXJzarX0qX0J3bFMSADuQLm+0jadZPDF/6uWpiRh4=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/hr.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			JA+ymYzp46eWqXkG/G+WClYRwHhNxzsWyukU+u0KW/4=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/hu.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			GoRF+Zxo+7BfNxT4D3DtCIpiNxtbmIXjErRRbwfYnk8=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/id.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			PyRv43MvgTyToElSNlECqWWiJIriTlBPGVMTmFiLK/k=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/it.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			TtxpfPqTYA6LaQTYcihANVBXvLLpxiQmqXzstkL2M8g=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/ja.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			hk3OYj6xqZvup+cqHbkAhhDEA8l1hXBMH3gLIIk4ERQ=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/ko.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			AhqCmUXH5He26Jp82dpoP1opwP/AwBLug5uvUO96wBM=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/ms.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			y2wRSAv0XEuZrBwtz9tnpfgqeZkXomMNT7PpYTV7XJM=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/nb.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			AqDORhPvDCPsPxYdWdXEk+neYmyBsEvpMYChGkLK6rA=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/nl.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			SQUYZcAGQO3tTDWbHoIOEdHxkQVdu0gFkfk5fTerXg0=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/pl.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			zB70RS/MmKy+7SKVC9fwoipXngJaj1DHj9u2AO045V0=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/pt.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			h4m5LhoUwf1F8mYZJzxXPRsQnjz0AOVugKWHC6rrzO4=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/pt_BR.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			h4m5LhoUwf1F8mYZJzxXPRsQnjz0AOVugKWHC6rrzO4=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/pt_PT.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			VgBP67jGl9/ChEtJOy0f2pT31xiBxen0V91QtDRgDpk=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/ro.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			r4dFHw1YRkncNtW9F0rb86p6SQ53QicvL33YbiJi490=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/ru.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			HTeXAqlR7PmIQ9lXCSqMSv7j7v6GamABZD47d3Vdxdw=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/sk.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			P/cihlo8LmENm4TLBV2TYyC4PWbK+iTI64GTaNQdXaw=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/sv.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			EB6TqcbOigHnqGM3qiEvaIEEVBHW5FJwF5/vJhhhQx4=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/th.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			87AIPzi3JhCduSGnkEqY3kpQF7l4xbCahIDFRHo8T8c=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/tr.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			DUnrVChJprfGiaclYvcgTKdFHOG+K+qtB0NSDZurgNI=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/uk.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			Jhxu6B2f/rMv7vqp4r9JDKbb+lbniEMqlbSjM+LHru8=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/vi.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			XdgQI6jed2yICWt5Lgc2Nmjlld6tS+jlIZu73Yg5j+A=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/zh_CN.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			UnRDQSf3cJY9kq+HAKK4OMrkkbt2CGQtT/KlF/uB1nc=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/GoogleSignIn.bundle/zh_TW.lproj/GoogleSignIn.strings</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			8K9LpcAznoYMsbk4Z5+PTNH5EEAbvqGHz7sjmrE7t+U=
+			</data>
+			<key>optional</key>
+			<true/>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/Info.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			+mKgbhAl2+/TC5j3EeFlrqeKCh0wYd7xJDhT4zAAGak=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/JitsiMeetSDK</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			p88vNPY5iG9CEKSi0xlJiO8K4dfGaDKcNktGlpHwZPY=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/README.md</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			EXAMkT8n5JbzZ6dJbLbyxjZGJfJN2XRV3zXZArmO60w=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/_CodeSignature/CodeResources</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			hGUSaUAKxrUQ2sQI6cGVZXbZgRl0g5HjGrSDzNcU55o=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/asked-unmute.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			iiNGrgiu6EW2KxswUYOluFpM/1NN2XIs8p7ItEzM/U8=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/asked-unmute.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			YQ28YthQ+ZGOl/ibIiYsrfEmWYonWPkFBpad5PGw/Hw=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/GIPHY_icon.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			LcipexprGKbI/q7luoaUwTowk5LpQUBZVUzejtkE9qU=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/GIPHY_logo.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			/OdoA0mz7LY+6ZmdFy/MiNF6UDdKCACryxap0Xd3uDU=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/avatar.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			KQenLeiIDdEMjFLpMcfvnyKSJooCsqFhGczlDUmwrrQ=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/btn_google_signin_dark_normal.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			3Q+a7AKeU9OvJLLc3xnL+8q0ax8aZxHGFivTsZL/y0I=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/downloadLocalRecording.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			tPU+yDUzC3hSKNpZoz0DT91eoyF2lg1215P+2DilB7Q=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/dropboxLogo_square.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			ddO0dckyW06cKOo1+01VeakgleVraFrRv3dbalArIFQ=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/icon-cloud.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			QK+XYtg7g/FSwmIKLsY7ak62+8X8AAFeRtTFaBWmBHI=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/icon-info.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			+b+Xr+4KrWjjBCEstqahFVhwvYlLL92ftO/X7oZkAV4=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/images/icon-users.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			u+XQsDMSOwXb8FGalnlx4IUbKhloeln1bNi6KIkrMmA=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/node_modules/@react-navigation/elements/src/assets/back-icon-mask.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			LJXowmdeeZM1/QBGuwfb2gbLfs/1HtN5IsYwnWGcxNM=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/node_modules/@react-navigation/elements/src/assets/back-icon.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			LN/rjlzN55dvcBL7jM5zryIpAp7iHU8VCf7RFIccbNg=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/node_modules/@react-navigation/elements/src/assets/back-icon@2x.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			K3RDqaWOksoRpXW9wRWYYVpX3eMFzYznDWAmBrMCzZg=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/assets/node_modules/@react-navigation/elements/src/assets/back-icon@3x.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			Pd0Hc+0n4j0leJ8wFzGzrEVa2L5aonoKG4OPicbSciU=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/e2eeOff.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			2d+sX6YjWWDbiJBbVe5O/I68ZO1WzX4wna5Au8AMcyk=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/e2eeOff.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			vO5dx93vb3Arz5bRVgg7+6ttWgv3vEPmMFgPryR+ApQ=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/e2eeOn.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			fRZjW9O1z46ablrxbzUIF39V0T3MXncPbRyyC1dTLX8=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/e2eeOn.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			keni/n3jf1WPyl9Ne3tqtjY3ayqI4NzZazUKX42+S7U=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/image-resize@2x.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			O9uBujyJyqD5vgPoHFtzOlvzuAFKc4KeGVbkL5yxTNE=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/image-resize@3x.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			1FxTrC33HRYNyIfOP1UBib1fIGe9rKCAnn7IS2jCT/o=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/incomingMessage.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			FCFf6HvXC+EIhrHycR2htfH045wzdki75NEPyKXfTmg=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/incomingMessage.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			LiWuBrFyNjua303qXGiM5m0OdSEiLVU10raXjOLJzeU=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/incomingMessage.wav</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			4LFCJE+iKaQfCRWW03MdFiApf8K32dGhTpoVgz24nvE=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/joined.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			rEH1z9ZwN4EQYRCC5wf++idFAS9hN8Y/C2qkdc2cHjk=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/joined.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			OiiCMZ8cWnKYP/ooJBNbtlA209iMU9tGAPUwwcQEzd8=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/joined.wav</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			+3m6WsQW8WxE1tirOR2bTco1R1pwCCuGAEZeQsYeCMU=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/knock.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			W3tbwT2dbp6h4ZLO3Jpetnrdd6jHgn8mayd+FDk9/D8=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/knock.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			/SonutdIHOU6rinoh5NCrX15su1LiT81JngWibRRZJM=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/left.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			E+FyfFffwC+EI5dOlOxQ9JoPcMQUGqJ+fS2vwg3aZas=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/left.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			ztdUWcH064gzJQn+KE0RHnQhrN9qBmgaqaBw43JQiz8=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/left.wav</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			Hr4+CW8U7fnEsUad2uJAf1O483iLALGz921tXJ8ul/U=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/liveStreamingOff.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			C4KhjNqOWbAijRZVySOg0t+E7qHu7AMil5lxxxCr6zI=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/liveStreamingOff.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			HIuwQqTvORbvxTs+xegP8H5WRYKPi+HZW7OFkKx9XBY=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/liveStreamingOn.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			e0i9IyydNKfYfoO5nk+RSav8WVB2HIV+5/pknK4TeeY=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/liveStreamingOn.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			0PRSJc2IrweBBPhz2Nq1Xf+5u62QUiN1jNe1n/YHuJs=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/main.jsbundle</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			Kk4RJ4DeTrGd5DLZfZtGiz+pxX9lmVXp9eIHn5fXe/s=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/noAudioSignal.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			hhRLFcOnxVjYP/hqEJC9E9ymXnp1KnwgUG/2E1Vo0fc=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/noAudioSignal.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			L/t2JzxalKNdbWc5f1Rsd5Yl9hlvwsm05A/mSn1mmuI=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/noisyAudioInput.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			hhRLFcOnxVjYP/hqEJC9E9ymXnp1KnwgUG/2E1Vo0fc=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/noisyAudioInput.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			pcsPo+6uHgD+qHqtA9/CiFe2/ptipIYiPi0i/tBMqnk=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/outgoingRinging.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			ahIUkdNFybB+ngvIkNHsu+rPdKNQUFTiXrLOOoR4ekQ=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/outgoingRinging.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			quouGBmUnss8IfkdZnEe4AwVeqykSHe9AyFGIRDueQQ=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/outgoingRinging.wav</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			XAOBddA+V+0VEDKJyvNn8apUF3O5gmBAj7JfLnpLPBE=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/outgoingStart.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			jtqevI3y/xh8rvWPquh94YLSedSBZPXWcbuSGaJo8No=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/outgoingStart.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			xQT3toEBJ5ngc37co8QMGAm6hoXrs07UYIKNu87VNwc=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/outgoingStart.wav</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			Ayr3NByzTZzhI3fRukuINKRNm2VGy/BoXbi5zY7DJw8=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-applause.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			UsBFRiLLlmSzGbBQJTgZkBbXf9z1ayvIVH5YT21Pwoo=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-applause.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			2bTG0oxNVDIPEP0naMTTpJB7Sv3x13U56JzOcmtWZEs=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-boo.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			K1gDTZQPz1BzSVEkmXO9P8l6xdmvChhFfKYLJUHn84M=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-boo.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			JLlMRe3hdcypvMkeT4c3h5AUNN/gw4KiI4rAQauf2nA=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-crickets.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			/HC8tNr7ilYvZ6Ey3rG3Wc3kvex2l89Kw87aEJw9PJg=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-crickets.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			yCzJdJ/AnBDCN1pIIn4Z2YEPPdFTcobyIR36XNerj5c=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-laughter.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			RMVEHiQS3C4tD1fSmvI6R6AUfBBtkdPpIARFkAvN8qI=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-laughter.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			mU59mwtVu7n1roflnfTbkjc3ZWCeUa+H9DugLyzEYAI=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-raised-hand.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			E33GwlM3yUnxYUu8SYIPQd3p86z/EGVDzVrWqaF3FUE=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-raised-hand.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			P/s0kOnA+lMnHhNKTLj8oOiThADjcct/6GUX7GJOVCk=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-surprise.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			M4v7KitOHBhTy7dgd2qJTDwJJIODPB1dLRTNfZwzv5w=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-surprise.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			WLhF5SC6DS/xFc14BhTupOUpW7Gmyhhv3sxozumvkjo=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-thumbs-up.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			Jr54QTly7SMrdu6VunKw8y/XUy6rKPDAYgInUpUJIjI=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/reactions-thumbs-up.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			Lh+sJpCGWYImSgkbfVqYCC8tt0JxVQmMQhiaWHrOTH0=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/recordingOff.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			h+w4iVYoVLicZgD2g76BJXv+IplQRY1N8S7/6Mw2L2A=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/recordingOff.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			8ZX8yYmlHkDC9dtOv0j70BCF/aX6cgoZcCOAtw+yzuM=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/recordingOn.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			KV7YLNMe6q6NOVRnZwdh+cTbjRlZltpViIw0QIkdtoI=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/recordingOn.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			Da2Txd66aJAnIlhCJVMC0UeyBb9BrbS+LTPEx/jqjLw=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/rejected.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			u8NKf7/NOBB5x3QgEqtDAAC3KLnJ6pnkq0nXSASUWxI=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/rejected.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			3LQV2y24+Bm9UZnN09/eAbJ6bCDu2FjzSUtjR1r4uO8=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/rejected.wav</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			mr6fLyl8mg0jSEaG+DF3uM4G22CuPMP7zWD7amaUNVo=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/ring.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			tlbavmhLZ7S6kXCMHaQ0yFx4wqlFS/SCU1Id2POIjYw=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/ring.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			bAWQ0nXlhbemJMB5BK95uastXJ/1Y3xbYfS0u4Z5/S8=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/ring.wav</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			yW6zgmHQlezTx/QyC/oXW9yn3Zg2GxuqPGBZMwmTEtc=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/talkWhileMuted.mp3</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			hhRLFcOnxVjYP/hqEJC9E9ymXnp1KnwgUG/2E1Vo0fc=
+			</data>
+		</dict>
+		<key>Frameworks/JitsiMeetSDK.framework/talkWhileMuted.opus</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			qeIe9m2S+0fXuk/wtx7o4IiYfZbhW7mT9hWZ6Am+KO0=
+			</data>
+		</dict>
 		<key>Frameworks/RecaptchaInterop.framework/Info.plist</key>
 		<dict>
 			<key>hash2</key>
@@ -3960,6 +5666,27 @@
 			<key>hash2</key>
 			<data>
 			s30a+eVDFM0q9COr4QDUd0e4GcqKDJ6P38XUxa2WETQ=
+			</data>
+		</dict>
+		<key>Frameworks/WebRTC.framework/Info.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			iE2cFKpn/Yc8b3plfo0rywRbyXz0XYo7SOT7/NrKP4g=
+			</data>
+		</dict>
+		<key>Frameworks/WebRTC.framework/WebRTC</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			XneqrM3k07EJIy/61qY5XRU3073+tB/409uffCV4GKA=
+			</data>
+		</dict>
+		<key>Frameworks/WebRTC.framework/_CodeSignature/CodeResources</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			ESbJzJ1bxYILrsJ4qyRl0ah8wJvjfAqwyaqlN2Yse5Q=
 			</data>
 		</dict>
 		<key>Frameworks/ZLPhotoBrowser.framework/Info.plist</key>
@@ -4848,7 +6575,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			0Se/AnHxZsVU1Xbv6fahYFLUL8F3qu5YiY8DZTb1wE8=
+			puy86jaAYeRMYJU5zAfa933lxEgvs1RoRvim9OucEVM=
 			</data>
 		</dict>
 		<key>Frameworks/absl.framework/xcprivacy.bundle/Info.plist</key>
@@ -4939,7 +6666,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			IlWTutsDYXmhehYGjc+gtgKy6tlnAhvVaFDleP6/Aio=
+			62ZtXfNMYRM0jsXyXRtR4IpCBQ/TJ7g3WRxkFHZsiFc=
 			</data>
 		</dict>
 		<key>Frameworks/grpc.framework/grpc.bundle/Info.plist</key>
@@ -5061,6 +6788,27 @@
 			CsAKC37/AHnc4lLimrQdcc9YxslP5OROoRDO9cYpcOE=
 			</data>
 		</dict>
+		<key>Frameworks/libwebp.framework/Info.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			t5xH4VLHDh/9ik8iWBBm2oZXU40TQPJAZ240TYV2fdI=
+			</data>
+		</dict>
+		<key>Frameworks/libwebp.framework/_CodeSignature/CodeResources</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			ItO8Nuuz7Wu6tZocVSEzdUV4xnfzI+/9vWzAvS4c/8U=
+			</data>
+		</dict>
+		<key>Frameworks/libwebp.framework/libwebp</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			jF10JAbypyirzSIqEmeI007v692F6ItrIZeYKKCa+rY=
+			</data>
+		</dict>
 		<key>Frameworks/nanopb.framework/Info.plist</key>
 		<dict>
 			<key>hash2</key>
@@ -5094,6 +6842,27 @@
 			<key>hash2</key>
 			<data>
 			cpujy9D0WMeM1h7fFzUO2v4ONMqG4xTsZMjLIszSG1Q=
+			</data>
+		</dict>
+		<key>Frameworks/omni_jitsi_meet.framework/Info.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			uwLi9XoF3ljYqmgr2P3Y7Myp0MJtHSVJUg3yRP+fn30=
+			</data>
+		</dict>
+		<key>Frameworks/omni_jitsi_meet.framework/_CodeSignature/CodeResources</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			tp3KRPQVRxOGC2rm5zsqm572uQ8ceUJ3iHDuxEhNL94=
+			</data>
+		</dict>
+		<key>Frameworks/omni_jitsi_meet.framework/omni_jitsi_meet</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			KUIgPNmb5ZvYJxoYaZexAworb3o/oO6l8Gvtbk4pxUM=
 			</data>
 		</dict>
 		<key>Frameworks/openssl_grpc.framework/Info.plist</key>
@@ -5268,7 +7037,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			GQ+aXKxzAMV7PHfAAXBo23mahXTq5Iq5F/TLuohJB/c=
+			kIFq+k1h3HFO+nfFSMDVPDjaP85y0fATx3VEf87R78o=
 			</data>
 		</dict>
 		<key>__preview.dylib</key>
