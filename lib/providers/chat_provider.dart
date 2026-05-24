@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:yarisa_doctor/api/firestore_schema.dart';
 
 import '../models/chat_model.dart';
 
@@ -20,22 +21,59 @@ class ChatConfig extends ChangeNotifier {
     return db.doc(userId).snapshots();
   }
 
-  Future<void> saveChat(String userId, Chat chatData) async {
-    await db.doc(userId).set({
-      "chat": FieldValue.arrayUnion([chatData.toMap()])
-    }, SetOptions(merge: true));
+  Future<void> _writeCanonicalChat(
+      String userId, Map<String, dynamic> chatData) async {
+    final doctorId = FirebaseAuth.instance.currentUser?.uid;
+    if (doctorId == null) return;
+
+    final conversationRef = FirestoreSchema.conversation(doctorId, userId);
+    final messageRef = conversationRef.collection("Messages").doc();
+    final messageData = {
+      ...chatData,
+      "messageId": messageRef.id,
+      "conversationId": conversationRef.id,
+      "createdAt": FieldValue.serverTimestamp(),
+    };
+
+    final batch = FirebaseFirestore.instance.batch();
+    batch.set(
+        conversationRef,
+        {
+          "conversationId": conversationRef.id,
+          "participants": [doctorId, userId],
+          "doctorId": doctorId,
+          "patientId": userId,
+          "lastMessage": chatData["message"],
+          "lastMessageAt": FieldValue.serverTimestamp(),
+          "updatedAt": FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true));
+    batch.set(messageRef, messageData);
+    await batch.commit();
   }
 
-  Future<void> saveOtherChat(String userId, Map<String, dynamic> chatData) async {
+  Future<void> saveChat(String userId, Chat chatData) async {
+    final data = chatData.toMap();
+    await db.doc(userId).set({
+      "chat": FieldValue.arrayUnion([data])
+    }, SetOptions(merge: true));
+    await _writeCanonicalChat(userId, data);
+  }
+
+  Future<void> saveOtherChat(
+      String userId, Map<String, dynamic> chatData) async {
     await db.doc(userId).set({
       "chat": FieldValue.arrayUnion([chatData])
     }, SetOptions(merge: true));
+    await _writeCanonicalChat(userId, chatData);
   }
 
   Future<void> updateChat(String userId, Chat chatData) async {
+    final data = chatData.toMap();
     await db.doc(userId).set({
-      "chat": FieldValue.arrayUnion([chatData.toMap()])
+      "chat": FieldValue.arrayUnion([data])
     }, SetOptions(merge: true));
+    await _writeCanonicalChat(userId, data);
   }
 
   Future<void> removeChat(String? userId) async {

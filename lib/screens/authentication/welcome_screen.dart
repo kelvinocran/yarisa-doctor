@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 
 import 'package:uicons_brands/uicons_brands.dart';
+import 'package:yarisa_doctor/api/api_methods.dart';
 import 'package:yarisa_doctor/api/config.dart';
 import 'package:yarisa_doctor/constants/yarisa_assets.dart';
 import 'package:yarisa_doctor/constants/yarisa_constants.dart';
@@ -66,11 +67,35 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         const TextSpan(text: "to patients across the Globe.")
                       ],
                       style: context.headlineMedium?.copyWith(
-                          color: Colors.purple.shade300.withOpacity(.7)))),
+                          color:
+                              Colors.purple.shade300.withValues(alpha: .7)))),
               50.hgap,
               if (Platform.isAndroid)
                 ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: () async {
+                      try {
+                        final userCredential =
+                            await ref.read(authConfig).signInWithGoogle();
+                        if (userCredential != null) {
+                          if (!context.mounted) return;
+                          final api = ref.read(apimethods);
+                          await api.openDoctorLanding(
+                            context,
+                            email: userCredential.user?.email,
+                            fullname: userCredential.user?.displayName,
+                          );
+                        }
+                      } catch (e) {
+                        Logger().e(e);
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Google sign-in failed: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
                     icon: Icon(
                       const UIconsBrands().google,
                       size: 20,
@@ -80,11 +105,26 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 ElevatedButton.icon(
                     onPressed: () async {
                       try {
-                        final cred =
+                        final userCredential =
                             await ref.read(authConfig).signInWithApple();
-                        print(cred);
+                        if (userCredential != null) {
+                          if (!context.mounted) return;
+                          final api = ref.read(apimethods);
+                          await api.openDoctorLanding(
+                            context,
+                            email: userCredential.user?.email,
+                            fullname: userCredential.user?.displayName,
+                          );
+                        }
                       } catch (e) {
                         Logger().e(e);
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Apple sign-in failed: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
                       }
                     },
                     icon: const Icon(Icons.apple_outlined),
@@ -103,7 +143,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           !Get.isDarkMode ? Colors.white : Colors.black),
                       backgroundColor: WidgetStateColor.resolveWith((states) {
                         if (states.contains(WidgetState.pressed)) {
-                          return Colors.grey.withOpacity(.5);
+                          return Colors.grey.withValues(alpha: .5);
                         }
                         if (Get.isDarkMode) {
                           return Colors.white;

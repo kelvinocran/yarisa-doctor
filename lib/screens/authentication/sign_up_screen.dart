@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
+import 'package:yarisa_doctor/api/api_methods.dart';
 import 'package:yarisa_doctor/constants/yarisa_strings.dart';
 import 'package:yarisa_doctor/extensions/yarisa_extensions.dart';
 import 'package:yarisa_doctor/screens/authentication/complete_profile.dart';
@@ -22,8 +23,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final name = TextEditingController();
   final email = TextEditingController();
   final password = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
+    final authenticating = ref.watch(apimethods).authenticating;
     return Scaffold(
         appBar: AppBar(),
         body: SafeArea(
@@ -100,19 +103,48 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     hint: AppStrings.password,
                   ),
                   20.hgap,
-                  ElevatedButton.icon(
-                      onPressed: () async {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const CompleteProfile()));
-                      },
-                      style: const ButtonStyle(
-                          elevation: WidgetStatePropertyAll(0),
-                          minimumSize: WidgetStatePropertyAll(
-                              Size(double.infinity, 50))),
-                      icon: const Icon(Icons.mark_email_read_outlined),
-                      label: const Text(AppStrings.signupwithemail)),
+                  Visibility(
+                    visible: !authenticating,
+                    replacement: const Center(child: Loader()),
+                    child: ElevatedButton.icon(
+                        onPressed: authenticating
+                            ? null
+                            : () async {
+                                if (key.currentState!.validate()) {
+                                  final api = ref.read(apimethods);
+                                  await api.signUpUserAccount(
+                                    email: email.text.trim(),
+                                    password: password.text.trim(),
+                                    fullname: name.text.trim(),
+                                    onSuccess: (credential) {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  CompleteProfile(
+                                                    email: email.text.trim(),
+                                                    fullname: name.text.trim(),
+                                                  )));
+                                    },
+                                    onFailed: (error) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(error),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    },
+                                  );
+                                }
+                              },
+                        style: const ButtonStyle(
+                            elevation: WidgetStatePropertyAll(0),
+                            minimumSize: WidgetStatePropertyAll(
+                                Size(double.infinity, 50))),
+                        icon: const Icon(Icons.mark_email_read_outlined),
+                        label: const Text(AppStrings.signupwithemail)),
+                  ),
                 ],
               ),
             ),

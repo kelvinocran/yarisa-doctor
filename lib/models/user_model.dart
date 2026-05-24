@@ -56,52 +56,54 @@ class UserModel {
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
-      fullname: map['fullname'] != null ? map['fullname'] as String : null,
-      speciality:
-          map['speciality'] != null ? map['speciality'] as String : null,
-      bio: map['bio'] != null ? map['bio'] as String : null,
-      location: map['location'] != null ? map['location'] as String : null,
-      phone: map['phone'] != null ? map['phone'] as String : null,
-      clinic: map['clinic'] != null ? map['clinic'] as String : null,
-      licenseCode:
-          map['licenseCode'] != null ? map['licenseCode'] as String : null,
-      email: map['email'] != null ? map['email'] as String : null,
-      id: map['doctorid'] != null ? map['doctorid'] as String : null,
-      nationality:
-          map['nationality'] != null ? map['nationality'] as String : null,
-      pic: map['pic'] != null ? map['pic'] as String : null,
-      experience: map['experience'] != null ? map['experience'] as int : null,
-      loggedIn: map['loggedIn'] != null ? map['loggedIn'] as bool : null,
-      online: map['online'] != null ? map['online'] as bool : null,
+      fullname: _stringValue(map['fullname']),
+      speciality: _stringValue(map['speciality']),
+      bio: _stringValue(map['bio']),
+      location: _stringValue(map['location']),
+      phone: _stringValue(map['phone']),
+      clinic: _stringValue(map['clinic']),
+      licenseCode: _stringValue(map['licenseCode']),
+      email: _stringValue(map['email']),
+      id: _stringValue(map['doctorid'] ?? map['doctorId']),
+      nationality: _stringValue(map['nationality']),
+      pic: _stringValue(map['pic']),
+      experience: _intValue(map['experience']),
+      loggedIn: _boolValue(map['loggedIn']),
+      online: _boolValue(map['online']),
     );
   }
 
   factory UserModel.fromDocumentSnapshot(
-      DocumentSnapshot<Map<String, dynamic>> map) {
-    return UserModel(
-      fullname: map['fullname'] != null ? map['fullname'] as String : null,
-      speciality:
-          map['speciality'] != null ? map['speciality'] as String : null,
-      bio: map['bio'] != null ? map['bio'] as String : null,
-      location: map['location'] != null ? map['location'] as String : null,
-      phone: map['phone'] != null ? map['phone'] as String : null,
-      clinic: map['clinic'] != null ? map['clinic'] as String : null,
-      licenseCode:
-          map['licenseCode'] != null ? map['licenseCode'] as String : null,
-      email: map['email'] != null ? map['email'] as String : null,
-      id: map['doctorid'] != null ? map['doctorid'] as String : null,
-      nationality:
-          map['nationality'] != null ? map['nationality'] as String : null,
-      pic: map['pic'] != null ? map['pic'] as String : null,
-      // token: map['token'] != null ? map['token'] as String : null,
-      experience: map['experience'] != null ? map['experience'] as int : null,
-      loggedIn: map['loggedIn'] != null ? map['loggedIn'] as bool : null,
-      online: map['online'] != null ? map['online'] as bool : null,
-    );
+      DocumentSnapshot<Map<String, dynamic>> snapshot) {
+    final data = snapshot.data() ?? <String, dynamic>{};
+    return UserModel.fromMap({
+      ...data,
+      'doctorid': data['doctorid'] ?? data['doctorId'] ?? snapshot.id,
+    });
   }
 
   String toJson() => json.encode(toMap());
 
   factory UserModel.fromJson(String source) =>
       UserModel.fromMap(json.decode(source) as Map<String, dynamic>);
+}
+
+String? _stringValue(dynamic value) {
+  final text = value?.toString().trim();
+  if (text == null || text.isEmpty || text.toLowerCase() == 'null') return null;
+  return text;
+}
+
+int? _intValue(dynamic value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString().trim() ?? '');
+}
+
+bool? _boolValue(dynamic value) {
+  if (value is bool) return value;
+  final text = value?.toString().toLowerCase().trim();
+  if (text == 'true') return true;
+  if (text == 'false') return false;
+  return null;
 }

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yarisa_doctor/components/bottombar.dart';
 import 'package:yarisa_doctor/constants/yarisa_constants.dart';
-import 'package:yarisa_doctor/screens/chat_view.dart';
+import 'package:yarisa_doctor/screens/main/chat_inbox_screen.dart';
 
 import '../../services/mqtt_service.dart';
 
@@ -32,11 +32,11 @@ class _BaseScreenState extends ConsumerState<BaseScreen> {
           ? FloatingActionButton(
               onPressed: () {
                 Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const ChatView(
-                            patientName: "Richard",
-                            patientId: "oB9qSfcOtmPUcoXGYfsDJLKiKb12")));
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DoctorChatInboxScreen(),
+                  ),
+                );
               },
               child: const Icon(EneftyIcons.message_outline),
             )

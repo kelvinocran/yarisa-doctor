@@ -75,10 +75,8 @@ class EmptyWidgetWithButton extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 15),
-ElevatedButton(
-                      onPressed: () async {
-
-                      },
+        ElevatedButton(
+                      onPressed: onPressed,
                       style: ButtonStyle(
                           elevation: const WidgetStatePropertyAll(0),
                           foregroundColor: WidgetStatePropertyAll(

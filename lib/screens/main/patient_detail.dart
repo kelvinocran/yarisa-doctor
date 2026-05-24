@@ -4,9 +4,12 @@ import 'package:enefty_icons/enefty_icons.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:omni_jitsi_meet/jitsi_meet.dart';
+import 'package:yarisa_doctor/constants/yarisa_widgets.dart';
 import 'package:yarisa_doctor/models/personal_patients_model.dart';
-import 'package:yarisa_doctor/screens/chat_view.dart';
+import 'package:yarisa_doctor/screens/main/chat_inbox_screen.dart';
+import 'package:yarisa_doctor/screens/main/lab_requests_screen.dart';
+import 'package:yarisa_doctor/screens/main/prescriptions_screen.dart';
+import 'package:yarisa_doctor/services/jitsi_call_service.dart';
 
 class PatientDetailScreen extends ConsumerStatefulWidget {
   const PatientDetailScreen({super.key, required this.patient});
@@ -19,6 +22,24 @@ class PatientDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
+  void _openPrescriptions() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PrescriptionsScreen(patient: widget.patient),
+      ),
+    );
+  }
+
+  void _openLabRequests() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LabRequestsScreen(patient: widget.patient),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,6 +58,16 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
             }
 
             final patient = snapshot.data;
+            final patientData = patient?.data();
+            final personalInfo = patientData?['personal_info'] is Map
+                ? Map<String, dynamic>.from(
+                    patientData?['personal_info'] as Map)
+                : patientData?['personalInfo'] is Map
+                    ? Map<String, dynamic>.from(
+                        patientData?['personalInfo'] as Map)
+                    : <String, dynamic>{};
+            final patientPic = validNetworkImageUrl(
+                (patientData?['pic'] ?? patientData?['photo'])?.toString());
             return SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -51,26 +82,20 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
                           shape: BoxShape.circle),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(100),
-                        child: CachedNetworkImage(
-                          imageUrl: patient?['pic'],
-                          fit: BoxFit.cover,
-                          errorWidget: (context, url, error) {
-                            return Container(
-                                decoration: BoxDecoration(
-                                    color: Colors.grey.withOpacity(.2)),
-                                child: const Center(
-                                  child: Icon(
-                                    EneftyIcons.user_bold,
-                                    size: 20,
-                                  ),
-                                ));
-                          },
-                          placeholder: (context, url) {
-                            return const Center(
-                              child: CircularProgressIndicator(),
-                            );
-                          },
-                        ),
+                        child: patientPic == null
+                            ? _patientImageFallback()
+                            : CachedNetworkImage(
+                                imageUrl: patientPic,
+                                fit: BoxFit.cover,
+                                errorWidget: (context, url, error) {
+                                  return _patientImageFallback();
+                                },
+                                placeholder: (context, url) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                },
+                              ),
                       ),
                     ),
                   ),
@@ -103,12 +128,30 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
                                     WidgetStatePropertyAll(Colors.red)),
                             icon: const Icon(EneftyIcons.message_2_bold),
                             onPressed: () {
+                              final patientId =
+                                  widget.patient.patientId ?? patient?.id;
+                              if (patientId == null || patientId.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content:
+                                        Text('Patient details are missing.'),
+                                  ),
+                                );
+                                return;
+                              }
                               Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => ChatView(
-                                            patientId: patient!.id,
-                                            patientName: patient['name'],
+                                      builder: (context) =>
+                                          DoctorMessageThreadScreen(
+                                            patientId: patientId,
+                                            patientName: patient?['name']
+                                                    ?.toString() ??
+                                                widget.patient.patientName ??
+                                                'Patient',
+                                            patientImage: patientPic ??
+                                                widget.patient.patientImage ??
+                                                '',
                                           )));
                             },
                             label: const Text("Chat")),
@@ -144,21 +187,39 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
                                   "${patient?['pic']}");
                             },
                             label: const Text("Video")),
+                        OutlinedButton.icon(
+                            style: const ButtonStyle(
+                                side: WidgetStatePropertyAll(
+                                    BorderSide(color: Colors.green)),
+                                foregroundColor:
+                                    WidgetStatePropertyAll(Colors.green)),
+                            icon: const Icon(Icons.medication_outlined),
+                            onPressed: _openPrescriptions,
+                            label: const Text("Prescriptions")),
+                        OutlinedButton.icon(
+                            style: const ButtonStyle(
+                                side: WidgetStatePropertyAll(
+                                    BorderSide(color: Colors.teal)),
+                                foregroundColor:
+                                    WidgetStatePropertyAll(Colors.teal)),
+                            icon: const Icon(Icons.science_outlined),
+                            onPressed: _openLabRequests,
+                            label: const Text("Labs")),
                       ],
                     ),
                   ),
-                  Divider(color: Colors.grey.withOpacity(.2), height: 50),
+                  Divider(color: Colors.grey.withValues(alpha: .2), height: 50),
                   Wrap(spacing: 10, runSpacing: 10, children: [
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(.2),
+                          color: Colors.grey.withValues(alpha: .2),
                           borderRadius: BorderRadius.circular(20)),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text("${patient?['age']}",
+                          Text(_patientValue(patientData, personalInfo, 'age'),
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyLarge
@@ -172,13 +233,16 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(.2),
+                          color: Colors.grey.withValues(alpha: .2),
                           borderRadius: BorderRadius.circular(20)),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text("${patient?['bloodtype']}",
+                          Text(
+                              _patientValue(
+                                  patientData, personalInfo, 'bloodtype',
+                                  alternatives: const ['bloodgroup']),
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyLarge
@@ -192,13 +256,15 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(.2),
+                          color: Colors.grey.withValues(alpha: .2),
                           borderRadius: BorderRadius.circular(20)),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text("${patient?['genotype']}",
+                          Text(
+                              _patientValue(
+                                  patientData, personalInfo, 'genotype'),
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyLarge
@@ -212,13 +278,15 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(.2),
+                          color: Colors.grey.withValues(alpha: .2),
                           borderRadius: BorderRadius.circular(20)),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text("${patient?['height']}",
+                          Text(
+                              _patientValue(
+                                  patientData, personalInfo, 'height'),
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyLarge
@@ -232,13 +300,15 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(.2),
+                          color: Colors.grey.withValues(alpha: .2),
                           borderRadius: BorderRadius.circular(20)),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text("${patient?['weight']}",
+                          Text(
+                              _patientValue(
+                                  patientData, personalInfo, 'weight'),
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyLarge
@@ -256,69 +326,44 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
           }),
     );
   }
+
+  Widget _patientImageFallback() {
+    return Container(
+      decoration: BoxDecoration(color: Colors.grey.withValues(alpha: .2)),
+      child: const Center(
+        child: Icon(
+          EneftyIcons.user_bold,
+          size: 20,
+        ),
+      ),
+    );
+  }
+}
+
+String _patientValue(
+  Map<String, dynamic>? patientData,
+  Map<String, dynamic> personalInfo,
+  String key, {
+  List<String> alternatives = const [],
+}) {
+  for (final candidate in [key, ...alternatives]) {
+    final value = personalInfo[candidate] ?? patientData?[candidate];
+    final text = value?.toString().trim();
+    if (text != null && text.isNotEmpty && text.toLowerCase() != 'null') {
+      return text;
+    }
+  }
+  return 'Not set';
 }
 
 joinMeeting(
     String type, String email, String name, String id, String image) async {
-  try {
-    Map<FeatureFlagEnum, Object> features = {
-      FeatureFlagEnum.ADD_PEOPLE_ENABLED: false,
-      FeatureFlagEnum.CHAT_ENABLED: false,
-      FeatureFlagEnum.LOBBY_MODE_ENABLED: false,
-      FeatureFlagEnum.WELCOME_PAGE_ENABLED: false,
-      FeatureFlagEnum.INVITE_ENABLED: false,
-      FeatureFlagEnum.CAR_MODE_ENABLED: false,
-      FeatureFlagEnum.LIVE_STREAMING_ENABLED: false,
-      FeatureFlagEnum.FILMSTRIP_ENABLED: false,
-      FeatureFlagEnum.FULLSCREEN_ENABLED: true,
-      FeatureFlagEnum.PREJOIN_PAGE_ENABLED: false,
-      FeatureFlagEnum.SECURITY_OPTIONS_ENABLED: false,
-      FeatureFlagEnum.VIDEO_SHARE_BUTTON_ENABLED: false,
-      FeatureFlagEnum.RECORDING_ENABLED: false,
-      FeatureFlagEnum.REACTIONS_ENABLED: false,
-      FeatureFlagEnum.SETTINGS_ENABLED: false,
-      FeatureFlagEnum.RAISE_HAND_ENABLED: false,
-      FeatureFlagEnum.CLOSE_CAPTIONS_ENABLED: false,
-    };
-
-    var options = JitsiMeetingOptions(
-        room: id,
-        serverURL: "",
-        subject: "Patient Appointment",
-        userDisplayName: name,
-        userAvatarURL: image,
-        userEmail: "",
-        audioOnly: type == "video" ? false : true,
-        audioMuted: false,
-        videoMuted: type == "video" ? false : true,
-        featureFlags: features);
-
-    await JitsiMeet.joinMeeting(options,
-        listener: JitsiMeetingListener(onConferenceWillJoin: (message) {
-          debugPrint("${options.room} will join with message: $message");
-        }, onConferenceJoined: (message) {
-          debugPrint("${options.room} joined with message: $message");
-        }, onConferenceTerminated: (message, error) {
-          debugPrint("${options.room} terminated with message: $message");
-          debugPrint("${options.room} terminated with error: $error");
-        }, onChatMessageReceived: (senderId, message, isPrivate, _) {
-          debugPrint(
-            "onChatMessageReceived: senderId: $senderId, message: $message, "
-            "isPrivate: $isPrivate",
-          );
-        })).whenComplete(() {
-      // sendCallMessage(
-      //     FirebaseFirestore.instance
-      //         .collection("Messages")
-      //         .doc(FirebaseAuth.instance.currentUser?.uid),
-      //     MessageType.call,
-      //     callType: type,
-      //     id: id,
-      //     image: image,
-      //     message: "",
-      //     name: name);
-    });
-  } catch (error) {
-    debugPrint("error: $error");
-  }
+  await YarisaJitsiCallService.join(
+    room: id,
+    type: type,
+    subject: "Patient Appointment",
+    displayName: name,
+    avatarUrl: image,
+    email: email,
+  );
 }

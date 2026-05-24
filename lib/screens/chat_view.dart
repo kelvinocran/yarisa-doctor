@@ -29,6 +29,7 @@ import 'package:yarisa_doctor/screens/add_prescription.dart';
 import '../../components/formtextfield.dart';
 import '../models/chat_model.dart';
 import '../providers/chat_provider.dart';
+import '../services/jitsi_call_service.dart';
 import '../services/mqtt_listener.dart';
 import '../services/mqtt_service.dart';
 
@@ -134,9 +135,7 @@ class _ChatViewState extends ConsumerState<ChatView>
                     //     backgroundColor: Get.isDarkMode
                     //         ? Colors.grey.shade800
                     //         : Colors.grey.shade200),
-                    onPressed: () {
-                      // _joinMeeting("video");
-                    },
+                    onPressed: () => _startCall("video"),
                   ),
                   IconButton(
                     icon: const Icon(EneftyIcons.call_outline),
@@ -146,9 +145,7 @@ class _ChatViewState extends ConsumerState<ChatView>
                     //     backgroundColor: Get.isDarkMode
                     //         ? Colors.grey.shade800
                     //         : Colors.grey.shade200),
-                    onPressed: () {
-                      // _joinMeeting("voice");
-                    },
+                    onPressed: () => _startCall("voice"),
                   ),
                   const SizedBox(
                     width: 8,
@@ -409,6 +406,8 @@ class _ChatViewState extends ConsumerState<ChatView>
                                         TextMessageItem(convo: convo),
                                       MessageType.prescription =>
                                         PrescriptionMessageItem(convo: convo),
+                                      MessageType.call =>
+                                        TextMessageItem(convo: convo),
                                       null => const SizedBox(),
                                     },
                                   ),
@@ -526,6 +525,30 @@ class _ChatViewState extends ConsumerState<ChatView>
         builder.payload!);
     messageBox.clear();
     await ref.read(chatconfig).saveChat(widget.patientId, chat);
+  }
+
+  Future<void> _startCall(String type) async {
+    final doctor = FirebaseAuth.instance.currentUser;
+    final joined = await YarisaJitsiCallService.join(
+      room: widget.patientId,
+      type: type,
+      subject: "Patient Appointment",
+      displayName: doctor?.displayName ?? "Doctor",
+      avatarUrl: doctor?.photoURL ?? "",
+      email: doctor?.email ?? "",
+    );
+    if (!joined) return;
+
+    await ref.read(chatconfig).saveOtherChat(widget.patientId, {
+      'message': type == "video" ? "Video call" : "Voice call",
+      'recipientId': widget.patientId,
+      'senderId': FirebaseAuth.instance.currentUser?.uid,
+      'senderName': "",
+      'recipientName': widget.patientName,
+      'date': DateTime.now().millisecondsSinceEpoch,
+      'isMe': true,
+      'type': MessageType.call.name,
+    });
   }
 
   Future<void> sendPrescription(
@@ -885,4 +908,4 @@ Future<void> showPopupMenu(
       items: items);
 }
 
-enum MessageType { file, text, image, prescription }
+enum MessageType { file, text, image, prescription, call }

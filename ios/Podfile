@@ -38,6 +38,13 @@ target 'Runner' do
 end
 
 post_install do |installer|
+  images_picker_plugin = File.join(__dir__, '.symlinks', 'plugins', 'images_picker', 'ios', 'Classes', 'SwiftImagesPickerPlugin.swift')
+  if File.exist?(images_picker_plugin)
+    source = File.read(images_picker_plugin)
+    patched = source.gsub("import AssetsLibrary\n", '')
+    File.write(images_picker_plugin, patched) if patched != source
+  end
+
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
   end

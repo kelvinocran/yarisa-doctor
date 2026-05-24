@@ -12,8 +12,6 @@ import 'package:yarisa_doctor/constants/yarisa_enums.dart';
 import 'package:yarisa_doctor/constants/yarisa_strings.dart';
 import 'package:yarisa_doctor/constants/yarisa_widgets.dart';
 import 'package:yarisa_doctor/extensions/yarisa_extensions.dart';
-import 'package:yarisa_doctor/screens/authentication/complete_profile.dart';
-import 'package:yarisa_doctor/screens/main/base.dart';
 
 import '../../api/config.dart';
 import 'forgot_password_screen.dart';
@@ -60,7 +58,33 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   50.hgap,
                   // if (Platform.isAndroid)
                   ElevatedButton.icon(
-                      onPressed: authenticating ? null : () {},
+                      onPressed: authenticating
+                          ? null
+                          : () async {
+                              try {
+                                final userCredential = await ref
+                                    .read(authConfig)
+                                    .signInWithGoogle();
+                                if (userCredential != null) {
+                                  if (!context.mounted) return;
+                                  final api = ref.read(apimethods);
+                                  await api.openDoctorLanding(
+                                    context,
+                                    email: userCredential.user?.email,
+                                    fullname: userCredential.user?.displayName,
+                                  );
+                                }
+                              } catch (e) {
+                                Logger().e(e);
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Google sign-in failed: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            },
                       icon: Icon(
                         const UIconsBrands().google,
                         size: 20,
@@ -72,7 +96,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                           backgroundColor:
                               WidgetStateColor.resolveWith((states) {
                             if (states.contains(WidgetState.pressed)) {
-                              return Colors.grey.withOpacity(.5);
+                              return Colors.grey.withValues(alpha: .5);
                             }
 
                             return Colors.red;
@@ -87,12 +111,28 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                             ? null
                             : () async {
                                 try {
-                                  final cred = await ref
+                                  final userCredential = await ref
                                       .read(authConfig)
                                       .signInWithApple();
-                                  print(cred);
+                                  if (userCredential != null) {
+                                    if (!context.mounted) return;
+                                    final api = ref.read(apimethods);
+                                    await api.openDoctorLanding(
+                                      context,
+                                      email: userCredential.user?.email,
+                                      fullname:
+                                          userCredential.user?.displayName,
+                                    );
+                                  }
                                 } catch (e) {
                                   Logger().e(e);
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Apple sign-in failed: $e'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
                                 }
                               },
                         style: ButtonStyle(
@@ -102,7 +142,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                             backgroundColor:
                                 WidgetStateColor.resolveWith((states) {
                               if (states.contains(WidgetState.pressed)) {
-                                return Colors.grey.withOpacity(.5);
+                                return Colors.grey.withValues(alpha: .5);
                               }
                               if (Get.isDarkMode) {
                                 return Colors.white;
@@ -182,22 +222,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                       email: email.text.trim(),
                                       password: password.text.trim(),
                                       onSuccess: (credential) async {
-                                        await api.getUserProfile(
-                                            onSuccess: (user) {
-                                          Navigator.pushAndRemoveUntil(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const BaseScreen()),
-                                              (route) => false);
-                                        }, onFailed: (user) {
-                                          Navigator.pushAndRemoveUntil(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const CompleteProfile()),
-                                              (route) => false);
-                                        });
+                                        if (!mounted) return;
+                                        await api.openDoctorLanding(context);
                                       });
                                 }
                               },
@@ -233,5 +259,3 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         ));
   }
 }
-
-

@@ -57,11 +57,13 @@ class CircleImage extends StatelessWidget {
     this.radius = 100,
   });
 
-  final String image;
+  final String? image;
   final double size, radius;
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = validNetworkImageUrl(image);
+
     return SizedBox(
       height: size,
       width: size,
@@ -70,42 +72,40 @@ class CircleImage extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(radius),
-                border: Border.all(color: Colors.green.withOpacity(.2))),
-            child: CachedNetworkImage(
-              imageUrl: image,
-              imageBuilder: (context, imageProvider) => Container(
-                width: size,
-                height: size,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(radius),
-                  image: DecorationImage(
-                    //image size fill
-                    image: imageProvider,
-                    fit: BoxFit.fitWidth,
+                border: Border.all(color: Colors.green.withValues(alpha: .2))),
+            child: imageUrl == null
+                ? _fallback(EneftyIcons.profile_outline)
+                : CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    imageBuilder: (context, imageProvider) => Container(
+                      width: size,
+                      height: size,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(radius),
+                        image: DecorationImage(
+                          //image size fill
+                          image: imageProvider,
+                          fit: BoxFit.fitWidth,
+                        ),
+                      ),
+                    ),
+                    progressIndicatorBuilder: (context, url, progress) =>
+                        _fallback(EneftyIcons.profile_bold),
+                    errorWidget: (context, url, error) =>
+                        _fallback(EneftyIcons.profile_outline),
+                    fit: BoxFit.cover,
                   ),
-                ),
-              ),
-              progressIndicatorBuilder: (context, url, progress) => ClipRRect(
-                borderRadius: BorderRadius.circular(radius),
-                child: CircleAvatar(
-                  backgroundColor: Colors.grey.withOpacity(.3),
-                  child: const Icon(
-                    EneftyIcons.profile_bold,
-                  ),
-                ),
-              ),
-              errorWidget: (context, url, error) => ClipRRect(
-                borderRadius: BorderRadius.circular(radius),
-                child: CircleAvatar(
-                  backgroundColor: Colors.grey.withOpacity(.3),
-                  child: const Icon(
-                    EneftyIcons.profile_outline,
-                  ),
-                ),
-              ),
-              fit: BoxFit.cover,
-            ),
           )),
+    );
+  }
+
+  Widget _fallback(IconData icon) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: CircleAvatar(
+        backgroundColor: Colors.grey.withValues(alpha: .3),
+        child: Icon(icon),
+      ),
     );
   }
 }
@@ -122,73 +122,100 @@ class UpcomingAppointments extends StatefulWidget {
 class _UpcomingAppointmentsState extends State<UpcomingAppointments> {
   @override
   Widget build(BuildContext context) {
+    final doctorId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (doctorId == null) {
+      return const SizedBox.shrink();
+    }
+
+    final appointmentsRef = FirebaseFirestore.instance.collection(
+      "Appointments",
+    );
+
     return StreamBuilder(
-        stream: FirebaseFirestore.instance
-            .collection("Appointments")
-            .where("doctor_id",
-                isEqualTo: FirebaseAuth.instance.currentUser?.uid)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return const SizedBox.shrink();
-          }
-          if (!snapshot.hasData) {
-            return const SizedBox.shrink();
-          }
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const SizedBox.shrink();
-          }
-          final appointments = (snapshot.data?.docs ?? [])
-              .map((e) => AppointmentModel.fromSnapshot(e))
-              .where((appoint) {
-            final date = appoint.date?.toDate().copyWith(
-                hour: int.parse(
-                    appoint.time!.split("-").first.trim().split(":").first),
-                minute: int.parse(
-                    appoint.time!.split("-").first.trim().split(":").last));
+      stream:
+          appointmentsRef.where("doctor_id", isEqualTo: doctorId).snapshots(),
+      builder: (context, legacySnapshot) {
+        return StreamBuilder(
+          stream: appointmentsRef
+              .where("doctorId", isEqualTo: doctorId)
+              .snapshots(),
+          builder: (context, canonicalSnapshot) {
+            if (legacySnapshot.hasError || canonicalSnapshot.hasError) {
+              return const SizedBox.shrink();
+            }
 
-            return (date!.isAfter(DateTime.now()) &&
-                appoint.status == AppointmentStatus.approved);
-          }).toList();
+            final docs = {
+              for (final doc in legacySnapshot.data?.docs ?? []) doc.id: doc,
+              for (final doc in canonicalSnapshot.data?.docs ?? []) doc.id: doc,
+            };
 
-          if (appointments.isEmpty) {
-            return const SizedBox.shrink();
-          }
+            final appointments = docs.values
+                .map((doc) => AppointmentModel.fromSnapshot(doc))
+                .where((appoint) {
+              final date = appointmentStartsAt(appoint);
 
-          appointments.sort((a, b) => (a.date as Timestamp)
-              .toDate()
-              .compareTo((b.date as Timestamp).toDate()));
-          return Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const YarisaText(
-                    text: "Upcoming Appointments",
-                    type: TextType.bodyBig,
-                    spacing: 0,
-                    weight: FontWeight.w500,
+              return date != null &&
+                  date.isAfter(DateTime.now()) &&
+                  _activeAppointmentStatus(appoint.status);
+            }).toList()
+              ..sort(compareAppointmentsByStart);
+
+            return _buildAppointments(context, appointments);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildAppointments(
+    BuildContext context,
+    List<AppointmentModel> appointments,
+  ) {
+    if (appointments.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const YarisaText(
+              text: "Upcoming Appointments",
+              type: TextType.bodyBig,
+              spacing: 0,
+              weight: FontWeight.w500,
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AppointmentScreen(),
                   ),
-                  TextButton(onPressed: () {}, child: const Text("See All"))
-                ],
-              ),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 180),
-                child: ListView.separated(
-                  separatorBuilder: (context, index) => 10.wgap,
-                  itemCount: appointments.length,
-                  shrinkWrap: true,
-                  scrollDirection: Axis.horizontal,
-                  itemBuilder: (BuildContext context, int index) {
-                    final item = appointments[index];
-                    return AppointmentItem(appointment: item);
-                  },
-                ),
-              ),
-              40.hgap,
-            ],
-          );
-        });
+                );
+              },
+              child: const Text("See All"),
+            ),
+          ],
+        ),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 180),
+          child: ListView.separated(
+            separatorBuilder: (context, index) => 10.wgap,
+            itemCount: appointments.length,
+            shrinkWrap: true,
+            scrollDirection: Axis.horizontal,
+            itemBuilder: (BuildContext context, int index) {
+              final item = appointments[index];
+              return AppointmentItem(appointment: item);
+            },
+          ),
+        ),
+        40.hgap,
+      ],
+    );
   }
 }
 
@@ -203,7 +230,7 @@ class AppointmentItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {},
+      onTap: () => openDoctorAppointmentDetail(context, appointment),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 350),
         padding: const EdgeInsets.all(15),
@@ -217,7 +244,7 @@ class AppointmentItem extends StatelessWidget {
               children: [
                 CircleImage(
                   size: 40,
-                  image: "${appointment.patient?.photo}",
+                  image: appointment.patient?.photo,
                 ),
                 15.wgap,
                 Column(
@@ -225,14 +252,14 @@ class AppointmentItem extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       YarisaText(
-                        text: "${appointment.patient?.name}",
+                        text: appointmentPatientName(appointment),
                         type: TextType.bodyBig,
                         color: Colors.white,
                         spacing: 0,
                         weight: FontWeight.w600,
                       ),
                       YarisaText(
-                        text: "${appointment.purpose}",
+                        text: appointmentPurposeText(appointment),
                         type: TextType.bodySmall,
                         // spacing: 0,
                         color: Colors.white,
@@ -268,8 +295,10 @@ class AppointmentItem extends StatelessWidget {
                         5.wgap,
                         Expanded(
                           child: YarisaText(
-                            text: DateFormat.MMMMEEEEd()
-                                .format(appointment.date!.toDate()),
+                            text: appointment.date == null
+                                ? "Date not set"
+                                : DateFormat.MMMMEEEEd()
+                                    .format(appointment.date!.toDate()),
                             type: TextType.subtitle,
                             color: Colors.white,
                             weight: FontWeight.w600,
@@ -290,7 +319,7 @@ class AppointmentItem extends StatelessWidget {
                         5.wgap,
                         Flexible(
                           child: YarisaText(
-                            text: "${appointment.time}",
+                            text: appointmentTimeText(appointment),
                             type: TextType.subtitle,
                             color: Colors.white,
                           ),
@@ -306,6 +335,65 @@ class AppointmentItem extends StatelessWidget {
       ),
     );
   }
+}
+
+bool _activeAppointmentStatus(AppointmentStatus? status) {
+  final currentStatus = status ?? AppointmentStatus.pending;
+  return currentStatus == AppointmentStatus.pending ||
+      currentStatus == AppointmentStatus.approved;
+}
+
+String appointmentPatientName(AppointmentModel appointment) {
+  return nonEmptyAppointmentText(appointment.patient?.name, "Unknown Patient");
+}
+
+String appointmentPurposeText(AppointmentModel appointment) {
+  return nonEmptyAppointmentText(appointment.purpose, "General appointment");
+}
+
+String appointmentTimeText(AppointmentModel appointment) {
+  return nonEmptyAppointmentText(appointment.time, "Time not set");
+}
+
+String nonEmptyAppointmentText(String? value, String fallback) {
+  final trimmed = value?.trim();
+  if (trimmed == null || trimmed.isEmpty || trimmed.toLowerCase() == 'null') {
+    return fallback;
+  }
+  return trimmed;
+}
+
+DateTime? appointmentStartsAt(AppointmentModel appointment) {
+  final date = appointment.date?.toDate();
+  if (date == null) return null;
+
+  final rawTime = appointment.time?.split('-').first.trim();
+  if (rawTime == null || rawTime.isEmpty) return date;
+
+  final match =
+      RegExp(r'^(\d{1,2}):(\d{2})\s*([AaPp][Mm])?').firstMatch(rawTime);
+  if (match == null) return date;
+
+  var hour = int.tryParse(match.group(1)!);
+  final minute = int.tryParse(match.group(2)!);
+  if (hour == null || minute == null || minute > 59) return date;
+
+  final meridiem = match.group(3)?.toLowerCase();
+  if (meridiem == 'pm' && hour < 12) {
+    hour += 12;
+  } else if (meridiem == 'am' && hour == 12) {
+    hour = 0;
+  }
+
+  if (hour > 23) return date;
+  return DateTime(date.year, date.month, date.day, hour, minute);
+}
+
+int compareAppointmentsByStart(
+    AppointmentModel first, AppointmentModel second) {
+  final firstDate = appointmentStartsAt(first) ?? DateTime(0);
+  final secondDate = appointmentStartsAt(second) ?? DateTime(0);
+  return firstDate.compareTo(secondDate);
 }
 
 String timeOfDay(DateTime date) {

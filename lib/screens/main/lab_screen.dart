@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:enefty_icons/enefty_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,12 +35,13 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
                     contentPadding: EdgeInsets.zero,
                     tileColor: Colors.transparent,
                     leading: CircleAvatar(
-                      backgroundImage: patient.patientImage != null ||
-                              patient.patientImage != ""
-                          ? CachedNetworkImageProvider(
-                              "${patient.patientImage}")
+                      backgroundImage:
+                          safeCachedNetworkImageProvider(patient.patientImage),
+                      child: safeCachedNetworkImageProvider(
+                                  patient.patientImage) ==
+                              null
+                          ? const Icon(EneftyIcons.profile_bold)
                           : null,
-                      child: const Icon(EneftyIcons.profile_bold),
                     ),
                     title: Text("${patient.patientName}"),
                     trailing: const Icon(Icons.navigate_next_rounded),

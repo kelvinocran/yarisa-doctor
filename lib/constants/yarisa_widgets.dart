@@ -1,5 +1,6 @@
 import 'package:enefty_icons/enefty_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:yarisa_doctor/constants/yarisa_enums.dart';
 import 'package:yarisa_doctor/extensions/yarisa_extensions.dart';
 import 'package:yarisa_doctor/screens/settings_screen.dart';
@@ -83,6 +84,27 @@ class YarisaText extends StatelessWidget {
               letterSpacing: spacing),
         });
   }
+}
+
+String? validNetworkImageUrl(String? value) {
+  final trimmed = value?.trim();
+  if (trimmed == null || trimmed.isEmpty || trimmed.toLowerCase() == 'null') {
+    return null;
+  }
+
+  final uri = Uri.tryParse(trimmed);
+  if (uri == null ||
+      (uri.scheme != 'http' && uri.scheme != 'https') ||
+      uri.host.isEmpty) {
+    return null;
+  }
+
+  return trimmed;
+}
+
+ImageProvider? safeCachedNetworkImageProvider(String? value) {
+  final imageUrl = validNetworkImageUrl(value);
+  return imageUrl == null ? null : CachedNetworkImageProvider(imageUrl);
 }
 
 AppBar yarisaAppBar(BuildContext context,
