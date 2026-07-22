@@ -1,9 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:enefty_icons/enefty_icons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../api/firestore_schema.dart';
 import '../../components/formtextfield.dart';
@@ -178,6 +180,7 @@ class _SecondOpinionCard extends StatelessWidget {
                     TextStyle(color: Colors.red, fontWeight: FontWeight.w700),
               ),
             ],
+            _attachmentCount(data['attachments']),
           ],
         ),
       ),
@@ -409,6 +412,7 @@ class _SecondOpinionDetailBody extends StatelessWidget {
           label: 'Patient Question',
           value: data['patientQuestion']?.toString(),
         ),
+        _AttachmentsSection(attachments: data['attachments']),
         if (response.isNotEmpty)
           _DetailSection(label: 'Your Response', value: response),
         const SizedBox(height: 10),
@@ -456,6 +460,90 @@ class _SecondOpinionDetailBody extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _AttachmentsSection extends StatelessWidget {
+  const _AttachmentsSection({required this.attachments});
+
+  final dynamic attachments;
+
+  @override
+  Widget build(BuildContext context) {
+    final list = attachments is List ? attachments as List : <dynamic>[];
+    if (list.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Attachments',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: Colors.grey, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          ...list.map((att) {
+            if (att is! Map) return const SizedBox.shrink();
+            final url = att['url']?.toString() ?? '';
+            final name = att['name']?.toString() ?? 'Attachment';
+            final type = att['type']?.toString() ?? '';
+            if (url.isEmpty) return const SizedBox.shrink();
+
+            if (type == 'image') {
+              return Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.withValues(alpha: .2)),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: CachedNetworkImage(
+                  imageUrl: url,
+                  fit: BoxFit.contain,
+                  placeholder: (context, url) => const SizedBox(
+                    height: 200,
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  errorWidget: (context, url, error) => SizedBox(
+                    height: 200,
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.broken_image, color: Colors.grey),
+                          const SizedBox(height: 8),
+                          Text(name, style: const TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+              title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
+              subtitle: const Text('PDF Document'),
+              trailing: FilledButton.tonalIcon(
+                onPressed: () => launchUrl(
+                  Uri.parse(url),
+                  mode: LaunchMode.externalApplication,
+                ),
+                icon: const Icon(Icons.open_in_new, size: 16),
+                label: const Text('Open'),
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 }
@@ -575,4 +663,22 @@ String _createdAtText(dynamic value) {
   if (value is DateTime) createdAt = value;
   if (createdAt == null) return 'Date pending';
   return DateFormat('MMM d, y • h:mm a').format(createdAt);
+}
+
+Widget _attachmentCount(dynamic attachments) {
+  final count = attachments is List ? attachments.length : 0;
+  if (count == 0) return const SizedBox.shrink();
+  return Padding(
+    padding: const EdgeInsets.only(top: 8),
+    child: Row(
+      children: [
+        const Icon(Icons.attach_file, size: 14, color: Colors.grey),
+        const SizedBox(width: 4),
+        Text(
+          '$count attachment${count == 1 ? '' : 's'}',
+          style: const TextStyle(color: Colors.grey, fontSize: 12),
+        ),
+      ],
+    ),
+  );
 }

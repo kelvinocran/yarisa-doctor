@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:yarisa_doctor/extensions/yarisa_extensions.dart';
 
 import '../../api/firestore_schema.dart';
+import '../../api/api_methods.dart';
 import '../../components/formtextfield.dart';
 import '../../constants/yarisa_constants.dart';
 import '../../constants/yarisa_enums.dart';
@@ -46,320 +47,329 @@ class _AppointmentScreenState extends ConsumerState<AppointmentScreen> {
         context,
         title: AppStrings.appointments,
       ),
-      body: _DoctorAppointmentsStream(builder: (context, appointments) {
-        final query = _query.toLowerCase();
-        final filteredAppointments = query.isEmpty
-            ? appointments
-            : appointments.where((appointment) {
-                return [
-                  appointmentPatientName(appointment),
-                  appointmentPurposeText(appointment),
-                  appointmentTimeText(appointment),
-                  appointment.status?.name,
-                  appointment.doctorNote,
-                ].whereType<String>().join(' ').toLowerCase().contains(query);
-              }).toList();
-        final upcomingappointments = filteredAppointments.where((appoint) {
-          final date = appointmentStartsAt(appoint);
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await ref.read(apimethods).getAppointments();
+        },
+        child: _DoctorAppointmentsStream(builder: (context, appointments) {
+          final query = _query.toLowerCase();
+          final filteredAppointments = query.isEmpty
+              ? appointments
+              : appointments.where((appointment) {
+                  return [
+                    appointmentPatientName(appointment),
+                    appointmentPurposeText(appointment),
+                    appointmentTimeText(appointment),
+                    appointment.status?.name,
+                    appointment.doctorNote,
+                  ].whereType<String>().join(' ').toLowerCase().contains(query);
+                }).toList();
+          final upcomingappointments = filteredAppointments.where((appoint) {
+            final date = appointmentStartsAt(appoint);
 
-          return date != null &&
-              date.isAfter(DateTime.now()) &&
-              _isActiveAppointmentStatus(appoint.status);
-        }).toList();
+            return date != null &&
+                date.isAfter(DateTime.now()) &&
+                _isActiveAppointmentStatus(appoint.status);
+          }).toList();
 
-        upcomingappointments.sort(compareAppointmentsByStart);
-        filteredAppointments.sort(compareAppointmentsByStart);
+          upcomingappointments.sort(compareAppointmentsByStart);
+          filteredAppointments.sort(compareAppointmentsByStart);
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              FormTextField(
-                controller: _searchController,
-                hint: 'Search appointments',
-                radius: 100,
-                labeled: false,
-                autoFocus: false,
-                icon: EneftyIcons.search_normal_2_outline,
-                onChanged: (value) => setState(() => _query = value.trim()),
-              ),
-              20.hgap,
-              Column(
-                children: [
-                  if (upcomingappointments.isNotEmpty)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const YarisaText(
-                          text: "Upcoming Appointments",
-                          type: TextType.bodyBig,
-                          spacing: 0,
-                          weight: FontWeight.w500,
-                        ),
-                        TextButton(
-                            onPressed: () {
-                              setState(() {
-                                _showAllUpcoming = !_showAllUpcoming;
-                              });
-                            },
-                            child: Text(
-                                _showAllUpcoming ? "Show Less" : "See All"))
-                      ],
-                    ),
-                  if (upcomingappointments.isNotEmpty)
-                    _showAllUpcoming
-                        ? ListView.separated(
-                            separatorBuilder: (context, index) => 10.hgap,
-                            itemCount: upcomingappointments.length,
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemBuilder: (BuildContext context, int index) {
-                              final item = upcomingappointments[index];
-                              return AppointmentItem(appointment: item);
-                            },
-                          )
-                        : ConstrainedBox(
-                            constraints: const BoxConstraints(maxHeight: 180),
-                            child: ListView.separated(
-                              separatorBuilder: (context, index) => 10.wgap,
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                FormTextField(
+                  controller: _searchController,
+                  hint: 'Search appointments',
+                  radius: 100,
+                  labeled: false,
+                  autoFocus: false,
+                  icon: EneftyIcons.search_normal_2_outline,
+                  onChanged: (value) => setState(() => _query = value.trim()),
+                ),
+                20.hgap,
+                Column(
+                  children: [
+                    if (upcomingappointments.isNotEmpty)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const YarisaText(
+                            text: "Upcoming Appointments",
+                            type: TextType.bodyBig,
+                            spacing: 0,
+                            weight: FontWeight.w500,
+                          ),
+                          TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _showAllUpcoming = !_showAllUpcoming;
+                                });
+                              },
+                              child: Text(
+                                  _showAllUpcoming ? "Show Less" : "See All"))
+                        ],
+                      ),
+                    if (upcomingappointments.isNotEmpty)
+                      _showAllUpcoming
+                          ? ListView.separated(
+                              separatorBuilder: (context, index) => 10.hgap,
                               itemCount: upcomingappointments.length,
                               shrinkWrap: true,
-                              scrollDirection: Axis.horizontal,
+                              physics: const NeverScrollableScrollPhysics(),
                               itemBuilder: (BuildContext context, int index) {
                                 final item = upcomingappointments[index];
                                 return AppointmentItem(appointment: item);
                               },
+                            )
+                          : ConstrainedBox(
+                              constraints: const BoxConstraints(maxHeight: 180),
+                              child: ListView.separated(
+                                separatorBuilder: (context, index) => 10.wgap,
+                                itemCount: upcomingappointments.length,
+                                shrinkWrap: true,
+                                scrollDirection: Axis.horizontal,
+                                itemBuilder: (BuildContext context, int index) {
+                                  final item = upcomingappointments[index];
+                                  return AppointmentItem(appointment: item);
+                                },
+                              ),
                             ),
-                          ),
-                  if (filteredAppointments.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 40),
-                      child: YarisaText(
-                        text: appointments.isEmpty
-                            ? "No appointments"
-                            : 'No appointments match "$_query"',
-                        type: TextType.bodySmall,
-                        color: Colors.grey,
-                        align: TextAlign.center,
-                      ),
-                    )
-                  else ...[
-                    Divider(
-                      height: 40,
-                      color: Colors.grey.withValues(alpha: .2),
-                    ),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        YarisaText(
-                          text: "All Appointments",
-                          type: TextType.bodyBig,
-                          spacing: 0,
-                          weight: FontWeight.w500,
+                    if (filteredAppointments.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 40),
+                        child: YarisaText(
+                          text: appointments.isEmpty
+                              ? "No appointments"
+                              : 'No appointments match "$_query"',
+                          type: TextType.bodySmall,
+                          color: Colors.grey,
+                          align: TextAlign.center,
                         ),
-                      ],
-                    ),
-                    15.hgap,
-                    ListView.separated(
-                        separatorBuilder: (context, index) => 10.hgap,
-                        itemCount: filteredAppointments.length,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemBuilder: (context, index) {
-                          final appointment = filteredAppointments[index];
-                          return InkWell(
-                            onTap: () => openDoctorAppointmentDetail(
-                              context,
-                              appointment,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                  border: Border.all(
-                                      color: Colors.grey.withValues(alpha: .2)),
-                                  color: Colors.white.withValues(alpha: .1),
-                                  borderRadius: BorderRadius.circular(20)),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      CircleImage(
-                                        size: 50,
-                                        image: appointment.patient?.photo,
-                                      ),
-                                      15.wgap,
-                                      Expanded(
-                                        child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              YarisaText(
-                                                text: appointmentPatientName(
-                                                    appointment),
-                                                type: TextType.bodyBig,
-                                                spacing: 0,
-                                                weight: FontWeight.w600,
-                                              ),
-                                              YarisaText(
-                                                text: appointmentPurposeText(
-                                                    appointment),
-                                                type: TextType.bodySmall,
-                                                // spacing: 0,
-                                              ),
-                                            ]),
-                                      ),
-                                      const CircleAvatar(
-                                          backgroundColor: Colors.white,
-                                          child: Icon(
-                                            EneftyIcons.call_bold,
-                                            size: 20,
-                                            color: Color.fromARGB(
-                                                255, 118, 34, 135),
-                                          ))
-                                    ],
-                                  ),
-                                  10.hgap,
-                                  Divider(
-                                    color: Colors.grey.withValues(alpha: .2),
-                                  ),
-                                  10.hgap,
-                                  RichText(
-                                    text: TextSpan(
-                                        text:
-                                            appointmentStartsAt(appointment) ==
-                                                    null
-                                                ? "Date not set"
-                                                : timeOfDay(appointmentStartsAt(
-                                                    appointment)!),
-                                        children: [
-                                          TextSpan(
-                                              text:
-                                                  " -> ${appointmentTimeText(appointment)}",
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyMedium
-                                                  ?.copyWith())
-                                        ],
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                                fontWeight: FontWeight.w600)),
-                                  ),
-                                  if (_hasAppointmentNote(appointment)) ...[
-                                    10.hgap,
-                                    Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
+                      )
+                    else ...[
+                      Divider(
+                        height: 40,
+                        color: Colors.grey.withValues(alpha: .2),
+                      ),
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          YarisaText(
+                            text: "All Appointments",
+                            type: TextType.bodyBig,
+                            spacing: 0,
+                            weight: FontWeight.w500,
+                          ),
+                        ],
+                      ),
+                      15.hgap,
+                      ListView.separated(
+                          separatorBuilder: (context, index) => 10.hgap,
+                          itemCount: filteredAppointments.length,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemBuilder: (context, index) {
+                            final appointment = filteredAppointments[index];
+                            return InkWell(
+                              onTap: () => openDoctorAppointmentDetail(
+                                context,
+                                appointment,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              child: Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                    border: Border.all(
                                         color:
-                                            Colors.grey.withValues(alpha: .08),
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                      child: YarisaText(
-                                        text: appointment.doctorNote!,
-                                        type: TextType.bodySmall,
-                                        lines: 3,
-                                      ),
+                                            Colors.grey.withValues(alpha: .2)),
+                                    color: Colors.white.withValues(alpha: .1),
+                                    borderRadius: BorderRadius.circular(20)),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        CircleImage(
+                                          size: 50,
+                                          image: appointment.patient?.photo,
+                                        ),
+                                        15.wgap,
+                                        Expanded(
+                                          child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                YarisaText(
+                                                  text: appointmentPatientName(
+                                                      appointment),
+                                                  type: TextType.bodyBig,
+                                                  spacing: 0,
+                                                  weight: FontWeight.w600,
+                                                ),
+                                                YarisaText(
+                                                  text: appointmentPurposeText(
+                                                      appointment),
+                                                  type: TextType.bodySmall,
+                                                  // spacing: 0,
+                                                ),
+                                              ]),
+                                        ),
+                                        const CircleAvatar(
+                                            backgroundColor: Colors.white,
+                                            child: Icon(
+                                              EneftyIcons.call_bold,
+                                              size: 20,
+                                              color: Color.fromARGB(
+                                                  255, 118, 34, 135),
+                                            ))
+                                      ],
                                     ),
-                                  ],
-                                  10.hgap,
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Container(
-                                        decoration: BoxDecoration(
-                                            color: switch (appointment.status) {
-                                              AppointmentStatus.approved =>
-                                                Colors.green,
-                                              null => Colors.grey,
-                                              AppointmentStatus.pending =>
-                                                Colors.amber.shade800,
-                                              AppointmentStatus.canceled =>
-                                                Colors.red,
-                                              AppointmentStatus.declined =>
-                                                Colors.pink,
-                                            },
-                                            borderRadius:
-                                                BorderRadius.circular(50)),
-                                        padding: const EdgeInsets.all(8),
-                                        child: YarisaText(
-                                            text: (appointment.status?.name ??
-                                                    AppointmentStatus
-                                                        .pending.name)
-                                                .capitalize!,
-                                            color: Colors.white,
-                                            type: TextType.subtitle),
-                                      ),
-                                      GestureDetector(
-                                        onTapDown: (details) async {
-                                          final action =
-                                              await _showAppointmentActionMenu(
-                                            context,
-                                            details,
-                                            appointment,
-                                          );
-                                          if (!context.mounted ||
-                                              action == null) {
-                                            return;
-                                          }
-
-                                          switch (action) {
-                                            case _AppointmentAction.approve:
-                                              await _updateAppointmentStatus(
-                                                context,
-                                                appointment,
-                                                AppointmentStatus.approved,
-                                              );
-                                              break;
-                                            case _AppointmentAction.decline:
-                                              await _updateAppointmentStatus(
-                                                context,
-                                                appointment,
-                                                AppointmentStatus.declined,
-                                              );
-                                              break;
-                                            case _AppointmentAction.reschedule:
-                                              await _showRescheduleSheet(
-                                                  context, appointment);
-                                              break;
-                                            case _AppointmentAction.note:
-                                              await _showAppointmentNoteSheet(
-                                                  context, appointment);
-                                              break;
-                                            case _AppointmentAction.delete:
-                                              await _deleteAppointment(
-                                                  context, appointment);
-                                              break;
-                                          }
-                                        },
-                                        child: Icon(
-                                          Icons.more_vert,
-                                          color: Theme.of(context)
+                                    10.hgap,
+                                    Divider(
+                                      color: Colors.grey.withValues(alpha: .2),
+                                    ),
+                                    10.hgap,
+                                    RichText(
+                                      text: TextSpan(
+                                          text: appointmentStartsAt(
+                                                      appointment) ==
+                                                  null
+                                              ? "Date not set"
+                                              : timeOfDay(appointmentStartsAt(
+                                                  appointment)!),
+                                          children: [
+                                            TextSpan(
+                                                text:
+                                                    " -> ${appointmentTimeText(appointment)}",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyMedium
+                                                    ?.copyWith())
+                                          ],
+                                          style: Theme.of(context)
                                               .textTheme
                                               .bodyMedium
-                                              ?.color,
+                                              ?.copyWith(
+                                                  fontWeight: FontWeight.w600)),
+                                    ),
+                                    if (_hasAppointmentNote(appointment)) ...[
+                                      10.hgap,
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey
+                                              .withValues(alpha: .08),
+                                          borderRadius:
+                                              BorderRadius.circular(14),
+                                        ),
+                                        child: YarisaText(
+                                          text: appointment.doctorNote!,
+                                          type: TextType.bodySmall,
+                                          lines: 3,
                                         ),
                                       ),
                                     ],
-                                  )
-                                ],
+                                    10.hgap,
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                              color: switch (
+                                                  appointment.status) {
+                                                AppointmentStatus.approved =>
+                                                  Colors.green,
+                                                null => Colors.grey,
+                                                AppointmentStatus.pending =>
+                                                  Colors.amber.shade800,
+                                                AppointmentStatus.canceled =>
+                                                  Colors.red,
+                                                AppointmentStatus.declined =>
+                                                  Colors.pink,
+                                              },
+                                              borderRadius:
+                                                  BorderRadius.circular(50)),
+                                          padding: const EdgeInsets.all(8),
+                                          child: YarisaText(
+                                              text: (appointment.status?.name ??
+                                                      AppointmentStatus
+                                                          .pending.name)
+                                                  .capitalize!,
+                                              color: Colors.white,
+                                              type: TextType.subtitle),
+                                        ),
+                                        GestureDetector(
+                                          onTapDown: (details) async {
+                                            final action =
+                                                await _showAppointmentActionMenu(
+                                              context,
+                                              details,
+                                              appointment,
+                                            );
+                                            if (!context.mounted ||
+                                                action == null) {
+                                              return;
+                                            }
+
+                                            switch (action) {
+                                              case _AppointmentAction.approve:
+                                                await _updateAppointmentStatus(
+                                                  context,
+                                                  appointment,
+                                                  AppointmentStatus.approved,
+                                                );
+                                                break;
+                                              case _AppointmentAction.decline:
+                                                await _updateAppointmentStatus(
+                                                  context,
+                                                  appointment,
+                                                  AppointmentStatus.declined,
+                                                );
+                                                break;
+                                              case _AppointmentAction
+                                                    .reschedule:
+                                                await _showRescheduleSheet(
+                                                    context, appointment);
+                                                break;
+                                              case _AppointmentAction.note:
+                                                await _showAppointmentNoteSheet(
+                                                    context, appointment);
+                                                break;
+                                              case _AppointmentAction.delete:
+                                                await _deleteAppointment(
+                                                    context, appointment);
+                                                break;
+                                            }
+                                          },
+                                          child: Icon(
+                                            Icons.more_vert,
+                                            color: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.color,
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  ],
+                                ),
                               ),
-                            ),
-                          );
-                        })
-                  ]
-                ],
-              )
-            ],
-          ),
-        );
-      }),
+                            );
+                          })
+                    ]
+                  ],
+                )
+              ],
+            ),
+          );
+        }),
+      ),
     );
   }
 }

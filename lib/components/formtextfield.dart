@@ -90,8 +90,8 @@ class FormTextField extends StatelessWidget {
       enableInteractiveSelection: true,
       keyboardType: inputType,
       textCapitalization: capitalization ?? TextCapitalization.words,
-      maxLines: lines,
-      minLines: minlines,
+      maxLines: (obscure ?? false) ? 1 : lines,
+      minLines: (obscure ?? false) ? null : minlines,
       obscureText: obscure ?? false,
       inputFormatters: formatters,
       style: context.bodySmall?.copyWith(

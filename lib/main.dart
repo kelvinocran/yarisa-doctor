@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:yarisa_doctor/api/api_methods.dart';
+import 'package:yarisa_doctor/screens/main/base.dart';
 import 'package:yarisa_doctor/services/fcm_service.dart';
 import 'package:yarisa_doctor/services/mqtt_listener.dart';
 
@@ -16,10 +17,25 @@ import 'services/firebase_options.dart';
 import 'services/mqtt_service.dart';
 import 'theme/theme.dart';
 
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await FcmService.initialize(userCollection: 'Doctors');
+  await FcmService.initialize(
+    userCollection: 'Doctors',
+    onMessageTap: (data) {
+      final navigator = appNavigatorKey.currentState;
+      if (navigator == null) {
+        return;
+      }
+
+      navigator.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const BaseScreen()),
+        (route) => false,
+      );
+    },
+  );
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -75,6 +91,7 @@ class _MyAppState extends ConsumerState<MyApp> implements MQTTMessageListener {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      navigatorKey: appNavigatorKey,
       title: 'Yarisa Doctor',
       debugShowCheckedModeBanner: false,
       theme: YarisaTheme.lightThemeData(context),

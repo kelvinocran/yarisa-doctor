@@ -15,7 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
-import 'package:images_picker/images_picker.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
 
 import 'package:mqtt_client/mqtt_client.dart';
@@ -52,6 +52,7 @@ class ChatView extends ConsumerStatefulWidget {
 class _ChatViewState extends ConsumerState<ChatView>
     implements MQTTMessageListener {
   final messageBox = TextEditingController();
+  bool _sendingText = false;
 
   @override
   void initState() {
@@ -232,18 +233,16 @@ class _ChatViewState extends ConsumerState<ChatView>
                                           ),
                                           ListTile(
                                             onTap: () async {
-                                              List<Media>? res =
-                                                  await ImagesPicker.pick(
-                                                      count: 1,
-                                                      pickType: PickType.image,
-                                                      cropOpt: CropOption());
+                                              final XFile? res =
+                                                  await ImagePicker().pickImage(
+                                                      source:
+                                                          ImageSource.gallery);
                                               if (res != null) {
-                                                File file =
-                                                    File(res.first.path);
+                                                File file = File(res.path);
 
                                                 await sendMedia(
                                                     MessageType.image,
-                                                    res.first.path,
+                                                    res.path,
                                                     file);
                                               }
                                             },
@@ -339,14 +338,24 @@ class _ChatViewState extends ConsumerState<ChatView>
                                     shape: const WidgetStatePropertyAll(
                                         CircleBorder())),
                                 onPressed: () {
-                                  if (messageBox.text.trim().isNotEmpty) {
+                                  if (messageBox.text.trim().isNotEmpty &&
+                                      !_sendingText) {
                                     sendMessage();
                                   }
                                 },
-                                icon: const Icon(
-                                  Icons.arrow_upward_rounded,
-                                  color: Colors.white,
-                                ),
+                                icon: _sendingText
+                                    ? const SizedBox(
+                                        height: 18,
+                                        width: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.arrow_upward_rounded,
+                                        color: Colors.white,
+                                      ),
                               ),
                               secondChild: const SizedBox(
                                 width: 10,
@@ -474,7 +483,6 @@ class _ChatViewState extends ConsumerState<ChatView>
       };
       final fileurl = await uploadImage(File(path), "Messages");
       map.update("message", (val) => fileurl);
-      //   final chat = Chat.fromMQTT(map);
       final builder = MqttClientPayloadBuilder();
       builder.addString(jsonEncode({"data_type": "chat", "data": map}));
       MQTTService.instance.client.publishMessage(
@@ -483,48 +491,70 @@ class _ChatViewState extends ConsumerState<ChatView>
           builder.payload!);
 
       await ref.read(chatconfig).saveOtherChat(widget.patientId, map);
-      isSendingFile.value = false;
     } catch (e) {
-      if (kDebugMode) {
-        print(e);
+      if (kDebugMode) print(e);
+      if (mounted) {
+        Get.snackbar(
+          'Send Failed',
+          'Failed to send file. Please try again.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
       }
+    } finally {
       isSendingFile.value = false;
     }
   }
 
   Future<void> sendMessage() async {
-    final builders = MqttClientPayloadBuilder();
-    builders.addString(jsonEncode({
-      "data_type": "typing",
-      "sender_id": FirebaseAuth.instance.currentUser?.uid,
-      "status": false
-    }));
-    MQTTService.instance.client.publishMessage(
-        "${MQTTService.MQTT_UNIQUE_TOPIC_NAME}/chats/${widget.patientId}",
-        MqttQos.atLeastOnce,
-        builders.payload!);
+    final text = messageBox.text.trim();
+    if (text.isEmpty) return;
 
-    final map = {
-      'message': Uint8List.fromList(utf8.encode(messageBox.text.trim())),
-      'recipientId': widget.patientId,
-      'senderId': FirebaseAuth.instance.currentUser?.uid,
-      'senderName': "",
-      'type': MessageType.text.name,
-      'recipientName': widget.patientName,
-      'date': DateTime.now().millisecondsSinceEpoch,
-      'isMe': true,
-    };
+    setState(() => _sendingText = true);
+    try {
+      final builders = MqttClientPayloadBuilder();
+      builders.addString(jsonEncode({
+        "data_type": "typing",
+        "sender_id": FirebaseAuth.instance.currentUser?.uid,
+        "status": false
+      }));
+      MQTTService.instance.client.publishMessage(
+          "${MQTTService.MQTT_UNIQUE_TOPIC_NAME}/chats/${widget.patientId}",
+          MqttQos.atLeastOnce,
+          builders.payload!);
 
-    final chat = Chat.fromMQTT(map);
+      final map = {
+        'message': Uint8List.fromList(utf8.encode(text)),
+        'recipientId': widget.patientId,
+        'senderId': FirebaseAuth.instance.currentUser?.uid,
+        'senderName': "",
+        'type': MessageType.text.name,
+        'recipientName': widget.patientName,
+        'date': DateTime.now().millisecondsSinceEpoch,
+        'isMe': true,
+      };
 
-    final builder = MqttClientPayloadBuilder();
-    builder.addString(jsonEncode({"data_type": "chat", "data": map}));
-    MQTTService.instance.client.publishMessage(
-        "${MQTTService.MQTT_UNIQUE_TOPIC_NAME}/chats/${widget.patientId}",
-        MqttQos.atLeastOnce,
-        builder.payload!);
-    messageBox.clear();
-    await ref.read(chatconfig).saveChat(widget.patientId, chat);
+      final chat = Chat.fromMQTT(map);
+
+      final builder = MqttClientPayloadBuilder();
+      builder.addString(jsonEncode({"data_type": "chat", "data": map}));
+      MQTTService.instance.client.publishMessage(
+          "${MQTTService.MQTT_UNIQUE_TOPIC_NAME}/chats/${widget.patientId}",
+          MqttQos.atLeastOnce,
+          builder.payload!);
+      messageBox.clear();
+      await ref.read(chatconfig).saveChat(widget.patientId, chat);
+    } catch (e) {
+      if (kDebugMode) print(e);
+      if (mounted) {
+        Get.snackbar(
+          'Send Failed',
+          'Failed to send message. Please try again.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _sendingText = false);
+    }
   }
 
   Future<void> _startCall(String type) async {

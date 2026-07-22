@@ -22,7 +22,6 @@ class YarisaJitsiCallService {
         FeatureFlagEnum.CAR_MODE_ENABLED: false,
         FeatureFlagEnum.LIVE_STREAMING_ENABLED: false,
         FeatureFlagEnum.FILMSTRIP_ENABLED: false,
-        FeatureFlagEnum.FULLSCREEN_ENABLED: true,
         FeatureFlagEnum.PREJOIN_PAGE_ENABLED: false,
         FeatureFlagEnum.SECURITY_OPTIONS_ENABLED: false,
         FeatureFlagEnum.VIDEO_SHARE_BUTTON_ENABLED: false,

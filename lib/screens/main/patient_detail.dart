@@ -53,8 +53,24 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
-            if (!snapshot.hasData) {
-              return const Text("No Patient");
+            if (snapshot.hasError) {
+              return _buildPatientErrorCard(
+                context: context,
+                icon: EneftyIcons.danger_bold,
+                title: 'Unable to load patient',
+                message: 'There was an error loading this patient\'s details. '
+                    'Please check your connection and try again.',
+                isError: true,
+              );
+            }
+            if (!snapshot.hasData || snapshot.data == null) {
+              return _buildPatientErrorCard(
+                context: context,
+                icon: EneftyIcons.profile_2user_bold,
+                title: widget.patient.patientName ?? 'Patient',
+                message:
+                    'Patient details are not available right now. They may not have completed their profile yet.',
+              );
             }
 
             final patient = snapshot.data;
@@ -334,6 +350,78 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
         child: Icon(
           EneftyIcons.user_bold,
           size: 20,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPatientErrorCard({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String message,
+    bool isError = false,
+  }) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 60),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              height: 100,
+              width: 100,
+              decoration: BoxDecoration(
+                color: isError ? Colors.red.shade50 : Colors.blue.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 48,
+                color: isError ? Colors.red.shade300 : Colors.blue.shade300,
+              ),
+            ),
+            const SizedBox(height: 28),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: isError ? Colors.red.shade700 : Colors.grey.shade800,
+                  fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey.shade600,
+                    height: 1.5,
+                  ),
+            ),
+            if (isError) ...[
+              const SizedBox(height: 32),
+              OutlinedButton.icon(
+                onPressed: () => setState(() {}),
+                style: OutlinedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.refresh_rounded, size: 20),
+                label: const Text('Retry'),
+              ),
+            ],
+            const SizedBox(height: 20),
+            Text(
+              'Patient ID: ${widget.patient.patientId ?? "unknown"}',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Colors.grey.shade400,
+                  ),
+            ),
+          ],
         ),
       ),
     );

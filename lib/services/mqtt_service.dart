@@ -1,11 +1,8 @@
 // ignore_for_file: constant_identifier_names
 
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
-
-
 
 import 'mqtt_listener.dart';
 
@@ -61,29 +58,25 @@ class MQTTService {
       return;
     }
 
-    _client.setProtocolV311();
-    _client.logging(on: true);
-    _client.keepAlivePeriod = 60 * 5;
-    _client.autoReconnect = true;
+    try {
+      _client.setProtocolV311();
+      _client.logging(on: true);
+      _client.keepAlivePeriod = 60 * 5;
+      _client.autoReconnect = true;
 
-    await _client.connect();
+      await _client.connect();
 
-    // _client.subscribe(
-    //     "${mMQTT_UNIQUE_TOPIC_NAME}delivery_request_${FirebaseAuth.instance.currentUser?.uid}",
-    //     MqttQos.atLeastOnce);
-    // _client.subscribe(
-    //     '$MQTT_UNIQUE_TOPIC_NAME/new_ride_request/${FirebaseAuth.instance.currentUser?.uid}',
-    //     MqttQos.atLeastOnce);
-    // _client.subscribe(
-    //     '$MQTT_UNIQUE_TOPIC_NAME/ride_request_status/${FirebaseAuth.instance.currentUser?.uid}',
-    //     MqttQos.atLeastOnce);
-    _client.subscribe(
-        '$MQTT_UNIQUE_TOPIC_NAME/chats/${FirebaseAuth.instance.currentUser?.uid}',
-        MqttQos.atLeastOnce);
+      _client.subscribe(
+          '$MQTT_UNIQUE_TOPIC_NAME/chats/${FirebaseAuth.instance.currentUser?.uid}',
+          MqttQos.atLeastOnce);
 
-    _client.updates?.listen(_onMessageReceived);
-
-    return;
+      _client.updates?.listen(_onMessageReceived);
+    } catch (e) {
+      // MQTT connection will retry automatically via autoReconnect.
+      // Log the error but don't crash — chat features will be unavailable
+      // until the connection succeeds.
+      print('MQTT connect failed: $e');
+    }
   }
 
   Future<void> disconnect() async {

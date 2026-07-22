@@ -547,6 +547,7 @@ Future<void> writeDoctorChatMessage({
   );
   batch.set(canonicalMessageRef, {
     ...doctorSideMessage,
+    "senderId": doctorId,
     "messageId": canonicalMessageRef.id,
     "conversationId": conversationRef.id,
     "createdAt": FieldValue.serverTimestamp(),

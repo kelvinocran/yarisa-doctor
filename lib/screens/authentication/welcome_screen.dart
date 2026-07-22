@@ -70,65 +70,66 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           color:
                               Colors.purple.shade300.withValues(alpha: .7)))),
               50.hgap,
-              if (Platform.isAndroid)
-                ElevatedButton.icon(
-                    onPressed: () async {
-                      try {
-                        final userCredential =
-                            await ref.read(authConfig).signInWithGoogle();
-                        if (userCredential != null) {
-                          if (!context.mounted) return;
-                          final api = ref.read(apimethods);
-                          await api.openDoctorLanding(
-                            context,
-                            email: userCredential.user?.email,
-                            fullname: userCredential.user?.displayName,
-                          );
-                        }
-                      } catch (e) {
-                        Logger().e(e);
+              // if (Platform.isAndroid)
+              ElevatedButton.icon(
+                  onPressed: () async {
+                    try {
+                      final userCredential =
+                          await ref.read(authConfig).signInWithGoogle();
+                      if (userCredential != null) {
                         if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Google sign-in failed: $e'),
-                            backgroundColor: Colors.red,
-                          ),
+                        final api = ref.read(apimethods);
+                        await api.openDoctorLanding(
+                          context,
+                          email: userCredential.user?.email,
+                          fullname: userCredential.user?.displayName,
                         );
                       }
-                    },
-                    icon: Icon(
-                      const UIconsBrands().google,
-                      size: 20,
-                    ),
-                    label: const Text(AppStrings.signupwithgoogle)),
-              if (Platform.isIOS)
-                ElevatedButton.icon(
-                    onPressed: () async {
-                      try {
-                        final userCredential =
-                            await ref.read(authConfig).signInWithApple();
-                        if (userCredential != null) {
-                          if (!context.mounted) return;
-                          final api = ref.read(apimethods);
-                          await api.openDoctorLanding(
-                            context,
-                            email: userCredential.user?.email,
-                            fullname: userCredential.user?.displayName,
-                          );
-                        }
-                      } catch (e) {
-                        Logger().e(e);
+                    } catch (e) {
+                      Logger().e(e);
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Google sign-in failed: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  icon: Icon(
+                    const UIconsBrands().google,
+                    size: 20,
+                  ),
+                  label: const Text(AppStrings.signupwithgoogle)),
+              const SizedBox(height: 10),
+              // if (Platform.isIOS)
+              ElevatedButton.icon(
+                  onPressed: () async {
+                    try {
+                      final userCredential =
+                          await ref.read(authConfig).signInWithApple();
+                      if (userCredential != null) {
                         if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Apple sign-in failed: $e'),
-                            backgroundColor: Colors.red,
-                          ),
+                        final api = ref.read(apimethods);
+                        await api.openDoctorLanding(
+                          context,
+                          email: userCredential.user?.email,
+                          fullname: userCredential.user?.displayName,
                         );
                       }
-                    },
-                    icon: const Icon(Icons.apple_outlined),
-                    label: const Text(AppStrings.signupwithapple)),
+                    } catch (e) {
+                      Logger().e(e);
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Apple sign-in failed: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.apple_outlined),
+                  label: const Text(AppStrings.signupwithapple)),
               10.hgap,
               ElevatedButton.icon(
                   onPressed: () {

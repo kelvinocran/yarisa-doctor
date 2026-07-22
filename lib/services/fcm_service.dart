@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:yarisa_doctor/services/firebase_options.dart';
+import 'package:yarisa_doctor/services/local_notification_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -14,15 +15,26 @@ class FcmService {
   static const int _maxApnsTokenRetries = 5;
 
   static String? _userCollection;
+  static void Function(Map<String, dynamic>)? _onMessageTap;
   static int _apnsTokenRetryCount = 0;
   static bool _apnsTokenRetryScheduled = false;
 
-  static Future<void> initialize({required String userCollection}) async {
+  static Future<void> initialize({
+    required String userCollection,
+    void Function(Map<String, dynamic> data)? onMessageTap,
+  }) async {
     _userCollection = userCollection;
+    _onMessageTap = onMessageTap;
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
     final messaging = FirebaseMessaging.instance;
     await messaging.requestPermission(alert: true, badge: true, sound: true);
+    await messaging.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+    await LocalNotificationService.initialize(onTap: _handleNotificationTap);
     await _saveCurrentToken();
 
     FirebaseAuth.instance.authStateChanges().listen((user) async {
@@ -35,11 +47,29 @@ class FcmService {
       await _saveToken(token);
     });
 
-    FirebaseMessaging.onMessage.listen((message) {
+    FirebaseMessaging.onMessage.listen((message) async {
+      await LocalNotificationService.showRemoteMessage(message);
       if (kDebugMode) {
         debugPrint('FCM foreground message: ${message.messageId}');
       }
     });
+
+    FirebaseMessaging.onMessageOpenedApp.listen(_handleRemoteMessageTap);
+    final initialMessage = await messaging.getInitialMessage();
+    if (initialMessage != null) {
+      _handleRemoteMessageTap(initialMessage);
+    }
+  }
+
+  static void _handleRemoteMessageTap(RemoteMessage message) {
+    _handleNotificationTap(message.data);
+  }
+
+  static void _handleNotificationTap(Map<String, dynamic> data) {
+    final callback = _onMessageTap;
+    if (callback != null) {
+      callback(data);
+    }
   }
 
   static Future<void> _saveCurrentToken() async {

@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:images_picker/images_picker.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../api/api_methods.dart';
 import '../constants/yarisa_enums.dart';
@@ -28,12 +28,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _updateProfilePic() async {
     try {
-      final res = await ImagesPicker.pick(
-        count: 1,
-        pickType: PickType.image,
-        cropOpt: CropOption(cropType: CropType.circle),
+      final res = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
       );
-      if (res == null || res.isEmpty) return;
+      if (res == null) return;
 
       setState(() => _uploadingPic = true);
       final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -43,7 +42,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           .ref()
           .child('profile_pictures')
           .child('$uid.jpg');
-      await storageRef.putFile(File(res.first.path));
+      await storageRef.putFile(File(res.path));
       final downloadUrl = await storageRef.getDownloadURL();
 
       await ref.read(apimethods).updateDoctorProfile({'pic': downloadUrl});

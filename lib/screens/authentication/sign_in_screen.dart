@@ -27,6 +27,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   final key = GlobalKey<FormState>();
   final email = TextEditingController();
   final password = TextEditingController();
+  bool _obscurePassword = true;
   @override
   Widget build(BuildContext context) {
     final authenticating = ref.watch(apimethods).authenticating;
@@ -196,6 +197,17 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     hint: AppStrings.password,
                     capitalization: TextCapitalization.none,
                     inputType: TextInputType.visiblePassword,
+                    lines: 1,
+                    obscure: _obscurePassword,
+                    endicon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: Colors.grey,
+                    ),
+                    endIconFunction: () {
+                      setState(() => _obscurePassword = !_obscurePassword);
+                    },
                     validator: (p0) {
                       if (p0!.isEmpty) {
                         return AppStrings.providepassword;

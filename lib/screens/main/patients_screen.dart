@@ -24,8 +24,12 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref.read(apimethods).getMyPatients();
+      _refreshPatients();
     });
+  }
+
+  Future<void> _refreshPatients() async {
+    await ref.read(apimethods).getMyPatients();
   }
 
   @override
@@ -67,43 +71,52 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
               ),
             ),
             Expanded(
-              child: filteredPatients.isEmpty
-                  ? Center(
-                      child: Text(
-                        mypatients.isEmpty
-                            ? "No Patients"
-                            : 'No patients match "$_query"',
-                      ),
-                    )
-                  : ListView.separated(
-                      separatorBuilder: (context, index) => const Divider(),
-                      itemCount: filteredPatients.length,
-                      padding: const EdgeInsets.all(20),
-                      itemBuilder: (context, index) {
-                        final patient = filteredPatients[index];
-                        return ListTile(
-                          onTap: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        PatientDetailScreen(patient: patient)));
-                          },
-                          contentPadding: EdgeInsets.zero,
-                          tileColor: Colors.transparent,
-                          leading: CircleAvatar(
-                            backgroundImage: safeCachedNetworkImageProvider(
-                                patient.patientImage),
-                            child: safeCachedNetworkImageProvider(
-                                        patient.patientImage) ==
-                                    null
-                                ? const Icon(EneftyIcons.profile_bold)
-                                : null,
+              child: RefreshIndicator(
+                onRefresh: _refreshPatients,
+                child: filteredPatients.isEmpty
+                    ? ListView(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 80),
+                            child: Text(
+                              mypatients.isEmpty
+                                  ? "No Patients"
+                                  : 'No patients match "$_query"',
+                              textAlign: TextAlign.center,
+                            ),
                           ),
-                          title: Text("${patient.patientName}"),
-                          trailing: const Icon(Icons.navigate_next_rounded),
-                        );
-                      }),
+                        ],
+                      )
+                    : ListView.separated(
+                        separatorBuilder: (context, index) => const Divider(),
+                        itemCount: filteredPatients.length,
+                        padding: const EdgeInsets.all(20),
+                        itemBuilder: (context, index) {
+                          final patient = filteredPatients[index];
+                          return ListTile(
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => PatientDetailScreen(
+                                          patient: patient)));
+                            },
+                            contentPadding: EdgeInsets.zero,
+                            tileColor: Colors.transparent,
+                            leading: CircleAvatar(
+                              backgroundImage: safeCachedNetworkImageProvider(
+                                  patient.patientImage),
+                              child: safeCachedNetworkImageProvider(
+                                          patient.patientImage) ==
+                                      null
+                                  ? const Icon(EneftyIcons.profile_bold)
+                                  : null,
+                            ),
+                            title: Text("${patient.patientName}"),
+                            trailing: const Icon(Icons.navigate_next_rounded),
+                          );
+                        }),
+              ),
             ),
           ],
         ));

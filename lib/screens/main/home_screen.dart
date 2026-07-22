@@ -41,9 +41,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref.read(apimethods).getMyPatients();
-      ref.read(apimethods).getAppointments();
+      _refreshHome();
     });
+  }
+
+  Future<void> _refreshHome() async {
+    await Future.wait([
+      ref.read(apimethods).getMyPatients(),
+      ref.read(apimethods).getAppointments(),
+    ]);
   }
 
   @override
@@ -169,90 +175,93 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ],
               )),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FormTextField(
-                    controller: _searchController,
-                    hint: "Search patients",
-                    radius: 100,
-                    labeled: false,
-                    autoFocus: false,
-                    iconSize: 20,
-                    icon: EneftyIcons.search_normal_2_outline,
-                    onChanged: (value) {
-                      setState(() {
-                        _query = value;
-                      });
-                    },
-                  ),
-                  20.hgap,
-                  if (isSearching) ...[
-                    YarisaText(
-                      text: results.isEmpty
-                          ? "No patients match \"$_query\""
-                          : "${results.length} result${results.length == 1 ? '' : 's'}",
-                      type: TextType.bodySmall,
-                      color: Colors.grey,
-                    ),
-                    10.hgap,
-                    ...results.map((patient) => ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: CircleAvatar(
-                            backgroundImage: safeCachedNetworkImageProvider(
-                                patient.patientImage),
-                            child: safeCachedNetworkImageProvider(
-                                        patient.patientImage) ==
-                                    null
-                                ? const Icon(EneftyIcons.profile_bold)
-                                : null,
-                          ),
-                          title: Text("${patient.patientName}"),
-                          trailing: const Icon(Icons.navigate_next_rounded),
-                          onTap: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => PatientDetailScreen(
-                                          patient: patient,
-                                        )));
-                          },
-                        )),
-                  ] else ...[
-                    _DoctorStatsSection(
-                      totalPatients: user.mypatients.length,
-                      upcomingAppointments: upcomingAppointmentCount,
-                      pendingAppointments: pendingAppointmentCount,
-                      todaysAppointments: todaysAppointmentCount,
+            child: RefreshIndicator(
+              onRefresh: _refreshHome,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FormTextField(
+                      controller: _searchController,
+                      hint: "Search patients",
+                      radius: 100,
+                      labeled: false,
+                      autoFocus: false,
+                      iconSize: 20,
+                      icon: EneftyIcons.search_normal_2_outline,
+                      onChanged: (value) {
+                        setState(() {
+                          _query = value;
+                        });
+                      },
                     ),
                     20.hgap,
-                    const UpcomingAppointments(),
-                    20.hgap,
-                    const _RecentPatientsSection(),
-                    20.hgap,
-                    _RecentAppointmentsSection(
-                      appointments: user.userAppointments,
-                    ),
-                    20.hgap,
-                    ResponsiveGridList(
-                        horizontalGridSpacing: 10,
-                        verticalGridSpacing: 10,
-                        minItemWidth: MediaQuery.of(context).size.width / 2,
-                        minItemsPerRow: 2,
-                        maxItemsPerRow: 4,
-                        listViewBuilderOptions: ListViewBuilderOptions(
-                            physics: const NeverScrollableScrollPhysics(),
-                            shrinkWrap: true,
-                            padding: EdgeInsets.zero),
-                        children: List.generate(
-                          dashboardItems.length,
-                          (index) =>
-                              HomeDashboardItem(data: dashboardItems[index]),
-                        ))
+                    if (isSearching) ...[
+                      YarisaText(
+                        text: results.isEmpty
+                            ? "No patients match \"$_query\""
+                            : "${results.length} result${results.length == 1 ? '' : 's'}",
+                        type: TextType.bodySmall,
+                        color: Colors.grey,
+                      ),
+                      10.hgap,
+                      ...results.map((patient) => ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: CircleAvatar(
+                              backgroundImage: safeCachedNetworkImageProvider(
+                                  patient.patientImage),
+                              child: safeCachedNetworkImageProvider(
+                                          patient.patientImage) ==
+                                      null
+                                  ? const Icon(EneftyIcons.profile_bold)
+                                  : null,
+                            ),
+                            title: Text("${patient.patientName}"),
+                            trailing: const Icon(Icons.navigate_next_rounded),
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => PatientDetailScreen(
+                                            patient: patient,
+                                          )));
+                            },
+                          )),
+                    ] else ...[
+                      _DoctorStatsSection(
+                        totalPatients: user.mypatients.length,
+                        upcomingAppointments: upcomingAppointmentCount,
+                        pendingAppointments: pendingAppointmentCount,
+                        todaysAppointments: todaysAppointmentCount,
+                      ),
+                      20.hgap,
+                      const UpcomingAppointments(),
+                      20.hgap,
+                      const _RecentPatientsSection(),
+                      20.hgap,
+                      _RecentAppointmentsSection(
+                        appointments: user.userAppointments,
+                      ),
+                      20.hgap,
+                      ResponsiveGridList(
+                          horizontalGridSpacing: 10,
+                          verticalGridSpacing: 10,
+                          minItemWidth: MediaQuery.of(context).size.width / 2,
+                          minItemsPerRow: 2,
+                          maxItemsPerRow: 4,
+                          listViewBuilderOptions: ListViewBuilderOptions(
+                              physics: const NeverScrollableScrollPhysics(),
+                              shrinkWrap: true,
+                              padding: EdgeInsets.zero),
+                          children: List.generate(
+                            dashboardItems.length,
+                            (index) =>
+                                HomeDashboardItem(data: dashboardItems[index]),
+                          ))
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),

@@ -8,7 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:images_picker/images_picker.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:yarisa_doctor/api/api_methods.dart';
 import 'package:yarisa_doctor/extensions/yarisa_extensions.dart';
@@ -91,15 +91,12 @@ class _CompleteProfileState extends ConsumerState<CompleteProfile> {
 
   Future<void> _pickProfilePhoto() async {
     try {
-      final res = await ImagesPicker.pick(
-        count: 1,
-        pickType: PickType.image,
-        cropOpt: CropOption(
-          cropType: CropType.circle,
-        ),
+      final res = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
       );
-      if (res != null && res.isNotEmpty) {
-        setState(() => _pickedPicPath = res.first.path);
+      if (res != null) {
+        setState(() => _pickedPicPath = res.path);
       }
     } catch (e) {
       if (mounted) {

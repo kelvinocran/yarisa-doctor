@@ -741,16 +741,10 @@ class ApiMethods extends ChangeNotifier {
           })
       };
 
-      final legacyAppointments = await FirestoreSchema.appointments()
-          .where("doctor_id", isEqualTo: doctorId)
-          .get();
-      final canonicalAppointments = await FirestoreSchema.appointments()
+      final appointmentsSnapshot = await FirestoreSchema.appointments()
           .where("doctorId", isEqualTo: doctorId)
           .get();
-      final appointmentDocs = {
-        for (final doc in legacyAppointments.docs) doc.id: doc,
-        for (final doc in canonicalAppointments.docs) doc.id: doc,
-      }.values;
+      final appointmentDocs = appointmentsSnapshot.docs;
 
       for (final appointmentDoc in appointmentDocs) {
         final appointment = AppointmentModel.fromSnapshot(appointmentDoc);

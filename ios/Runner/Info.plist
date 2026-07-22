@@ -26,6 +26,8 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Allow calendar access to schedule and manage appointment reminders.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Allow camera access for video calls and photo upload</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
@@ -38,6 +40,10 @@
 	<string>Allow microphone access for video and voice calls</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Allow photo access for sharing images and photo upload</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
