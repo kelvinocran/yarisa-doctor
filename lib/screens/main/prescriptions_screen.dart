@@ -1,15 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:enefty_icons/enefty_icons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../api/api_methods.dart';
-import '../../components/formtextfield.dart';
-import '../../constants/yarisa_enums.dart';
-import '../../constants/yarisa_widgets.dart';
-import '../../models/personal_patients_model.dart';
-import '../add_prescription.dart';
+import 'package:yarisa_doctor/api/api_methods.dart';
+import 'package:yarisa_doctor/constants/yarisa_constants.dart';
+import 'package:yarisa_doctor/models/personal_patients_model.dart';
+import 'package:yarisa_doctor/screens/add_prescription.dart';
+import 'package:yarisa_doctor/ui/doctor_ui.dart';
 
 class PrescriptionsScreen extends ConsumerStatefulWidget {
   const PrescriptionsScreen({super.key, this.patient});
@@ -32,12 +29,68 @@ class _PrescriptionsScreenState extends ConsumerState<PrescriptionsScreen> {
     super.dispose();
   }
 
-  Future<void> _addPrescription() async {
-    final patient = widget.patient;
-    if (patient == null || (patient.patientId ?? '').isEmpty) {
+  Future<PersonalPatientsModel?> _resolvePatient() async {
+    final existing = widget.patient;
+    if (existing != null && (existing.patientId ?? '').isNotEmpty) {
+      return existing;
+    }
+    final patients = ref.read(apimethods).mypatients;
+    if (patients.isEmpty) {
+      await ref.read(apimethods).getMyPatients();
+    }
+    final options = ref.read(apimethods).mypatients;
+    if (!mounted) return null;
+    if (options.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Open a patient before prescribing.')),
+        const SnackBar(
+          content: Text('No patients yet. Accept an appointment first.'),
+        ),
       );
+      return null;
+    }
+    return showModalBottomSheet<PersonalPatientsModel>(
+      context: context,
+      backgroundColor: DoctorUi.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'Select patient',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+              ),
+            ),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: options.length,
+                itemBuilder: (context, index) {
+                  final patient = options[index];
+                  return ListTile(
+                    leading: CircleImage(
+                      size: 40,
+                      image: patient.patientImage,
+                    ),
+                    title: Text(patient.patientName ?? 'Patient'),
+                    onTap: () => Navigator.pop(context, patient),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _addPrescription() async {
+    final patient = await _resolvePatient();
+    if (!mounted || patient == null || (patient.patientId ?? '').isEmpty) {
       return;
     }
 
@@ -96,74 +149,96 @@ class _PrescriptionsScreenState extends ConsumerState<PrescriptionsScreen> {
     }
   }
 
+  Stream<QuerySnapshot<Map<String, dynamic>>> _stream(String doctorId) {
+    final patientId = widget.patient?.patientId;
+    if (patientId != null && patientId.isNotEmpty) {
+      // Patient subcollection is always readable by treating doctor when
+      // doctorId matches; also works offline of top-level list rules.
+      return FirebaseFirestore.instance
+          .collection('Patients')
+          .doc(patientId)
+          .collection('Prescriptions')
+          .where('doctorId', isEqualTo: doctorId)
+          .snapshots();
+    }
+    return FirebaseFirestore.instance
+        .collection('Prescriptions')
+        .where('doctorId', isEqualTo: doctorId)
+        .snapshots();
+  }
+
   @override
   Widget build(BuildContext context) {
     final doctorId = FirebaseAuth.instance.currentUser?.uid;
     final patient = widget.patient;
     final title = patient == null
         ? 'Prescriptions'
-        : '${patient.patientName ?? 'Patient'} prescriptions';
+        : '${patient.patientName ?? 'Patient'} Rx';
 
     if (doctorId == null) {
-      return Scaffold(
-        appBar: yarisaAppBar(context, title: title),
-        body: const Center(child: Text('Sign in again to view prescriptions.')),
+      return DoctorScaffold(
+        title: title,
+        body: const DoctorEmptyState(
+          icon: Icons.medication_outlined,
+          title: 'Sign in required',
+          message: 'Sign in again to view prescriptions.',
+        ),
       );
     }
 
-    return Scaffold(
-      appBar: yarisaAppBar(context, title: title),
-      floatingActionButton: patient == null
-          ? null
-          : FloatingActionButton(
-              onPressed: _saving ? null : _addPrescription,
-              child: _saving
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.add),
-            ),
+    return DoctorScaffold(
+      title: title,
+      subtitle: patient == null
+          ? 'Medicines you prescribe'
+          : 'For this patient',
+      floatingActionButton: FloatingActionButton(
+        onPressed: _saving ? null : _addPrescription,
+        backgroundColor: DoctorUi.primary,
+        foregroundColor: Colors.white,
+        child: _saving
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(Icons.add_rounded),
+      ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: FormTextField(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: DoctorSearchField(
               controller: _searchController,
               hint: 'Search prescriptions',
-              radius: 100,
-              labeled: false,
-              autoFocus: false,
-              icon: EneftyIcons.search_normal_2_outline,
               onChanged: (value) => setState(() => _query = value.trim()),
             ),
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: FirebaseFirestore.instance
-                  .collection('Prescriptions')
-                  .where('doctorId', isEqualTo: doctorId)
-                  .snapshots(),
+              stream: _stream(doctorId),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2.2),
+                  );
                 }
                 if (snapshot.hasError) {
-                  return const _EmptyState(
+                  return DoctorEmptyState(
                     icon: Icons.medication_outlined,
                     title: 'Unable to load prescriptions',
-                    message: 'Please check your connection and try again.',
+                    message:
+                        'Check your connection and try again. If this persists, pull to refresh after a full restart.',
+                    actionLabel: 'Retry',
+                    onAction: () => setState(() {}),
                   );
                 }
 
                 final query = _query.toLowerCase();
                 final docs = (snapshot.data?.docs ?? []).where((doc) {
                   final data = doc.data();
-                  if (patient != null &&
-                      data['patientId']?.toString() != patient.patientId) {
-                    return false;
-                  }
                   if (query.isEmpty) return true;
                   return _matchesPrescription(data, query);
                 }).toList()
@@ -174,11 +249,11 @@ class _PrescriptionsScreenState extends ConsumerState<PrescriptionsScreen> {
                       )));
 
                 if (docs.isEmpty) {
-                  return _EmptyState(
+                  return DoctorEmptyState(
                     icon: Icons.medication_outlined,
-                    title: 'No prescriptions found',
+                    title: 'No prescriptions yet',
                     message: patient == null
-                        ? 'Prescriptions created for your patients will appear here.'
+                        ? 'Tap + to write a prescription for a patient.'
                         : 'Add a prescription for this patient when needed.',
                   );
                 }
@@ -186,10 +261,9 @@ class _PrescriptionsScreenState extends ConsumerState<PrescriptionsScreen> {
                 return ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
                   itemCount: docs.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 8),
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
-                    return _PrescriptionTile(document: docs[index]);
+                    return _PrescriptionCard(document: docs[index]);
                   },
                 );
               },
@@ -201,8 +275,8 @@ class _PrescriptionsScreenState extends ConsumerState<PrescriptionsScreen> {
   }
 }
 
-class _PrescriptionTile extends StatelessWidget {
-  const _PrescriptionTile({required this.document});
+class _PrescriptionCard extends StatelessWidget {
+  const _PrescriptionCard({required this.document});
 
   final QueryDocumentSnapshot<Map<String, dynamic>> document;
 
@@ -212,116 +286,97 @@ class _PrescriptionTile extends StatelessWidget {
     final items = data['items'] is List ? data['items'] as List : const [];
     final patientName = data['patientName']?.toString() ?? 'Patient';
     final createdOn = _dateValue(data['createdOn'] ?? data['createdAt']);
+    final status = data['status']?.toString() ?? 'active';
 
-    return Card(
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ExpansionTile(
-        leading: CircleAvatar(
-          backgroundImage: safeCachedNetworkImageProvider(
-            data['patientImage']?.toString(),
+    return DoctorCard(
+      padding: EdgeInsets.zero,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.fromLTRB(14, 4, 10, 4),
+          childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+          leading: CircleImage(
+            size: 42,
+            image: data['patientImage']?.toString(),
           ),
-          child: safeCachedNetworkImageProvider(
-                      data['patientImage']?.toString()) ==
-                  null
-              ? const Icon(EneftyIcons.profile_bold)
-              : null,
-        ),
-        title: Text(patientName),
-        subtitle: Text(
-          '${items.length} item${items.length == 1 ? '' : 's'} • ${_formatDate(createdOn)}',
-        ),
-        trailing: _StatusChip(label: data['status']?.toString() ?? 'active'),
-        children: [
-          if (items.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text('No medicines added.'),
+          title: Text(
+            patientName,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          subtitle: Text(
+            '${items.length} item${items.length == 1 ? '' : 's'} · ${_formatDate(createdOn)}',
+            style: TextStyle(color: DoctorUi.muted, fontSize: 12),
+          ),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: DoctorUi.primary.withValues(alpha: .1),
+              borderRadius: BorderRadius.circular(50),
+            ),
+            child: Text(
+              status,
+              style: TextStyle(
+                color: DoctorUi.primary,
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
               ),
-            )
-          else
-            ...items.map((item) {
-              final map = item is Map
-                  ? Map<String, dynamic>.from(item)
-                  : <String, dynamic>{};
-              final medicine = map['medicine'] is Map
-                  ? Map<String, dynamic>.from(map['medicine'] as Map)
-                  : <String, dynamic>{};
-              final medicineName =
-                  medicine['medicine']?.toString() ?? 'Medicine';
-              final dosage = [medicine['dosage'], medicine['unit']]
-                  .where(
-                      (value) => value != null && value.toString().isNotEmpty)
-                  .join('');
-              final instruction = map['controller']?.toString() ?? '';
-              return ListTile(
-                title: Text(medicineName),
-                subtitle: Text(
-                  [
-                    if (dosage.isNotEmpty) dosage,
-                    if (instruction.isNotEmpty) instruction,
-                  ].join(' • '),
-                ),
-              );
-            }),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Chip(
-      label: Text(label),
-      visualDensity: VisualDensity.compact,
-      labelStyle: Theme.of(context).textTheme.labelSmall,
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({
-    required this.icon,
-    required this.title,
-    required this.message,
-  });
-
-  final IconData icon;
-  final String title;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+            ),
+          ),
           children: [
-            Icon(icon, size: 42, color: Colors.grey),
-            const SizedBox(height: 12),
-            YarisaText(
-              text: title,
-              type: TextType.bodyBig,
-              weight: FontWeight.w700,
-              align: TextAlign.center,
-            ),
-            const SizedBox(height: 6),
-            YarisaText(
-              text: message,
-              type: TextType.bodySmall,
-              color: Colors.grey,
-              lines: 3,
-              align: TextAlign.center,
-            ),
+            if (items.isEmpty)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'No medicines listed.',
+                  style: TextStyle(color: DoctorUi.muted),
+                ),
+              )
+            else
+              ...items.map((item) {
+                final map = item is Map
+                    ? Map<String, dynamic>.from(item)
+                    : <String, dynamic>{};
+                final medicine = map['medicine'] is Map
+                    ? Map<String, dynamic>.from(map['medicine'] as Map)
+                    : <String, dynamic>{};
+                final medicineName =
+                    medicine['medicine']?.toString() ?? 'Medicine';
+                final dosage = [medicine['dosage'], medicine['unit']]
+                    .where((v) => v != null && v.toString().isNotEmpty)
+                    .join('');
+                final instruction = map['controller']?.toString() ?? '';
+                return Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: DoctorUi.fieldBg,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        medicineName,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      if (dosage.isNotEmpty || instruction.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          [
+                            if (dosage.isNotEmpty) dosage,
+                            if (instruction.isNotEmpty) instruction,
+                          ].join(' · '),
+                          style: TextStyle(
+                            color: DoctorUi.muted,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }),
           ],
         ),
       ),

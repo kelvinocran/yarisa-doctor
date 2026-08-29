@@ -60,52 +60,90 @@ class _SecondOpinionsScreenState extends State<SecondOpinionsScreen> {
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: FirestoreSchema.secondOpinions()
-                  .where('doctorId', isEqualTo: doctorId)
-                  .orderBy('createdAt', descending: true)
+              // Prefer doctor-owned subcollection (always readable by owner).
+              stream: FirestoreSchema.doctorDoc(doctorId)
+                  .collection('SecondOpinions')
                   .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const AppointmentSkeletonList();
-                }
-                if (snapshot.hasError) {
-                  return const _SecondOpinionState(
-                    title: 'Unable to load requests',
-                    message: 'Please check your connection and try again.',
-                  );
-                }
+              builder: (context, doctorSnap) {
+                return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  // Top-level collection as fallback / dual-write path.
+                  // No orderBy here — avoids composite-index failures; sort client-side.
+                  stream: FirestoreSchema.secondOpinions()
+                      .where('doctorId', isEqualTo: doctorId)
+                      .snapshots(),
+                  builder: (context, topSnap) {
+                    final waiting =
+                        doctorSnap.connectionState == ConnectionState.waiting &&
+                            topSnap.connectionState == ConnectionState.waiting;
+                    if (waiting) {
+                      return const AppointmentSkeletonList();
+                    }
 
-                final query = _query.toLowerCase();
-                final requests = (snapshot.data?.docs ?? []).where((doc) {
-                  if (query.isEmpty) return true;
-                  final data = doc.data();
-                  return [
-                    data['patientName'],
-                    data['concern'],
-                    data['currentDiagnosis'],
-                    data['status'],
-                    data['urgency'],
-                  ].whereType<Object>().join(' ').toLowerCase().contains(query);
-                }).toList();
+                    final bothFailed =
+                        doctorSnap.hasError && topSnap.hasError;
+                    if (bothFailed) {
+                      return const _SecondOpinionState(
+                        title: 'Unable to load requests',
+                        message:
+                            'Check your connection and try again after a full restart.',
+                      );
+                    }
 
-                if (requests.isEmpty) {
-                  return _SecondOpinionState(
-                    title: snapshot.data?.docs.isEmpty == true
-                        ? 'No second opinions yet'
-                        : 'No matching requests',
-                    message: snapshot.data?.docs.isEmpty == true
-                        ? 'Patient second opinion requests will appear here.'
-                        : 'Try another search term.',
-                  );
-                }
+                    final docs =
+                        <String, QueryDocumentSnapshot<Map<String, dynamic>>>{};
+                    if (!doctorSnap.hasError) {
+                      for (final d in doctorSnap.data?.docs ?? []) {
+                        docs[d.id] = d;
+                      }
+                    }
+                    if (!topSnap.hasError) {
+                      for (final d in topSnap.data?.docs ?? []) {
+                        docs[d.id] = d;
+                      }
+                    }
 
-                return ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                  itemCount: requests.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 12),
-                  itemBuilder: (context, index) =>
-                      _SecondOpinionCard(snapshot: requests[index]),
+                    final query = _query.toLowerCase();
+                    final requests = docs.values.where((doc) {
+                      if (query.isEmpty) return true;
+                      final data = doc.data();
+                      return [
+                        data['patientName'],
+                        data['concern'],
+                        data['currentDiagnosis'],
+                        data['status'],
+                        data['urgency'],
+                      ]
+                          .whereType<Object>()
+                          .join(' ')
+                          .toLowerCase()
+                          .contains(query);
+                    }).toList()
+                      ..sort((a, b) {
+                        final aAt = _soDate(a.data()['createdAt']);
+                        final bAt = _soDate(b.data()['createdAt']);
+                        return bAt.compareTo(aAt);
+                      });
+
+                    if (requests.isEmpty) {
+                      return _SecondOpinionState(
+                        title: docs.isEmpty
+                            ? 'No second opinions yet'
+                            : 'No matching requests',
+                        message: docs.isEmpty
+                            ? 'Patient second opinion requests will appear here.'
+                            : 'Try another search term.',
+                      );
+                    }
+
+                    return ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                      itemCount: requests.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
+                      itemBuilder: (context, index) =>
+                          _SecondOpinionCard(snapshot: requests[index]),
+                    );
+                  },
                 );
               },
             ),
@@ -347,7 +385,7 @@ class _SecondOpinionDetailBody extends StatelessWidget {
     if (currentUser == null || patientId.isEmpty) return;
 
     final joined = await YarisaJitsiCallService.join(
-      room: requestId,
+      room: YarisaJitsiCallService.secondOpinionRoom(requestId),
       type: type,
       subject: 'Second Opinion',
       displayName: currentUser.displayName ?? 'Doctor',
@@ -657,11 +695,15 @@ class _SecondOpinionState extends StatelessWidget {
   }
 }
 
+DateTime _soDate(dynamic value) {
+  if (value is Timestamp) return value.toDate();
+  if (value is DateTime) return value;
+  return DateTime.fromMillisecondsSinceEpoch(0);
+}
+
 String _createdAtText(dynamic value) {
-  DateTime? createdAt;
-  if (value is Timestamp) createdAt = value.toDate();
-  if (value is DateTime) createdAt = value;
-  if (createdAt == null) return 'Date pending';
+  final createdAt = _soDate(value);
+  if (createdAt.millisecondsSinceEpoch == 0) return 'Date pending';
   return DateFormat('MMM d, y • h:mm a').format(createdAt);
 }
 

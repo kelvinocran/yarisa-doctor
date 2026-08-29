@@ -1,19 +1,15 @@
 import 'package:enefty_icons/enefty_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-
 import 'package:yarisa_doctor/api/api_methods.dart';
-import 'package:yarisa_doctor/components/formtextfield.dart';
-import 'package:yarisa_doctor/extensions/yarisa_extensions.dart';
-
-import '../../constants/yarisa_enums.dart';
-import '../../constants/yarisa_strings.dart';
-import '../../constants/yarisa_widgets.dart';
-import '../../widgets/confirmation_dialog.dart';
-import '../../widgets/skeleton_loader.dart';
-
-enum _AvailabilityViewMode { calendar, list }
+import 'package:yarisa_doctor/components/availability/add_slot_sheet.dart';
+import 'package:yarisa_doctor/components/availability/availability_widgets.dart';
+import 'package:yarisa_doctor/screens/main/appointment_screen.dart';
+import 'package:yarisa_doctor/ui/doctor_ui.dart';
+import 'package:yarisa_doctor/widgets/confirmation_dialog.dart';
+import 'package:yarisa_doctor/widgets/skeleton_loader.dart';
 
 class AvailabilityScreen extends ConsumerStatefulWidget {
   const AvailabilityScreen({super.key});
@@ -26,12 +22,15 @@ class AvailabilityScreen extends ConsumerStatefulWidget {
 class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
   bool status = false;
   bool scheduleLoading = true;
+  /// Open labels only (legacy helpers / overlap checks).
   List<String> availability = [];
+  /// All slots for selected day, ascending (open + booked).
+  List<DoctorAvailabilitySlot> daySlots = [];
   Map<String, dynamic>? data;
   List<AvailabilityDaySummary> schedule = [];
-  DateTime selectedDate = _dateOnly(DateTime.now());
+  DateTime selectedDate = availabilityDateOnly(DateTime.now());
   DateTime visibleMonth = DateTime(DateTime.now().year, DateTime.now().month);
-  _AvailabilityViewMode viewMode = _AvailabilityViewMode.calendar;
+  AvailabilityViewMode viewMode = AvailabilityViewMode.calendar;
 
   @override
   void initState() {
@@ -57,7 +56,7 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
   Future<void> _loadSelectedDay(DateTime date) async {
     if (!mounted) return;
     await ref.read(apimethods).getAvailability(
-          date: _dateOnly(date),
+          date: availabilityDateOnly(date),
           onSuccess: _applySelectedDayData,
           onFailed: () {
             if (!mounted) return;
@@ -65,6 +64,7 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
               data = null;
               status = false;
               availability = [];
+              daySlots = [];
             });
           },
         );
@@ -72,13 +72,36 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
 
   void _applySelectedDayData(Map<String, dynamic>? value) {
     if (!mounted) return;
+    final detailsRaw = value?['slotDetails'];
+    List<DoctorAvailabilitySlot> details = [];
+    if (detailsRaw is List) {
+      details = detailsRaw.whereType<DoctorAvailabilitySlot>().toList()
+        ..sort((a, b) => a.sortMinutes.compareTo(b.sortMinutes));
+    }
+    final openLabels = List<dynamic>.from(value?['slots'] ?? [])
+        .map((slot) => slot.toString())
+        .where((slot) => slot.trim().isNotEmpty)
+        .toList()
+      ..sort(compareSlotLabelsAscending);
+
+    // If API only returned labels, still show them sorted.
+    if (details.isEmpty && openLabels.isNotEmpty) {
+      details = openLabels
+          .map(
+            (l) => DoctorAvailabilitySlot(
+              label: l,
+              open: true,
+              booked: false,
+            ),
+          )
+          .toList();
+    }
+
     setState(() {
       data = value;
-      status = value?["status"] == true;
-      availability = List<dynamic>.from(value?["slots"] ?? [])
-          .map((slot) => slot.toString())
-          .where((slot) => slot.trim().isNotEmpty)
-          .toList();
+      status = value?['status'] == true;
+      availability = openLabels;
+      daySlots = details;
     });
   }
 
@@ -94,21 +117,112 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
   }
 
   Future<void> _selectDate(DateTime date) async {
-    final day = _dateOnly(date);
+    final day = availabilityDateOnly(date);
     setState(() {
       selectedDate = day;
       visibleMonth = DateTime(day.year, day.month);
       status = false;
       availability = [];
+      daySlots = [];
     });
     await _loadSelectedDay(day);
+  }
+
+  Future<void> _onBookedSlotTap(DoctorAvailabilitySlot slot) async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: DoctorUi.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 12, 8, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: .3),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              ),
+              ListTile(
+                leading: Icon(Icons.lock_outline, color: DoctorUi.primary),
+                title: Text(slot.label,
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                subtitle: const Text('This time is held by a patient booking'),
+              ),
+              ListTile(
+                leading: const Icon(EneftyIcons.calendar_2_outline),
+                title: const Text('View appointments'),
+                subtitle: const Text('Approve, reschedule, or manage bookings'),
+                onTap: () => Navigator.pop(ctx, 'appointments'),
+              ),
+              ListTile(
+                leading: Icon(Icons.event_available_outlined,
+                    color: Colors.green.shade700),
+                title: const Text('Cancel booking & free slot'),
+                subtitle: const Text(
+                    'Marks the appointment cancelled and reopens this time'),
+                onTap: () => Navigator.pop(ctx, 'free'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.close_rounded),
+                title: const Text('Keep as booked'),
+                onTap: () => Navigator.pop(ctx),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (!mounted || choice == null) return;
+
+    if (choice == 'appointments') {
+      Get.to(() => const AppointmentScreen());
+      return;
+    }
+    if (choice == 'free') {
+      final ok = await showYarisaConfirmationDialog(
+        context,
+        title: 'Cancel booking & free slot?',
+        message:
+            'This will cancel the patient appointment for ${slot.label} and open the slot again for others. The patient should be notified outside the app if needed.',
+        confirmLabel: 'Cancel & free',
+        icon: Icons.event_available_outlined,
+        isDestructive: true,
+      );
+      if (!ok || !mounted) return;
+      await ref.read(apimethods).cancelBookedSlotAndFree(
+            date: selectedDate,
+            slotLabel: slot.label,
+            onSuccess: () async {
+              await _loadSelectedDay(selectedDate);
+              await _loadSchedule();
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${slot.label} is free again')),
+              );
+            },
+            onFailed: (msg) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(msg)),
+              );
+            },
+          );
+    }
   }
 
   Future<void> _toggleStatus(bool value) async {
     setState(() => status = value);
     await ref.read(apimethods).updateAvailability(
           date: selectedDate,
-          timeSlots: "",
+          timeSlots: '',
           status: value,
           onSuccess: (value) async {
             _applySelectedDayData(value);
@@ -122,550 +236,275 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
   }
 
   Future<void> _removeSlot(String slot) async {
+    // Booked slots cannot be deleted — protect the patient's appointment.
+    final booking = await ref.read(apimethods).getSlotBookingInfo(
+          date: selectedDate,
+          timeSlots: slot,
+        );
+    if (!mounted) return;
+
+    if (booking.booked) {
+      await _onBookedSlotTap(
+        DoctorAvailabilitySlot(
+          label: slot,
+          open: false,
+          booked: true,
+          appointmentId: booking.appointmentId,
+          bookedBy: booking.bookedBy,
+        ),
+      );
+      return;
+    }
+
     final confirmed = await showYarisaConfirmationDialog(
       context,
-      title: "Delete slot?",
+      title: 'Delete slot?',
       message:
-          "Remove $slot from ${DateFormat.yMMMMEEEEd().format(selectedDate)}?",
-      confirmLabel: "Delete",
+          'Remove $slot from ${DateFormat.yMMMMEEEEd().format(selectedDate)}? This only removes an open time — no patient is booked here.',
+      confirmLabel: 'Delete',
       icon: EneftyIcons.trash_outline,
       isDestructive: true,
     );
     if (!confirmed || !mounted) return;
 
-    await ref.read(apimethods).removeTimeSlot(
+    try {
+      await ref.read(apimethods).removeTimeSlot(
+            date: selectedDate,
+            timeSlots: slot,
+            onSuccess: (value) async {
+              _applySelectedDayData(value);
+              await _loadSchedule();
+            },
+          );
+    } on SlotBookedException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This slot was just booked. Refresh and try again.'),
+        ),
+      );
+      await _loadSelectedDay(selectedDate);
+      await _loadSchedule();
+    }
+  }
+
+  Future<void> _showAddSlotSheet() async {
+    final result = await showAddAvailabilitySlotSheet(
+      context,
+      date: selectedDate,
+      initialDayOpen: status || availability.isNotEmpty,
+    );
+    if (result == null || !mounted) return;
+
+    // Confirm when adding many slots onto a day that already has some.
+    if (result.slotLabels.isNotEmpty && availability.isNotEmpty) {
+      final overlaps = _overlappingExistingLabels(
+        existing: availability,
+        incoming: result.slotLabels,
+      );
+      final message = overlaps.isEmpty
+          ? 'You already have ${availability.length} slot(s) on this day. '
+              'New times will be added alongside them (existing slots stay).'
+          : 'Some times already exist or may overlap open slots:\n'
+              '${overlaps.take(5).join('\n')}'
+              '${overlaps.length > 5 ? '\n…' : ''}\n\n'
+              'Duplicates are skipped. New free times will be added.';
+
+      final ok = await showYarisaConfirmationDialog(
+        context,
+        title: 'Add to this day?',
+        message: message,
+        confirmLabel: 'Add slots',
+        cancelLabel: 'Cancel',
+        icon: EneftyIcons.calendar_add_outline,
+      );
+      if (!ok || !mounted) return;
+    }
+
+    final write = await ref.read(apimethods).updateAvailabilitySlots(
           date: selectedDate,
-          timeSlots: slot,
+          slotLabels: result.slotLabels,
+          status: result.dayOpen || result.slotLabels.isNotEmpty,
           onSuccess: (value) async {
             _applySelectedDayData(value);
             await _loadSchedule();
           },
+          onFailed: _showVerificationRequired,
         );
+
+    if (!mounted) return;
+    final parts = <String>[];
+    if (write.added > 0) {
+      parts.add(write.added == 1
+          ? '1 new slot added'
+          : '${write.added} new slots added');
+    }
+    if (write.skippedExisting > 0) {
+      parts.add('${write.skippedExisting} already open');
+    }
+    if (write.skippedBooked > 0) {
+      parts.add('${write.skippedBooked} booked (left unchanged)');
+    }
+    if (parts.isEmpty && result.slotLabels.isEmpty) {
+      parts.add(result.dayOpen ? 'Day opened' : 'Day updated');
+    }
+    if (parts.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(parts.join(' · '))),
+      );
+    }
   }
 
-  Future<void> _showAddSlotSheet() async {
-    final startTime = TextEditingController();
-    final endTime = TextEditingController();
-    var sheetStatus = status || availability.isNotEmpty;
-    var saving = false;
-
-    try {
-      await showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        builder: (sheetContext) => StatefulBuilder(
-          builder: (sheetContext, setSheetState) {
-            Future<void> pickTime(TextEditingController controller) async {
-              final value = await showTimePicker(
-                context: sheetContext,
-                initialTime: TimeOfDay.now(),
-              );
-              if (value == null || !sheetContext.mounted) return;
-              controller.text = value.format(sheetContext);
-              setSheetState(() {});
-            }
-
-            Future<void> save() async {
-              if (saving) return;
-              if (!mounted) return;
-              final slot = startTime.text.isEmpty && endTime.text.isEmpty
-                  ? ""
-                  : "${startTime.text} - ${endTime.text}";
-              setSheetState(() => saving = true);
-              try {
-                var saved = false;
-                await ref.read(apimethods).updateAvailability(
-                      date: selectedDate,
-                      timeSlots: slot,
-                      status: sheetStatus || slot.isNotEmpty,
-                      onSuccess: (value) async {
-                        saved = true;
-                        _applySelectedDayData(value);
-                        await _loadSchedule();
-                      },
-                      onFailed: _showVerificationRequired,
-                    );
-                if (saved && sheetContext.mounted) Navigator.pop(sheetContext);
-              } finally {
-                if (sheetContext.mounted) {
-                  setSheetState(() => saving = false);
-                }
-              }
-            }
-
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 20,
-                  right: 20,
-                  top: 20,
-                  bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 20,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: YarisaText(
-                            text: DateFormat.yMMMMEEEEd().format(selectedDate),
-                            type: TextType.bodyBig,
-                            weight: FontWeight.w700,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(sheetContext),
-                          icon: const Icon(Icons.close_rounded),
-                        )
-                      ],
-                    ),
-                    12.hgap,
-                    SwitchListTile(
-                      value: sheetStatus,
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 10),
-                      title: Text(
-                        AppStrings.manageavailabilty,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      subtitle: Text(
-                        AppStrings.toggleyouravailability,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      onChanged: (value) {
-                        setSheetState(() => sheetStatus = value);
-                      },
-                    ),
-                    12.hgap,
-                    Row(
-                      children: [
-                        Expanded(
-                          child: InkWell(
-                            onTap: () => pickTime(startTime),
-                            child: FormTextField(
-                              endicon: const Icon(
-                                EneftyIcons.clock_2_outline,
-                                size: 18,
-                              ),
-                              enabled: false,
-                              controller: startTime,
-                              hint: AppStrings.starttime,
-                            ),
-                          ),
-                        ),
-                        10.wgap,
-                        Expanded(
-                          child: InkWell(
-                            onTap: () => pickTime(endTime),
-                            child: FormTextField(
-                              endicon: const Icon(
-                                EneftyIcons.clock_2_outline,
-                                size: 18,
-                              ),
-                              enabled: false,
-                              controller: endTime,
-                              hint: AppStrings.endtime,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    20.hgap,
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () {
-                              startTime.clear();
-                              endTime.clear();
-                              setSheetState(() {});
-                            },
-                            child: const Text(AppStrings.cancel),
-                          ),
-                        ),
-                        10.wgap,
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: saving ? null : save,
-                            child: saving
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Text(AppStrings.save),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
-      );
-    } finally {
-      startTime.dispose();
-      endTime.dispose();
+  /// Labels that already exist or whose time ranges overlap an existing slot.
+  List<String> _overlappingExistingLabels({
+    required List<String> existing,
+    required List<String> incoming,
+  }) {
+    final hits = <String>[];
+    final existingRanges = existing
+        .map(_parseSlotRange)
+        .whereType<_MinuteRange>()
+        .toList();
+    for (final label in incoming) {
+      if (existing.any((e) => e.trim() == label.trim())) {
+        hits.add('$label (already exists)');
+        continue;
+      }
+      final range = _parseSlotRange(label);
+      if (range == null) continue;
+      for (final other in existingRanges) {
+        if (range.overlaps(other)) {
+          hits.add('$label (overlaps an open slot)');
+          break;
+        }
+      }
     }
+    return hits;
+  }
+
+  _MinuteRange? _parseSlotRange(String label) {
+    final parts = label.split(RegExp(r'\s*[-–—]\s*'));
+    if (parts.length < 2) return null;
+    final a = _parseTimeOfDay(parts[0].trim());
+    final b = _parseTimeOfDay(parts.sublist(1).join(' - ').trim());
+    if (a == null || b == null) return null;
+    final start = a.hour * 60 + a.minute;
+    final end = b.hour * 60 + b.minute;
+    if (end <= start) return null;
+    return _MinuteRange(start, end);
+  }
+
+  TimeOfDay? _parseTimeOfDay(String raw) {
+    final cleaned = raw.trim().toUpperCase();
+    final match = RegExp(
+      r'^(\d{1,2}):(\d{2})\s*(AM|PM)?$',
+    ).firstMatch(cleaned);
+    if (match == null) return null;
+    var hour = int.tryParse(match.group(1)!);
+    final minute = int.tryParse(match.group(2)!);
+    if (hour == null || minute == null) return null;
+    final mer = match.group(3);
+    if (mer == 'PM' && hour < 12) hour += 12;
+    if (mer == 'AM' && hour == 12) hour = 0;
+    if (hour > 23 || minute > 59) return null;
+    return TimeOfDay(hour: hour, minute: minute);
   }
 
   @override
   Widget build(BuildContext context) {
     final loading = ref.watch(apimethods).loading;
-    return Scaffold(
-      appBar: yarisaAppBar(
-        context,
-        title: AppStrings.availability,
-      ),
-      floatingActionButton: FloatingActionButton.small(
+    final openDays = schedule.where((d) => d.hasOpenSlots).length;
+
+    return DoctorScaffold(
+      title: 'Availability',
+      subtitle: openDays == 0
+          ? 'Publish days patients can book'
+          : '$openDays open day${openDays == 1 ? '' : 's'}',
+      showBack: false,
+      floatingActionButton: FloatingActionButton(
         onPressed: _showAddSlotSheet,
-        child: const Icon(Icons.add, size: 20),
+        backgroundColor: DoctorUi.primary,
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.add_rounded),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SegmentedButton<_AvailabilityViewMode>(
-                segments: const [
-                  ButtonSegment(
-                    value: _AvailabilityViewMode.calendar,
-                    icon: Icon(Icons.calendar_month_outlined),
-                    label: Text("Calendar"),
-                  ),
-                  ButtonSegment(
-                    value: _AvailabilityViewMode.list,
-                    icon: Icon(Icons.view_agenda_outlined),
-                    label: Text("List"),
+      body: RefreshIndicator(
+        color: DoctorUi.primary,
+        onRefresh: () async {
+          await _loadSchedule();
+          await _loadSelectedDay(selectedDate);
+        },
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+          children: [
+            DoctorCard(
+              child: Row(
+                children: [
+                  Icon(EneftyIcons.info_circle_outline,
+                      size: 18, color: DoctorUi.primary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Tap a day, open it for booking, then add time slots patients can choose.',
+                      style: TextStyle(
+                        color: DoctorUi.muted,
+                        fontSize: 12,
+                        height: 1.35,
+                      ),
+                    ),
                   ),
                 ],
-                selected: {viewMode},
-                onSelectionChanged: (value) {
-                  setState(() => viewMode = value.first);
-                },
-              ),
-              20.hgap,
-              if (scheduleLoading)
-                const ScheduleSkeleton().paddingSymmetric(vertical: 10)
-              else if (viewMode == _AvailabilityViewMode.calendar)
-                _AvailabilityCalendar(
-                  visibleMonth: visibleMonth,
-                  selectedDate: selectedDate,
-                  schedule: schedule,
-                  onMonthChanged: (month) {
-                    setState(() => visibleMonth = month);
-                  },
-                  onDateSelected: _selectDate,
-                )
-              else
-                _AvailabilityList(
-                  schedule: schedule,
-                  selectedDate: selectedDate,
-                  onDateSelected: _selectDate,
-                ),
-              20.hgap,
-              _SelectedDaySlots(
-                date: selectedDate,
-                loading: loading,
-                status: status,
-                slots: availability,
-                onStatusChanged: _toggleStatus,
-                onRemoveSlot: _removeSlot,
-                onAddSlot: _showAddSlotSheet,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AvailabilityCalendar extends StatelessWidget {
-  const _AvailabilityCalendar({
-    required this.visibleMonth,
-    required this.selectedDate,
-    required this.schedule,
-    required this.onMonthChanged,
-    required this.onDateSelected,
-  });
-
-  final DateTime visibleMonth;
-  final DateTime selectedDate;
-  final List<AvailabilityDaySummary> schedule;
-  final ValueChanged<DateTime> onMonthChanged;
-  final ValueChanged<DateTime> onDateSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final monthStart = DateTime(visibleMonth.year, visibleMonth.month);
-    final days = _calendarCells(monthStart);
-    final scheduleByKey = {
-      for (final day in schedule) day.dateKey: day,
-    };
-
-    return Column(
-      children: [
-        Row(
-          children: [
-            IconButton(
-              onPressed: () => onMonthChanged(
-                DateTime(visibleMonth.year, visibleMonth.month - 1),
-              ),
-              icon: const Icon(Icons.chevron_left_rounded),
-            ),
-            Expanded(
-              child: Center(
-                child: YarisaText(
-                  text: DateFormat.yMMMM().format(visibleMonth),
-                  type: TextType.bodyBig,
-                  weight: FontWeight.w700,
-                ),
               ),
             ),
-            IconButton(
-              onPressed: () => onMonthChanged(
-                DateTime(visibleMonth.year, visibleMonth.month + 1),
-              ),
-              icon: const Icon(Icons.chevron_right_rounded),
+            const SizedBox(height: 14),
+            AvailabilityViewToggle(
+              mode: viewMode,
+              onChanged: (mode) => setState(() => viewMode = mode),
             ),
-          ],
-        ),
-        8.hgap,
-        GridView.count(
-          crossAxisCount: 7,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          childAspectRatio: 1,
-          children: const [
-            _WeekdayLabel("M"),
-            _WeekdayLabel("T"),
-            _WeekdayLabel("W"),
-            _WeekdayLabel("T"),
-            _WeekdayLabel("F"),
-            _WeekdayLabel("S"),
-            _WeekdayLabel("S"),
-          ],
-        ),
-        GridView.builder(
-          itemCount: days.length,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 7,
-            childAspectRatio: .9,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-          ),
-          itemBuilder: (context, index) {
-            final date = days[index];
-            if (date == null) return const SizedBox.shrink();
-
-            final key = _scheduleKey(date);
-            final day = scheduleByKey[key];
-            final selected = _isSameDay(date, selectedDate);
-            return _CalendarDayCell(
-              date: date,
-              selected: selected,
-              day: day,
-              onTap: () => onDateSelected(date),
-            );
-          },
-        ),
-      ],
-    );
-  }
-}
-
-class _AvailabilityList extends StatelessWidget {
-  const _AvailabilityList({
-    required this.schedule,
-    required this.selectedDate,
-    required this.onDateSelected,
-  });
-
-  final List<AvailabilityDaySummary> schedule;
-  final DateTime selectedDate;
-  final ValueChanged<DateTime> onDateSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final openDays = schedule.where((day) => day.hasOpenSlots).toList();
-    if (openDays.isEmpty) {
-      return _EmptyAvailabilityCard(
-        title: "No open slots",
-        action: TextButton.icon(
-          onPressed: () => onDateSelected(DateTime.now()),
-          icon: const Icon(Icons.add_circle_outline),
-          label: const Text("Select today"),
-        ),
-      );
-    }
-
-    return Column(
-      children: openDays.map((day) {
-        final selected = _isSameDay(day.date, selectedDate);
-        return _AvailabilityDayCard(
-          day: day,
-          selected: selected,
-          onTap: () => onDateSelected(day.date),
-        );
-      }).toList(),
-    );
-  }
-}
-
-class _SelectedDaySlots extends StatelessWidget {
-  const _SelectedDaySlots({
-    required this.date,
-    required this.loading,
-    required this.status,
-    required this.slots,
-    required this.onStatusChanged,
-    required this.onRemoveSlot,
-    required this.onAddSlot,
-  });
-
-  final DateTime date;
-  final bool loading;
-  final bool status;
-  final List<String> slots;
-  final ValueChanged<bool> onStatusChanged;
-  final ValueChanged<String> onRemoveSlot;
-  final VoidCallback onAddSlot;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.withValues(alpha: .18)),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 12),
+            if (viewMode == AvailabilityViewMode.calendar)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
                   children: [
-                    YarisaText(
-                      text: DateFormat.yMMMMEEEEd().format(date),
-                      type: TextType.bodyBig,
-                      weight: FontWeight.w700,
-                    ),
-                    YarisaText(
-                      text: status ? "Open" : "Closed",
-                      type: TextType.subtitle,
-                      color: status ? Colors.green : Colors.grey,
-                    ),
+                    _legendDot(DoctorUi.primary, 'Selected'),
+                    const SizedBox(width: 14),
+                    _legendDot(Colors.green, 'Has slots'),
+                    const SizedBox(width: 14),
+                    _legendDot(DoctorUi.border, 'Empty'),
                   ],
                 ),
               ),
-              Switch(value: status, onChanged: onStatusChanged),
-            ],
-          ),
-          16.hgap,
-          if (loading)
-            const SkeletonBox(
-              height: 76,
-              width: double.infinity,
-              radius: 16,
-            ).paddingSymmetric(vertical: 6)
-          else if (slots.isEmpty)
-            _EmptyAvailabilityCard(
-              title: "No slots on this day",
-              action: TextButton.icon(
-                onPressed: onAddSlot,
-                icon: const Icon(Icons.add),
-                label: const Text(""),
+            if (scheduleLoading)
+              const ScheduleSkeleton()
+            else if (viewMode == AvailabilityViewMode.calendar)
+              AvailabilityCalendar(
+                visibleMonth: visibleMonth,
+                selectedDate: selectedDate,
+                schedule: schedule,
+                onMonthChanged: (month) =>
+                    setState(() => visibleMonth = month),
+                onDateSelected: _selectDate,
+              )
+            else
+              AvailabilityListView(
+                schedule: schedule,
+                selectedDate: selectedDate,
+                onDateSelected: _selectDate,
               ),
-            )
-          else
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: slots
-                  .map((slot) => InputChip(
-                        label: Text(slot),
-                        deleteIcon: const Icon(EneftyIcons.trash_outline),
-                        onDeleted: () => onRemoveSlot(slot),
-                      ))
-                  .toList(),
+            const SizedBox(height: 16),
+            DoctorSectionHeader(
+              title: 'Selected day',
+              count: daySlots.isEmpty ? null : daySlots.length,
             ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AvailabilityDayCard extends StatelessWidget {
-  const _AvailabilityDayCard({
-    required this.day,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final AvailabilityDaySummary day;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        width: double.infinity,
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: selected
-              ? Theme.of(context).primaryColor.withValues(alpha: .08)
-              : null,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: selected
-                ? Theme.of(context).primaryColor
-                : Colors.grey.withValues(alpha: .18),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: YarisaText(
-                    text: DateFormat.yMMMMEEEEd().format(day.date),
-                    type: TextType.bodyBig,
-                    weight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  "${day.slots.length} slot${day.slots.length == 1 ? '' : 's'}",
-                ),
-              ],
-            ),
-            10.hgap,
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children:
-                  day.slots.map((slot) => Chip(label: Text(slot))).toList(),
+            SelectedDaySlotsPanel(
+              date: selectedDate,
+              loading: loading,
+              status: status,
+              slots: daySlots,
+              onStatusChanged: _toggleStatus,
+              onRemoveOpenSlot: (s) => _removeSlot(s.label),
+              onBookedSlotTap: _onBookedSlotTap,
+              onAddSlot: _showAddSlotSheet,
             ),
           ],
         ),
@@ -674,143 +513,35 @@ class _AvailabilityDayCard extends StatelessWidget {
   }
 }
 
-class _CalendarDayCell extends StatelessWidget {
-  const _CalendarDayCell({
-    required this.date,
-    required this.selected,
-    required this.day,
-    required this.onTap,
-  });
-
-  final DateTime date;
-  final bool selected;
-  final AvailabilityDaySummary? day;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final hasOpenSlots = day?.hasOpenSlots == true;
-    final primary = Theme.of(context).primaryColor;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        decoration: BoxDecoration(
-          color: selected ? primary : null,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: selected
-                ? primary
-                : hasOpenSlots
-                    ? Colors.green.withValues(alpha: .65)
-                    : Colors.grey.withValues(alpha: .18),
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              DateFormat.d().format(date),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: selected ? Colors.white : null,
-                  ),
-            ),
-            5.hgap,
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              height: 6,
-              width: hasOpenSlots ? 18 : 6,
-              decoration: BoxDecoration(
-                color: selected
-                    ? Colors.white
-                    : hasOpenSlots
-                        ? Colors.green
-                        : Colors.transparent,
-                borderRadius: BorderRadius.circular(100),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+class _MinuteRange {
+  const _MinuteRange(this.start, this.end);
+  final int start;
+  final int end;
+  bool overlaps(_MinuteRange other) => start < other.end && other.start < end;
 }
 
-class _WeekdayLabel extends StatelessWidget {
-  const _WeekdayLabel(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
+Widget _legendDot(Color color, String label) {
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(
+        width: 10,
+        height: 10,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(3),
+          border: Border.all(color: color.withValues(alpha: .4)),
+        ),
+      ),
+      const SizedBox(width: 6),
+      Text(
         label,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey,
-              fontWeight: FontWeight.w700,
-            ),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: DoctorUi.muted,
+        ),
       ),
-    );
-  }
-}
-
-class _EmptyAvailabilityCard extends StatelessWidget {
-  const _EmptyAvailabilityCard({required this.title, this.action});
-
-  final String title;
-  final Widget? action;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.grey.withValues(alpha: .08),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.event_busy_outlined,
-            color: Colors.grey.shade500,
-          ),
-          8.hgap,
-          Text(title, style: Theme.of(context).textTheme.bodyMedium),
-          if (action != null) ...[12.hgap, action!],
-        ],
-      ),
-    );
-  }
-}
-
-List<DateTime?> _calendarCells(DateTime month) {
-  final firstDay = DateTime(month.year, month.month);
-  final leadingEmptyCells = firstDay.weekday - 1;
-  final totalDays = DateUtils.getDaysInMonth(month.year, month.month);
-  return [
-    ...List<DateTime?>.filled(leadingEmptyCells, null),
-    ...List.generate(
-      totalDays,
-      (index) => DateTime(month.year, month.month, index + 1),
-    ),
-  ];
-}
-
-bool _isSameDay(DateTime first, DateTime second) {
-  return first.year == second.year &&
-      first.month == second.month &&
-      first.day == second.day;
-}
-
-DateTime _dateOnly(DateTime value) {
-  return DateTime(value.year, value.month, value.day);
-}
-
-String _scheduleKey(DateTime value) {
-  final month = value.month.toString().padLeft(2, '0');
-  final day = value.day.toString().padLeft(2, '0');
-  return '${value.year}-$month-$day';
+    ],
+  );
 }

@@ -1,15 +1,16 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:enefty_icons/enefty_icons.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:yarisa_doctor/components/patients/patient_widgets.dart';
 import 'package:yarisa_doctor/constants/yarisa_widgets.dart';
 import 'package:yarisa_doctor/models/personal_patients_model.dart';
 import 'package:yarisa_doctor/screens/main/chat_inbox_screen.dart';
 import 'package:yarisa_doctor/screens/main/lab_requests_screen.dart';
 import 'package:yarisa_doctor/screens/main/prescriptions_screen.dart';
 import 'package:yarisa_doctor/services/jitsi_call_service.dart';
+import 'package:yarisa_doctor/ui/doctor_ui.dart';
 
 class PatientDetailScreen extends ConsumerStatefulWidget {
   const PatientDetailScreen({super.key, required this.patient});
@@ -40,392 +41,251 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
     );
   }
 
+  Future<void> _startCall(
+    BuildContext context, {
+    required String type,
+    required String patientId,
+  }) async {
+    final ok = await joinMeeting(type, '', '', patientId, '');
+    if (!context.mounted || ok) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          type == 'video'
+              ? 'Video calls need a full app build on a real device or Android emulator with native plugins. Simulators often cannot start Jitsi.'
+              : 'Voice calls need a full app build on a real device or Android emulator with native plugins. Simulators often cannot start Jitsi.',
+        ),
+        duration: const Duration(seconds: 5),
+      ),
+    );
+  }
+
+  void _openChat({
+    required String patientId,
+    required String name,
+    required String image,
+  }) {
+    if (patientId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Patient details are missing.')),
+      );
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DoctorMessageThreadScreen(
+          patientId: patientId,
+          patientName: name,
+          patientImage: image,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: StreamBuilder(
-          stream: FirebaseFirestore.instance
-              .collection("Patients")
-              .doc(widget.patient.patientId)
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return _buildPatientErrorCard(
-                context: context,
-                icon: EneftyIcons.danger_bold,
-                title: 'Unable to load patient',
-                message: 'There was an error loading this patient\'s details. '
-                    'Please check your connection and try again.',
-                isError: true,
-              );
-            }
-            if (!snapshot.hasData || snapshot.data == null) {
-              return _buildPatientErrorCard(
-                context: context,
-                icon: EneftyIcons.profile_2user_bold,
-                title: widget.patient.patientName ?? 'Patient',
-                message:
-                    'Patient details are not available right now. They may not have completed their profile yet.',
-              );
-            }
+    final fallbackName = widget.patient.patientName?.trim().isNotEmpty == true
+        ? widget.patient.patientName!
+        : 'Patient';
+    final patientId = widget.patient.patientId ?? '';
 
-            final patient = snapshot.data;
-            final patientData = patient?.data();
-            final personalInfo = patientData?['personal_info'] is Map
-                ? Map<String, dynamic>.from(
-                    patientData?['personal_info'] as Map)
-                : patientData?['personalInfo'] is Map
-                    ? Map<String, dynamic>.from(
-                        patientData?['personalInfo'] as Map)
-                    : <String, dynamic>{};
-            final patientPic = validNetworkImageUrl(
-                (patientData?['pic'] ?? patientData?['photo'])?.toString());
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      height: 100,
-                      width: 100,
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          shape: BoxShape.circle),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(100),
-                        child: patientPic == null
-                            ? _patientImageFallback()
-                            : CachedNetworkImage(
-                                imageUrl: patientPic,
-                                fit: BoxFit.cover,
-                                errorWidget: (context, url, error) {
-                                  return _patientImageFallback();
-                                },
-                                placeholder: (context, url) {
-                                  return const Center(
-                                    child: CircularProgressIndicator(),
-                                  );
-                                },
-                              ),
-                      ),
+    return DoctorScaffold(
+      title: 'Patient',
+      subtitle: fallbackName,
+      body: patientId.isEmpty
+          ? PatientsEmptyState(
+              title: fallbackName,
+              message: 'This patient record is missing an ID.',
+            )
+          : StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance
+            .collection('Patients')
+            .doc(patientId)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              !snapshot.hasData) {
+            return const Center(
+              child: CircularProgressIndicator(strokeWidth: 2.2),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return DoctorEmptyState(
+              icon: EneftyIcons.warning_2_outline,
+              title: 'Unable to load patient',
+              message:
+                  'Check your connection and try again. You can still open care tools below with the saved profile.',
+              actionLabel: 'Retry',
+              onAction: () => setState(() {}),
+            );
+          }
+
+          final patientData = snapshot.data?.data();
+          final personalInfo = _personalInfo(patientData);
+          final name = patientData?['name']?.toString().trim().isNotEmpty == true
+              ? patientData!['name'].toString()
+              : fallbackName;
+          final email = patientData?['email']?.toString() ?? '';
+          final pic = validNetworkImageUrl(
+                (patientData?['pic'] ?? patientData?['photo'])?.toString(),
+              ) ??
+              widget.patient.patientImage;
+          final id = snapshot.data?.id ?? patientId;
+
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+            children: [
+              PatientHeroHeader(
+                name: name,
+                email: email,
+                imageUrl: pic,
+              ),
+              const SizedBox(height: 16),
+              const DoctorSectionHeader(title: 'Care actions'),
+              PatientActionGrid(
+                actions: [
+                  PatientActionItem(
+                    label: 'Chat',
+                    icon: EneftyIcons.message_2_bold,
+                    color: Colors.red.shade400,
+                    onTap: () => _openChat(
+                      patientId: id,
+                      name: name,
+                      image: pic ?? '',
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Center(
-                    child: Text(
-                      '${patient?["name"]}',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleLarge,
+                  PatientActionItem(
+                    label: 'Voice call',
+                    icon: EneftyIcons.call_bold,
+                    color: Colors.blue,
+                    onTap: () => _startCall(
+                      context,
+                      type: 'voice',
+                      patientId: id,
                     ),
                   ),
-                  Center(
-                    child: Text(
-                      '${patient?["email"]}',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall,
+                  PatientActionItem(
+                    label: 'Video call',
+                    icon: EneftyIcons.video_bold,
+                    color: Colors.purple,
+                    onTap: () => _startCall(
+                      context,
+                      type: 'video',
+                      patientId: id,
                     ),
                   ),
-                  const SizedBox(height: 30),
-                  Center(
-                    child: Wrap(
-                      spacing: 10,
-                      alignment: WrapAlignment.spaceEvenly,
-                      children: [
-                        OutlinedButton.icon(
-                            style: const ButtonStyle(
-                                side: WidgetStatePropertyAll(
-                                    BorderSide(color: Colors.red)),
-                                foregroundColor:
-                                    WidgetStatePropertyAll(Colors.red)),
-                            icon: const Icon(EneftyIcons.message_2_bold),
-                            onPressed: () {
-                              final patientId =
-                                  widget.patient.patientId ?? patient?.id;
-                              if (patientId == null || patientId.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content:
-                                        Text('Patient details are missing.'),
-                                  ),
-                                );
-                                return;
-                              }
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          DoctorMessageThreadScreen(
-                                            patientId: patientId,
-                                            patientName: patient?['name']
-                                                    ?.toString() ??
-                                                widget.patient.patientName ??
-                                                'Patient',
-                                            patientImage: patientPic ??
-                                                widget.patient.patientImage ??
-                                                '',
-                                          )));
-                            },
-                            label: const Text("Chat")),
-                        OutlinedButton.icon(
-                            style: const ButtonStyle(
-                                side: WidgetStatePropertyAll(
-                                    BorderSide(color: Colors.blue)),
-                                foregroundColor:
-                                    WidgetStatePropertyAll(Colors.blue)),
-                            icon: const Icon(EneftyIcons.call_bold),
-                            onPressed: () {
-                              joinMeeting(
-                                  "voice",
-                                  "${patient?['email']}",
-                                  "${patient?['name']}",
-                                  "${patient?.id}",
-                                  "${patient?['pic']}");
-                            },
-                            label: const Text("Audio")),
-                        OutlinedButton.icon(
-                            style: const ButtonStyle(
-                                side: WidgetStatePropertyAll(
-                                    BorderSide(color: Colors.purple)),
-                                foregroundColor:
-                                    WidgetStatePropertyAll(Colors.purple)),
-                            icon: const Icon(EneftyIcons.video_bold),
-                            onPressed: () {
-                              joinMeeting(
-                                  "video",
-                                  "${patient?['email']}",
-                                  "${patient?['name']}",
-                                  "${patient?.id}",
-                                  "${patient?['pic']}");
-                            },
-                            label: const Text("Video")),
-                        OutlinedButton.icon(
-                            style: const ButtonStyle(
-                                side: WidgetStatePropertyAll(
-                                    BorderSide(color: Colors.green)),
-                                foregroundColor:
-                                    WidgetStatePropertyAll(Colors.green)),
-                            icon: const Icon(Icons.medication_outlined),
-                            onPressed: _openPrescriptions,
-                            label: const Text("Prescriptions")),
-                        OutlinedButton.icon(
-                            style: const ButtonStyle(
-                                side: WidgetStatePropertyAll(
-                                    BorderSide(color: Colors.teal)),
-                                foregroundColor:
-                                    WidgetStatePropertyAll(Colors.teal)),
-                            icon: const Icon(Icons.science_outlined),
-                            onPressed: _openLabRequests,
-                            label: const Text("Labs")),
-                      ],
-                    ),
+                  PatientActionItem(
+                    label: 'Prescriptions',
+                    icon: Icons.medication_outlined,
+                    color: Colors.green,
+                    onTap: _openPrescriptions,
                   ),
-                  Divider(color: Colors.grey.withValues(alpha: .2), height: 50),
-                  Wrap(spacing: 10, runSpacing: 10, children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                          color: Colors.grey.withValues(alpha: .2),
-                          borderRadius: BorderRadius.circular(20)),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(_patientValue(patientData, personalInfo, 'age'),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge
-                                  ?.copyWith(fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 5),
-                          Text("Age",
-                              style: Theme.of(context).textTheme.bodySmall),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                          color: Colors.grey.withValues(alpha: .2),
-                          borderRadius: BorderRadius.circular(20)),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                              _patientValue(
-                                  patientData, personalInfo, 'bloodtype',
-                                  alternatives: const ['bloodgroup']),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge
-                                  ?.copyWith(fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 5),
-                          Text("Blood Group",
-                              style: Theme.of(context).textTheme.bodySmall),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                          color: Colors.grey.withValues(alpha: .2),
-                          borderRadius: BorderRadius.circular(20)),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                              _patientValue(
-                                  patientData, personalInfo, 'genotype'),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge
-                                  ?.copyWith(fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 5),
-                          Text("Genotype",
-                              style: Theme.of(context).textTheme.bodySmall),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                          color: Colors.grey.withValues(alpha: .2),
-                          borderRadius: BorderRadius.circular(20)),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                              _patientValue(
-                                  patientData, personalInfo, 'height'),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge
-                                  ?.copyWith(fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 5),
-                          Text("Height",
-                              style: Theme.of(context).textTheme.bodySmall),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                          color: Colors.grey.withValues(alpha: .2),
-                          borderRadius: BorderRadius.circular(20)),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                              _patientValue(
-                                  patientData, personalInfo, 'weight'),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge
-                                  ?.copyWith(fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 5),
-                          Text("Weight",
-                              style: Theme.of(context).textTheme.bodySmall),
-                        ],
-                      ),
-                    )
-                  ]),
+                  PatientActionItem(
+                    label: 'Lab requests',
+                    icon: Icons.science_outlined,
+                    color: Colors.teal,
+                    onTap: _openLabRequests,
+                  ),
                 ],
               ),
-            );
-          }),
-    );
-  }
-
-  Widget _patientImageFallback() {
-    return Container(
-      decoration: BoxDecoration(color: Colors.grey.withValues(alpha: .2)),
-      child: const Center(
-        child: Icon(
-          EneftyIcons.user_bold,
-          size: 20,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPatientErrorCard({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String message,
-    bool isError = false,
-  }) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 60),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              height: 100,
-              width: 100,
-              decoration: BoxDecoration(
-                color: isError ? Colors.red.shade50 : Colors.blue.shade50,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                size: 48,
-                color: isError ? Colors.red.shade300 : Colors.blue.shade300,
-              ),
-            ),
-            const SizedBox(height: 28),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: isError ? Colors.red.shade700 : Colors.grey.shade800,
-                  fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey.shade600,
-                    height: 1.5,
+              const SizedBox(height: 18),
+              const DoctorSectionHeader(title: 'Health profile'),
+              if (patientData == null)
+                DoctorCard(
+                  child: Text(
+                    'Full profile is not available yet. The patient may still be setting up their account.',
+                    style: TextStyle(color: DoctorUi.muted, height: 1.4),
                   ),
-            ),
-            if (isError) ...[
-              const SizedBox(height: 32),
-              OutlinedButton.icon(
-                onPressed: () => setState(() {}),
-                style: OutlinedButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                )
+              else
+                PatientMetricGrid(
+                  metrics: [
+                    PatientMetric(
+                      label: 'Age',
+                      value: _patientValue(patientData, personalInfo, 'age'),
+                    ),
+                    PatientMetric(
+                      label: 'Blood',
+                      value: _patientValue(
+                        patientData,
+                        personalInfo,
+                        'bloodtype',
+                        alternatives: const ['bloodgroup', 'blood_group'],
+                      ),
+                    ),
+                    PatientMetric(
+                      label: 'Genotype',
+                      value: _patientValue(
+                        patientData,
+                        personalInfo,
+                        'genotype',
+                      ),
+                    ),
+                    PatientMetric(
+                      label: 'Height',
+                      value: _patientValue(
+                        patientData,
+                        personalInfo,
+                        'height',
+                      ),
+                    ),
+                    PatientMetric(
+                      label: 'Weight',
+                      value: _patientValue(
+                        patientData,
+                        personalInfo,
+                        'weight',
+                      ),
+                    ),
+                    PatientMetric(
+                      label: 'Gender',
+                      value: _patientValue(
+                        patientData,
+                        personalInfo,
+                        'gender',
+                        alternatives: const ['sex'],
+                      ),
+                    ),
+                  ],
                 ),
-                icon: const Icon(Icons.refresh_rounded, size: 20),
-                label: const Text('Retry'),
+              const SizedBox(height: 18),
+              DoctorCard(
+                child: Row(
+                  children: [
+                    Icon(Icons.badge_outlined, size: 18, color: DoctorUi.muted),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Patient ID · $id',
+                        style: TextStyle(
+                          color: DoctorUi.muted,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
-            const SizedBox(height: 20),
-            Text(
-              'Patient ID: ${widget.patient.patientId ?? "unknown"}',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Colors.grey.shade400,
-                  ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
+}
+
+Map<String, dynamic> _personalInfo(Map<String, dynamic>? patientData) {
+  if (patientData == null) return {};
+  if (patientData['personal_info'] is Map) {
+    return Map<String, dynamic>.from(patientData['personal_info'] as Map);
+  }
+  if (patientData['personalInfo'] is Map) {
+    return Map<String, dynamic>.from(patientData['personalInfo'] as Map);
+  }
+  return {};
 }
 
 String _patientValue(
@@ -444,14 +304,22 @@ String _patientValue(
   return 'Not set';
 }
 
-joinMeeting(
-    String type, String email, String name, String id, String image) async {
-  await YarisaJitsiCallService.join(
-    room: id,
+Future<bool> joinMeeting(
+  String type,
+  String email,
+  String name,
+  String id,
+  String image,
+) async {
+  final doctor = FirebaseAuth.instance.currentUser;
+  final doctorId = doctor?.uid ?? '';
+  if (doctorId.isEmpty || id.isEmpty) return false;
+  return YarisaJitsiCallService.join(
+    room: YarisaJitsiCallService.conversationRoom(doctorId, id),
     type: type,
-    subject: "Patient Appointment",
-    displayName: name,
-    avatarUrl: image,
-    email: email,
+    subject: 'Patient Appointment',
+    displayName: doctor?.displayName ?? 'Doctor',
+    avatarUrl: doctor?.photoURL ?? '',
+    email: doctor?.email ?? '',
   );
 }

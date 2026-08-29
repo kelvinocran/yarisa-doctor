@@ -3,18 +3,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import '../constants/yarisa_enums.dart';
-import '../constants/yarisa_strings.dart';
-import '../constants/yarisa_widgets.dart';
-import 'authentication/welcome_screen.dart';
-import '../widgets/confirmation_dialog.dart';
+import 'package:yarisa_doctor/screens/authentication/welcome_screen.dart';
+import 'package:yarisa_doctor/ui/doctor_ui.dart';
+import 'package:yarisa_doctor/widgets/confirmation_dialog.dart';
 
 class MoreScreen extends ConsumerStatefulWidget {
   const MoreScreen({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _MoreScreenState();
+  ConsumerState<MoreScreen> createState() => _MoreScreenState();
 }
 
 class _MoreScreenState extends ConsumerState<MoreScreen> {
@@ -33,11 +30,15 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(title),
+        backgroundColor: DoctorUi.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
         content: SingleChildScrollView(child: Text(content)),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Close'))
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
         ],
       ),
     );
@@ -56,112 +57,173 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     await FirebaseAuth.instance.signOut();
     if (mounted) {
       Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const WelcomeScreen()),
-          (route) => false);
+        context,
+        MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+        (route) => false,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context).textTheme;
-    return Scaffold(
-      appBar: AppBar(
-        title: const YarisaText(
-          text: AppStrings.more,
-          type: TextType.appbar,
-        ),
+    return DoctorScaffold(
+      title: 'Help & support',
+      subtitle: 'Contact us and legal information',
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+        children: [
+          const DoctorSectionHeader(title: 'Support'),
+          DoctorCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                _tile(
+                  icon: EneftyIcons.sms_outline,
+                  title: 'Email support',
+                  subtitle: 'support@yarisa.health',
+                  onTap: () => _launch(
+                    'mailto:support@yarisa.health?subject=Yarisa%20Doctor%20Support',
+                  ),
+                ),
+                Divider(height: 1, color: DoctorUi.border),
+                _tile(
+                  icon: EneftyIcons.global_outline,
+                  title: 'Visit website',
+                  subtitle: 'yarisa.health',
+                  onTap: () => _launch('https://yarisa.health'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          const DoctorSectionHeader(title: 'Legal'),
+          DoctorCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                _tile(
+                  icon: EneftyIcons.document_outline,
+                  title: 'Terms & conditions',
+                  subtitle: 'How you may use Yarisa',
+                  onTap: () => _showTextDialog(
+                    'Terms & Conditions',
+                    'These terms and conditions govern your use of the Yarisa Healthcare platform. '
+                        'By using this app, you agree to these terms. '
+                        'For the full terms, visit yarisa.health/terms.',
+                  ),
+                ),
+                Divider(height: 1, color: DoctorUi.border),
+                _tile(
+                  icon: EneftyIcons.shield_outline,
+                  title: 'Privacy policy',
+                  subtitle: 'How we protect your data',
+                  onTap: () => _showTextDialog(
+                    'Privacy Policy',
+                    'Yarisa Healthcare is committed to protecting your privacy. '
+                        'We collect and use your data only to provide healthcare services. '
+                        'For the full policy, visit yarisa.health/privacy.',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          const DoctorSectionHeader(title: 'About'),
+          DoctorCard(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(EneftyIcons.info_circle_outline, color: DoctorUi.muted),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Yarisa Healthcare connects patients and doctors for appointments, messaging, prescriptions, and labs.',
+                    style: TextStyle(
+                      color: DoctorUi.muted,
+                      height: 1.4,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // const SizedBox(height: 24),
+          // Material(
+          //   color: Colors.red.shade600,
+          //   borderRadius: BorderRadius.circular(16),
+          //   child: InkWell(
+          //     onTap: _signOut,
+          //     borderRadius: BorderRadius.circular(16),
+          //     child: const Padding(
+          //       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          //       child: Row(
+          //         children: [
+          //           Icon(EneftyIcons.logout_outline, color: Colors.white),
+          //           SizedBox(width: 12),
+          //           Expanded(
+          //             child: Text(
+          //               'Sign out',
+          //               style: TextStyle(
+          //                 color: Colors.white,
+          //                 fontWeight: FontWeight.w800,
+          //               ),
+          //             ),
+          //           ),
+          //           Icon(Icons.chevron_right_rounded, color: Colors.white),
+          //         ],
+          //       ),
+          //     ),
+          //   ),
+          // ),
+        ],
       ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          children: [
-            Text('SUPPORT',
-                style: theme.bodySmall
-                    ?.copyWith(color: Colors.grey, letterSpacing: 1.2)),
-            const SizedBox(height: 8),
-            ListTile(
-              onTap: () => _launch('tel:+233XXXXXXXXX'),
-              leading: const Icon(EneftyIcons.call_outline),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              title: const Text('Call Support'),
-              subtitle: const Text('+233 XX XXX XXXX'),
-            ),
-            ListTile(
-              onTap: () => _launch(
-                  'mailto:support@yarisa.health?subject=Support%20Request'),
-              leading: const Icon(EneftyIcons.sms_outline),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              title: const Text('Email Support'),
-              subtitle: const Text('support@yarisa.health'),
-            ),
-            ListTile(
-              onTap: () => _launch('https://wa.me/233XXXXXXXXX'),
-              leading: const Icon(EneftyIcons.message_outline),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              title: const Text('WhatsApp Support'),
-              subtitle: const Text('Chat with us on WhatsApp'),
-            ),
-            ListTile(
-              onTap: () => _launch('https://yarisa.health'),
-              leading: const Icon(EneftyIcons.global_outline),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              title: const Text('Visit Website'),
-              subtitle: const Text('yarisa.health'),
-            ),
-            const SizedBox(height: 24),
-            Text('LEGAL',
-                style: theme.bodySmall
-                    ?.copyWith(color: Colors.grey, letterSpacing: 1.2)),
-            const SizedBox(height: 8),
-            ListTile(
-              onTap: () => _showTextDialog(
-                'Terms & Conditions',
-                'These terms and conditions govern your use of the Yarisa Healthcare platform. '
-                    'By using this app, you agree to these terms. '
-                    'For the full terms, visit yarisa.health/terms.',
+    );
+  }
+
+  Widget _tile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: DoctorUi.primary.withValues(alpha: .1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: DoctorUi.primary, size: 18),
               ),
-              leading: const Icon(EneftyIcons.document_outline),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              title: const Text('Terms & Conditions'),
-            ),
-            ListTile(
-              onTap: () => _showTextDialog(
-                'Privacy Policy',
-                'Yarisa Healthcare is committed to protecting your privacy. '
-                    'We collect and use your data only to provide healthcare services. '
-                    'For the full policy, visit yarisa.health/privacy.',
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(color: DoctorUi.muted, fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
-              leading: const Icon(EneftyIcons.shield_outline),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              title: const Text('Privacy Policy'),
-            ),
-            const SizedBox(height: 24),
-            Text('APP',
-                style: theme.bodySmall
-                    ?.copyWith(color: Colors.grey, letterSpacing: 1.2)),
-            const SizedBox(height: 8),
-            const ListTile(
-              leading: Icon(EneftyIcons.info_circle_outline),
-              title: Text('About Yarisa Healthcare'),
-              subtitle: Text(
-                  'Connecting patients and doctors seamlessly.\nVersion 1.0.1 (build 2)'),
-            ),
-            const SizedBox(height: 40),
-            ListTile(
-              tileColor: Colors.red,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15)),
-              onTap: _signOut,
-              trailing:
-                  const Icon(Icons.chevron_right_rounded, color: Colors.white),
-              leading:
-                  const Icon(EneftyIcons.logout_outline, color: Colors.white),
-              title: Text('Sign Out',
-                  style: theme.bodyMedium?.copyWith(
-                      color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
-          ],
+              Icon(Icons.chevron_right_rounded, color: DoctorUi.muted),
+            ],
+          ),
         ),
       ),
     );

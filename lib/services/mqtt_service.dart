@@ -53,28 +53,37 @@ class MQTTService {
   /// Makes a connection to the MQTT broker and subscribes to ride request
   /// topic
   ///
+  /// Public HiveMQ has no auth and is not safe for health chat.
+  /// Primary messaging uses Firestore; keep connect as a no-op until a private broker exists.
+  static const bool mqttEnabled = false;
+
   Future<void> connect() async {
+    if (!mqttEnabled) {
+      return;
+    }
+
     if (_client.connectionStatus?.state == MqttConnectionState.connected) {
+      return;
+    }
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || uid.isEmpty) {
       return;
     }
 
     try {
       _client.setProtocolV311();
-      _client.logging(on: true);
+      _client.logging(on: false);
       _client.keepAlivePeriod = 60 * 5;
       _client.autoReconnect = true;
 
       await _client.connect();
 
       _client.subscribe(
-          '$MQTT_UNIQUE_TOPIC_NAME/chats/${FirebaseAuth.instance.currentUser?.uid}',
-          MqttQos.atLeastOnce);
+          '$MQTT_UNIQUE_TOPIC_NAME/chats/$uid', MqttQos.atLeastOnce);
 
       _client.updates?.listen(_onMessageReceived);
     } catch (e) {
-      // MQTT connection will retry automatically via autoReconnect.
-      // Log the error but don't crash — chat features will be unavailable
-      // until the connection succeeds.
       print('MQTT connect failed: $e');
     }
   }

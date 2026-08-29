@@ -1,20 +1,13 @@
-import 'dart:convert';
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
-import 'package:mqtt_client/mqtt_client.dart';
 import 'package:yarisa_doctor/api/api_methods.dart';
-import 'package:yarisa_doctor/screens/main/base.dart';
+import 'package:yarisa_doctor/services/callkit_service.dart';
+import 'package:yarisa_doctor/services/deep_link_router.dart';
 import 'package:yarisa_doctor/services/fcm_service.dart';
-import 'package:yarisa_doctor/services/mqtt_listener.dart';
 
-import 'models/chat_model.dart';
-import 'providers/chat_provider.dart';
 import 'services/firebase_options.dart';
-import 'services/mqtt_service.dart';
 import 'theme/theme.dart';
 
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
@@ -22,71 +15,18 @@ final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  DeepLinkRouter.attach(appNavigatorKey);
+  await CallKitService.initialize();
   await FcmService.initialize(
     userCollection: 'Doctors',
-    onMessageTap: (data) {
-      final navigator = appNavigatorKey.currentState;
-      if (navigator == null) {
-        return;
-      }
-
-      navigator.pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const BaseScreen()),
-        (route) => false,
-      );
-    },
+    onMessageTap: DeepLinkRouter.handle,
+    onForegroundCall: CallKitService.showIncoming,
   );
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends ConsumerStatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
-  @override
-  ConsumerState<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends ConsumerState<MyApp> implements MQTTMessageListener {
-  @override
-  void dispose() {
-    MQTTService.instance.unregisterListener(this);
-    super.dispose();
-  }
-
-  @override
-  Future<void> onMessageReceived(String payloadJson) async {
-    final data = jsonDecode(payloadJson);
-    if (mounted) {
-      if (data['data_type'] == 'chat') {
-        final chat = Chat.fromMQTT((data['data']));
-
-        if (chat.senderId != FirebaseAuth.instance.currentUser?.uid) {
-          await ref.read(chatconfig).saveChat(chat.senderId!, chat);
-        }
-      } else {
-        if (data['sender_id'] != FirebaseAuth.instance.currentUser?.uid) {
-          ref.read(chatconfig).changeTyingStatus(data['status']);
-        }
-      }
-    }
-  }
-
-  mqttForUser() async {
-    MQTTService.instance.registerListener(this);
-
-    try {
-      await MQTTService.instance.connect();
-    } on NoConnectionException catch (e) {
-      debugPrint(e.toString());
-      MQTTService.instance.connect();
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    mqttForUser();
-  }
 
   @override
   Widget build(BuildContext context) {

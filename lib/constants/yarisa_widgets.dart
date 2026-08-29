@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:yarisa_doctor/constants/yarisa_enums.dart';
 import 'package:yarisa_doctor/extensions/yarisa_extensions.dart';
+import 'package:yarisa_doctor/screens/main/appointment_screen.dart';
+import 'package:yarisa_doctor/screens/main/chat_inbox_screen.dart';
+import 'package:yarisa_doctor/screens/main/second_opinions_screen.dart';
 import 'package:yarisa_doctor/screens/settings_screen.dart';
 
 class YarisaText extends StatelessWidget {
@@ -121,7 +124,70 @@ AppBar yarisaAppBar(BuildContext context,
       actions: actions ??
           [
             IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    builder: (sheetContext) => SafeArea(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const ListTile(
+                            title: Text(
+                              'Quick links',
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          ListTile(
+                            leading:
+                                const Icon(EneftyIcons.calendar_2_outline),
+                            title: const Text('Appointments'),
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const AppointmentScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(EneftyIcons.message_outline),
+                            title: const Text('Messages'),
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const DoctorChatInboxScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(EneftyIcons.note_2_outline),
+                            title: const Text('Second opinions'),
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const SecondOpinionsScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
                 icon: const Icon(EneftyIcons.notification_outline)),
             IconButton(
                 onPressed: () {

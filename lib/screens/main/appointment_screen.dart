@@ -6,19 +6,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import 'package:yarisa_doctor/extensions/yarisa_extensions.dart';
+import 'package:yarisa_doctor/components/appointments/appointment_list_card.dart';
+import 'package:yarisa_doctor/components/appointments/doctor_appointments_stream.dart';
+import 'package:yarisa_doctor/ui/doctor_ui.dart';
 
 import '../../api/firestore_schema.dart';
 import '../../api/api_methods.dart';
-import '../../components/formtextfield.dart';
 import '../../constants/yarisa_constants.dart';
 import '../../constants/yarisa_enums.dart';
-import '../../constants/yarisa_strings.dart';
-import '../../constants/yarisa_widgets.dart';
 import '../../services/jitsi_call_service.dart';
 import '../../models/appointment_model.dart';
 import '../../widgets/confirmation_dialog.dart';
-import '../../widgets/skeleton_loader.dart';
 import 'chat_inbox_screen.dart';
 
 class AppointmentScreen extends ConsumerStatefulWidget {
@@ -40,21 +38,53 @@ class _AppointmentScreenState extends ConsumerState<AppointmentScreen> {
     super.dispose();
   }
 
+  Future<void> _runAction(
+    BuildContext context,
+    AppointmentModel appointment,
+    _AppointmentAction action,
+  ) async {
+    switch (action) {
+      case _AppointmentAction.approve:
+        await _updateAppointmentStatus(
+          context,
+          appointment,
+          AppointmentStatus.approved,
+        );
+        break;
+      case _AppointmentAction.decline:
+        await _updateAppointmentStatus(
+          context,
+          appointment,
+          AppointmentStatus.declined,
+        );
+        break;
+      case _AppointmentAction.reschedule:
+        await _showRescheduleSheet(context, appointment);
+        break;
+      case _AppointmentAction.note:
+        await _showAppointmentNoteSheet(context, appointment);
+        break;
+      case _AppointmentAction.delete:
+        await _deleteAppointment(context, appointment);
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: yarisaAppBar(
-        context,
-        title: AppStrings.appointments,
-      ),
+    return DoctorScaffold(
+      title: 'Appointments',
+      subtitle: 'Review, approve, and manage bookings',
+      showBack: false,
       body: RefreshIndicator(
+        color: DoctorUi.primary,
         onRefresh: () async {
           await ref.read(apimethods).getAppointments();
         },
-        child: _DoctorAppointmentsStream(builder: (context, appointments) {
+        child: DoctorAppointmentsStream(builder: (context, appointments) {
           final query = _query.toLowerCase();
           final filteredAppointments = query.isEmpty
-              ? appointments
+              ? List<AppointmentModel>.from(appointments)
               : appointments.where((appointment) {
                   return [
                     appointmentPatientName(appointment),
@@ -64,314 +94,175 @@ class _AppointmentScreenState extends ConsumerState<AppointmentScreen> {
                     appointment.doctorNote,
                   ].whereType<String>().join(' ').toLowerCase().contains(query);
                 }).toList();
-          final upcomingappointments = filteredAppointments.where((appoint) {
+          final upcomingAppointments = filteredAppointments.where((appoint) {
             final date = appointmentStartsAt(appoint);
-
             return date != null &&
                 date.isAfter(DateTime.now()) &&
                 _isActiveAppointmentStatus(appoint.status);
           }).toList();
 
-          upcomingappointments.sort(compareAppointmentsByStart);
+          upcomingAppointments.sort(compareAppointmentsByStart);
           filteredAppointments.sort(compareAppointmentsByStart);
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                FormTextField(
-                  controller: _searchController,
-                  hint: 'Search appointments',
-                  radius: 100,
-                  labeled: false,
-                  autoFocus: false,
-                  icon: EneftyIcons.search_normal_2_outline,
-                  onChanged: (value) => setState(() => _query = value.trim()),
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+            children: [
+              DoctorSearchField(
+                controller: _searchController,
+                hint: 'Search appointments',
+                onChanged: (value) => setState(() => _query = value.trim()),
+              ),
+              const SizedBox(height: 16),
+              if (upcomingAppointments.isNotEmpty) ...[
+                DoctorSectionHeader(
+                  title: 'Upcoming',
+                  count: upcomingAppointments.length,
+                  actionLabel: _showAllUpcoming ? 'Show less' : 'See all',
+                  onAction: () =>
+                      setState(() => _showAllUpcoming = !_showAllUpcoming),
                 ),
-                20.hgap,
-                Column(
-                  children: [
-                    if (upcomingappointments.isNotEmpty)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const YarisaText(
-                            text: "Upcoming Appointments",
-                            type: TextType.bodyBig,
-                            spacing: 0,
-                            weight: FontWeight.w500,
-                          ),
-                          TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  _showAllUpcoming = !_showAllUpcoming;
-                                });
-                              },
-                              child: Text(
-                                  _showAllUpcoming ? "Show Less" : "See All"))
-                        ],
+                if (_showAllUpcoming)
+                  ...upcomingAppointments.map(
+                    (item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: AppointmentListCard(
+                        appointment: item,
+                        onTap: () =>
+                            openDoctorAppointmentDetail(context, item),
                       ),
-                    if (upcomingappointments.isNotEmpty)
-                      _showAllUpcoming
-                          ? ListView.separated(
-                              separatorBuilder: (context, index) => 10.hgap,
-                              itemCount: upcomingappointments.length,
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemBuilder: (BuildContext context, int index) {
-                                final item = upcomingappointments[index];
-                                return AppointmentItem(appointment: item);
-                              },
-                            )
-                          : ConstrainedBox(
-                              constraints: const BoxConstraints(maxHeight: 180),
-                              child: ListView.separated(
-                                separatorBuilder: (context, index) => 10.wgap,
-                                itemCount: upcomingappointments.length,
-                                shrinkWrap: true,
-                                scrollDirection: Axis.horizontal,
-                                itemBuilder: (BuildContext context, int index) {
-                                  final item = upcomingappointments[index];
-                                  return AppointmentItem(appointment: item);
-                                },
-                              ),
-                            ),
-                    if (filteredAppointments.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 40),
-                        child: YarisaText(
-                          text: appointments.isEmpty
-                              ? "No appointments"
-                              : 'No appointments match "$_query"',
-                          type: TextType.bodySmall,
-                          color: Colors.grey,
-                          align: TextAlign.center,
-                        ),
-                      )
-                    else ...[
-                      Divider(
-                        height: 40,
-                        color: Colors.grey.withValues(alpha: .2),
-                      ),
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          YarisaText(
-                            text: "All Appointments",
-                            type: TextType.bodyBig,
-                            spacing: 0,
-                            weight: FontWeight.w500,
-                          ),
-                        ],
-                      ),
-                      15.hgap,
-                      ListView.separated(
-                          separatorBuilder: (context, index) => 10.hgap,
-                          itemCount: filteredAppointments.length,
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemBuilder: (context, index) {
-                            final appointment = filteredAppointments[index];
-                            return InkWell(
-                              onTap: () => openDoctorAppointmentDetail(
-                                context,
-                                appointment,
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                              child: Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color:
-                                            Colors.grey.withValues(alpha: .2)),
-                                    color: Colors.white.withValues(alpha: .1),
-                                    borderRadius: BorderRadius.circular(20)),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        CircleImage(
-                                          size: 50,
-                                          image: appointment.patient?.photo,
-                                        ),
-                                        15.wgap,
-                                        Expanded(
-                                          child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                YarisaText(
-                                                  text: appointmentPatientName(
-                                                      appointment),
-                                                  type: TextType.bodyBig,
-                                                  spacing: 0,
-                                                  weight: FontWeight.w600,
-                                                ),
-                                                YarisaText(
-                                                  text: appointmentPurposeText(
-                                                      appointment),
-                                                  type: TextType.bodySmall,
-                                                  // spacing: 0,
-                                                ),
-                                              ]),
-                                        ),
-                                        const CircleAvatar(
-                                            backgroundColor: Colors.white,
-                                            child: Icon(
-                                              EneftyIcons.call_bold,
-                                              size: 20,
-                                              color: Color.fromARGB(
-                                                  255, 118, 34, 135),
-                                            ))
-                                      ],
-                                    ),
-                                    10.hgap,
-                                    Divider(
-                                      color: Colors.grey.withValues(alpha: .2),
-                                    ),
-                                    10.hgap,
-                                    RichText(
-                                      text: TextSpan(
-                                          text: appointmentStartsAt(
-                                                      appointment) ==
-                                                  null
-                                              ? "Date not set"
-                                              : timeOfDay(appointmentStartsAt(
-                                                  appointment)!),
-                                          children: [
-                                            TextSpan(
-                                                text:
-                                                    " -> ${appointmentTimeText(appointment)}",
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodyMedium
-                                                    ?.copyWith())
-                                          ],
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                  fontWeight: FontWeight.w600)),
-                                    ),
-                                    if (_hasAppointmentNote(appointment)) ...[
-                                      10.hgap,
-                                      Container(
-                                        width: double.infinity,
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey
-                                              .withValues(alpha: .08),
-                                          borderRadius:
-                                              BorderRadius.circular(14),
-                                        ),
-                                        child: YarisaText(
-                                          text: appointment.doctorNote!,
-                                          type: TextType.bodySmall,
-                                          lines: 3,
-                                        ),
-                                      ),
-                                    ],
-                                    10.hgap,
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Container(
-                                          decoration: BoxDecoration(
-                                              color: switch (
-                                                  appointment.status) {
-                                                AppointmentStatus.approved =>
-                                                  Colors.green,
-                                                null => Colors.grey,
-                                                AppointmentStatus.pending =>
-                                                  Colors.amber.shade800,
-                                                AppointmentStatus.canceled =>
-                                                  Colors.red,
-                                                AppointmentStatus.declined =>
-                                                  Colors.pink,
-                                              },
-                                              borderRadius:
-                                                  BorderRadius.circular(50)),
-                                          padding: const EdgeInsets.all(8),
-                                          child: YarisaText(
-                                              text: (appointment.status?.name ??
-                                                      AppointmentStatus
-                                                          .pending.name)
-                                                  .capitalize!,
-                                              color: Colors.white,
-                                              type: TextType.subtitle),
-                                        ),
-                                        GestureDetector(
-                                          onTapDown: (details) async {
-                                            final action =
-                                                await _showAppointmentActionMenu(
-                                              context,
-                                              details,
-                                              appointment,
-                                            );
-                                            if (!context.mounted ||
-                                                action == null) {
-                                              return;
-                                            }
-
-                                            switch (action) {
-                                              case _AppointmentAction.approve:
-                                                await _updateAppointmentStatus(
-                                                  context,
-                                                  appointment,
-                                                  AppointmentStatus.approved,
-                                                );
-                                                break;
-                                              case _AppointmentAction.decline:
-                                                await _updateAppointmentStatus(
-                                                  context,
-                                                  appointment,
-                                                  AppointmentStatus.declined,
-                                                );
-                                                break;
-                                              case _AppointmentAction
-                                                    .reschedule:
-                                                await _showRescheduleSheet(
-                                                    context, appointment);
-                                                break;
-                                              case _AppointmentAction.note:
-                                                await _showAppointmentNoteSheet(
-                                                    context, appointment);
-                                                break;
-                                              case _AppointmentAction.delete:
-                                                await _deleteAppointment(
-                                                    context, appointment);
-                                                break;
-                                            }
-                                          },
-                                          child: Icon(
-                                            Icons.more_vert,
-                                            color: Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium
-                                                ?.color,
-                                          ),
-                                        ),
-                                      ],
-                                    )
-                                  ],
-                                ),
-                              ),
-                            );
-                          })
-                    ]
-                  ],
-                )
+                    ),
+                  )
+                else
+                  SizedBox(
+                    height: 150,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: upcomingAppointments.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 10),
+                      itemBuilder: (context, index) {
+                        final item = upcomingAppointments[index];
+                        return AppointmentUpcomingChip(
+                          appointment: item,
+                          onTap: () =>
+                              openDoctorAppointmentDetail(context, item),
+                        );
+                      },
+                    ),
+                  ),
+                const SizedBox(height: 12),
               ],
-            ),
+              DoctorSectionHeader(
+                title: 'All appointments',
+                count: filteredAppointments.length,
+              ),
+              if (filteredAppointments.isEmpty)
+                DoctorEmptyState(
+                  icon: EneftyIcons.calendar_2_outline,
+                  title: appointments.isEmpty
+                      ? 'No appointments'
+                      : 'No matches',
+                  message: appointments.isEmpty
+                      ? 'New patient bookings will appear here.'
+                      : 'No appointments match "$_query".',
+                )
+              else
+                ...filteredAppointments.map(
+                  (appointment) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: AppointmentListCard(
+                      appointment: appointment,
+                      onTap: () => openDoctorAppointmentDetail(
+                        context,
+                        appointment,
+                      ),
+                      onMore: () async {
+                        final action = await _showAppointmentActionMenuSimple(
+                          context,
+                          appointment,
+                        );
+                        if (!context.mounted || action == null) return;
+                        await _runAction(context, appointment, action);
+                      },
+                    ),
+                  ),
+                ),
+            ],
           );
         }),
       ),
     );
   }
+}
+
+Future<_AppointmentAction?> _showAppointmentActionMenuSimple(
+  BuildContext context,
+  AppointmentModel appointment,
+) {
+  return showModalBottomSheet<_AppointmentAction>(
+    context: context,
+    backgroundColor: DoctorUi.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) {
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 12, 8, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: .3),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              ),
+              if ((appointment.status ?? AppointmentStatus.pending) ==
+                  AppointmentStatus.pending) ...[
+                ListTile(
+                  leading: const Icon(Icons.check_circle_outline,
+                      color: Colors.green),
+                  title: const Text('Approve'),
+                  onTap: () =>
+                      Navigator.pop(context, _AppointmentAction.approve),
+                ),
+                ListTile(
+                  leading:
+                      const Icon(Icons.cancel_outlined, color: Colors.pink),
+                  title: const Text('Decline'),
+                  onTap: () =>
+                      Navigator.pop(context, _AppointmentAction.decline),
+                ),
+              ],
+              ListTile(
+                leading: const Icon(EneftyIcons.calendar_search_outline),
+                title: const Text('Reschedule'),
+                onTap: () =>
+                    Navigator.pop(context, _AppointmentAction.reschedule),
+              ),
+              ListTile(
+                leading: const Icon(EneftyIcons.edit_2_outline),
+                title: const Text('Add note'),
+                onTap: () => Navigator.pop(context, _AppointmentAction.note),
+              ),
+              ListTile(
+                leading: Icon(EneftyIcons.trash_outline,
+                    color: Colors.red.shade400),
+                title: Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red.shade400),
+                ),
+                onTap: () => Navigator.pop(context, _AppointmentAction.delete),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }
 
 bool _isActiveAppointmentStatus(AppointmentStatus? status) {
@@ -432,169 +323,471 @@ class _DoctorAppointmentDetailBody extends StatelessWidget {
     final patientId = _appointmentPatientId(appointment);
     final startAt = appointmentStartsAt(appointment);
     final status = appointment.status ?? AppointmentStatus.pending;
+    final statusColor = DoctorUi.statusColor(status);
+    final patientName = appointmentPatientName(appointment);
+    final purpose = appointmentPurposeText(appointment);
+    final timeLabel = appointmentTimeText(appointment);
+    final isPending = status == AppointmentStatus.pending;
+    final isActive = status != AppointmentStatus.canceled &&
+        status != AppointmentStatus.declined;
+    final email = appointment.patient?.email?.trim() ?? '';
+    final note = (appointment.doctorNote ?? '').trim();
 
     return Scaffold(
-      appBar: yarisaAppBar(context, title: "Appointment Details"),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
+      backgroundColor: DoctorUi.scaffoldBg,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: DoctorUi.scaffoldBg,
+        surfaceTintColor: DoctorUi.scaffoldBg,
+        centerTitle: false,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          tooltip: 'Back',
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              Get.back();
+            }
+          },
+        ),
+        title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                CircleImage(size: 64, image: appointment.patient?.photo),
-                14.wgap,
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      YarisaText(
-                        text: appointmentPatientName(appointment),
-                        type: TextType.bodyBig,
-                        weight: FontWeight.w700,
-                      ),
-                      YarisaText(
-                        text: appointment.patient?.email ?? "Patient",
-                        type: TextType.bodySmall,
-                        color: Colors.grey,
-                      ),
-                    ],
-                  ),
-                ),
-                _AppointmentStatusPill(status: status),
-              ],
+            Text(
+              'Appointment',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
             ),
-            24.hgap,
-            _AppointmentDetailTile(
-              icon: EneftyIcons.calendar_2_outline,
-              label: "Date",
-              value: startAt == null
-                  ? "Date not set"
-                  : DateFormat.yMMMMEEEEd().format(startAt),
-            ),
-            _AppointmentDetailTile(
-              icon: EneftyIcons.clock_2_outline,
-              label: "Time",
-              value: appointmentTimeText(appointment),
-            ),
-            _AppointmentDetailTile(
-              icon: Icons.description_outlined,
-              label: "Purpose",
-              value: appointmentPurposeText(appointment),
-            ),
-            if (_hasAppointmentNote(appointment))
-              _AppointmentDetailTile(
-                icon: Icons.note_alt_outlined,
-                label: "Doctor note",
-                value: appointment.doctorNote!,
-              ),
-            24.hgap,
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                FilledButton.icon(
-                  onPressed: patientId == null
-                      ? null
-                      : () => _openAppointmentChat(context, appointment),
-                  icon: const Icon(EneftyIcons.message_2_outline, size: 18),
-                  label: const Text("Chat"),
-                ),
-                OutlinedButton.icon(
-                  onPressed: patientId == null
-                      ? null
-                      : () => _startAppointmentCall(
-                            context,
-                            appointment,
-                            "voice",
-                          ),
-                  icon: const Icon(EneftyIcons.call_outline, size: 18),
-                  label: const Text("Voice"),
-                ),
-                OutlinedButton.icon(
-                  onPressed: patientId == null
-                      ? null
-                      : () => _startAppointmentCall(
-                            context,
-                            appointment,
-                            "video",
-                          ),
-                  icon: const Icon(EneftyIcons.video_outline, size: 18),
-                  label: const Text("Video"),
-                ),
-              ],
-            ),
-            24.hgap,
-            if (status == AppointmentStatus.pending) ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () => _updateAppointmentStatus(
-                        context,
-                        appointment,
-                        AppointmentStatus.approved,
-                      ),
-                      icon: const Icon(Icons.check_circle_outline),
-                      label: const Text("Approve"),
-                    ),
-                  ),
-                  10.wgap,
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _updateAppointmentStatus(
-                        context,
-                        appointment,
-                        AppointmentStatus.declined,
-                      ),
-                      icon: const Icon(Icons.cancel_outlined),
-                      label: const Text("Decline"),
-                    ),
-                  ),
-                ],
-              ),
-              10.hgap,
-            ],
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showRescheduleSheet(context, appointment),
-                    icon: const Icon(EneftyIcons.calendar_search_outline),
-                    label: const Text("Reschedule"),
-                  ),
-                ),
-                10.wgap,
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showAppointmentNoteSheet(
-                      context,
-                      appointment,
-                    ),
-                    icon: const Icon(EneftyIcons.edit_2_outline),
-                    label: const Text("Notes"),
-                  ),
-                ),
-              ],
-            ),
-            10.hgap,
-            SizedBox(
-              width: double.infinity,
-              child: TextButton.icon(
-                onPressed: () => _deleteAppointment(context, appointment),
-                icon: const Icon(EneftyIcons.trash_outline),
-                label: const Text("Delete appointment"),
+            SizedBox(height: 2),
+            Text(
+              'Visit details & actions',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 11,
+                color: Colors.grey,
               ),
             ),
           ],
         ),
       ),
+      bottomNavigationBar: isPending
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => _updateAppointmentStatus(
+                          context,
+                          appointment,
+                          AppointmentStatus.declined,
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          side: BorderSide(
+                            color: Colors.red.withValues(alpha: .4),
+                          ),
+                          minimumSize: const Size.fromHeight(52),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: const Text(
+                          'Decline',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      flex: 2,
+                      child: FilledButton(
+                        onPressed: () => _updateAppointmentStatus(
+                          context,
+                          appointment,
+                          AppointmentStatus.approved,
+                        ),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.green.shade600,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size.fromHeight(52),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: const Text(
+                          'Approve visit',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : null,
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+        children: [
+          // ── Patient hero ─────────────────────────────────────────
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(18, 22, 18, 18),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  DoctorUi.primary,
+                  DoctorUi.primary.withValues(alpha: .78),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: DoctorUi.primary.withValues(alpha: .28),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2.5),
+                      ),
+                      child: CircleImage(
+                        size: 68,
+                        image: appointment.patient?.photo,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            patientName,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 20,
+                              height: 1.15,
+                            ),
+                          ),
+                          if (email.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              email,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: .85),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: .18),
+                      borderRadius: BorderRadius.circular(50),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: .25),
+                      ),
+                    ),
+                    child: Text(
+                      (status.name).toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 11,
+                        letterSpacing: .6,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // ── Schedule highlight ───────────────────────────────────
+          DoctorCard(
+            padding: EdgeInsets.zero,
+            child: Row(
+              children: [
+                Container(
+                  width: 88,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: .12),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(18),
+                      bottomLeft: Radius.circular(18),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        startAt == null
+                            ? '—'
+                            : DateFormat.MMM().format(startAt).toUpperCase(),
+                        style: TextStyle(
+                          color: statusColor,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                          letterSpacing: .4,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        startAt == null
+                            ? '—'
+                            : DateFormat.d().format(startAt),
+                        style: TextStyle(
+                          color: statusColor,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 32,
+                          height: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        startAt == null
+                            ? ''
+                            : DateFormat.E().format(startAt),
+                        style: TextStyle(
+                          color: statusColor.withValues(alpha: .85),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          startAt == null
+                              ? 'Date not set'
+                              : DateFormat.yMMMMEEEEd().format(startAt),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            height: 1.25,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: DoctorUi.primary.withValues(alpha: .1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                EneftyIcons.clock_2_outline,
+                                size: 16,
+                                color: DoctorUi.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                timeLabel,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: DoctorUi.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if ((appointment.type ?? '').trim().isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            appointment.type!,
+                            style: TextStyle(
+                              color: DoctorUi.muted,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // ── Purpose & notes ──────────────────────────────────────
+          const DoctorSectionHeader(title: 'Visit info'),
+          DoctorCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _DetailInfoRow(
+                  icon: EneftyIcons.note_2_outline,
+                  label: 'Purpose',
+                  value: purpose,
+                ),
+                if (note.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Divider(height: 1, color: DoctorUi.border),
+                  ),
+                  _DetailInfoRow(
+                    icon: EneftyIcons.edit_2_outline,
+                    label: 'Your note',
+                    value: note,
+                  ),
+                ] else ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Divider(height: 1, color: DoctorUi.border),
+                  ),
+                  Text(
+                    'No clinical note yet',
+                    style: TextStyle(
+                      color: DoctorUi.muted,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: () =>
+                          _showAppointmentNoteSheet(context, appointment),
+                      icon: const Icon(EneftyIcons.edit_2_outline, size: 16),
+                      label: const Text('Add note'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: DoctorUi.primary,
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+
+          // ── Contact ──────────────────────────────────────────────
+          const DoctorSectionHeader(title: 'Contact patient'),
+          Row(
+            children: [
+              Expanded(
+                child: _ContactTile(
+                  icon: EneftyIcons.message_2_bold,
+                  label: 'Chat',
+                  color: Colors.red.shade400,
+                  enabled: patientId != null,
+                  onTap: () => _openAppointmentChat(context, appointment),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _ContactTile(
+                  icon: EneftyIcons.call_bold,
+                  label: 'Voice',
+                  color: Colors.blue,
+                  enabled: patientId != null,
+                  onTap: () =>
+                      _startAppointmentCall(context, appointment, 'voice'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _ContactTile(
+                  icon: EneftyIcons.video_bold,
+                  label: 'Video',
+                  color: Colors.purple,
+                  enabled: patientId != null,
+                  onTap: () =>
+                      _startAppointmentCall(context, appointment, 'video'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // ── Manage ───────────────────────────────────────────────
+          if (isActive) ...[
+            const DoctorSectionHeader(title: 'Manage'),
+            DoctorCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  _ManageTile(
+                    icon: EneftyIcons.calendar_search_outline,
+                    title: 'Reschedule',
+                    subtitle: 'Move to another open slot',
+                    onTap: () => _showRescheduleSheet(context, appointment),
+                  ),
+                  Divider(height: 1, color: DoctorUi.border),
+                  _ManageTile(
+                    icon: EneftyIcons.edit_2_outline,
+                    title: 'Clinical notes',
+                    subtitle: note.isEmpty
+                        ? 'Add notes for this visit'
+                        : 'Update your notes',
+                    onTap: () =>
+                        _showAppointmentNoteSheet(context, appointment),
+                  ),
+                  Divider(height: 1, color: DoctorUi.border),
+                  _ManageTile(
+                    icon: EneftyIcons.trash_outline,
+                    title: 'Cancel appointment',
+                    subtitle: 'Release the slot and notify patient',
+                    isDestructive: true,
+                    onTap: () => _deleteAppointment(context, appointment),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
 
-class _AppointmentDetailTile extends StatelessWidget {
-  const _AppointmentDetailTile({
+class _DetailInfoRow extends StatelessWidget {
+  const _DetailInfoRow({
     required this.icon,
     required this.label,
     required this.value,
@@ -606,67 +799,164 @@ class _AppointmentDetailTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.withValues(alpha: .18)),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 20),
-          12.wgap,
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                YarisaText(
-                  text: label,
-                  type: TextType.bodySmall,
-                  color: Colors.grey,
-                ),
-                4.hgap,
-                YarisaText(
-                  text: value,
-                  type: TextType.bodySmall,
-                  weight: FontWeight.w600,
-                  lines: 5,
-                ),
-              ],
-            ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: DoctorUi.primary.withValues(alpha: .1),
+            borderRadius: BorderRadius.circular(12),
           ),
-        ],
+          child: Icon(icon, size: 18, color: DoctorUi.primary),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: DoctorUi.muted,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  height: 1.3,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ContactTile extends StatelessWidget {
+  const _ContactTile({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+    this.enabled = true,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: enabled ? 1 : .45,
+      child: DoctorCard(
+        onTap: enabled ? onTap : null,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        child: Column(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: .12),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+                color: color,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _AppointmentStatusPill extends StatelessWidget {
-  const _AppointmentStatusPill({required this.status});
+class _ManageTile extends StatelessWidget {
+  const _ManageTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.isDestructive = false,
+  });
 
-  final AppointmentStatus status;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final bool isDestructive;
 
   @override
   Widget build(BuildContext context) {
-    final color = switch (status) {
-      AppointmentStatus.approved => Colors.green,
-      AppointmentStatus.pending => Colors.amber.shade800,
-      AppointmentStatus.canceled => Colors.red,
-      AppointmentStatus.declined => Colors.pink,
-    };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(100),
-      ),
-      child: YarisaText(
-        text: status.name.capitalize!,
-        type: TextType.subtitle,
-        color: Colors.white,
+    final color = isDestructive ? Colors.red : DoctorUi.primary;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: .1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        color: isDestructive ? Colors.red : null,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: DoctorUi.muted,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: isDestructive ? Colors.red.shade300 : DoctorUi.muted,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -699,8 +989,15 @@ Future<void> _startAppointmentCall(
   final patientId = _appointmentPatientId(appointment);
   if (patientId == null) return;
   final doctor = FirebaseAuth.instance.currentUser;
+  final appointmentId = appointment.id;
+  final room = (appointmentId != null && appointmentId.isNotEmpty)
+      ? YarisaJitsiCallService.appointmentRoom(appointmentId)
+      : YarisaJitsiCallService.conversationRoom(
+          doctor?.uid ?? "",
+          patientId,
+        );
   final joined = await YarisaJitsiCallService.join(
-    room: appointment.id ?? patientId,
+    room: room,
     type: type,
     subject: "Patient Appointment",
     displayName: doctor?.displayName ?? "Doctor",
@@ -720,91 +1017,6 @@ Future<void> _startAppointmentCall(
 }
 
 enum _AppointmentAction { approve, decline, reschedule, note, delete }
-
-Future<_AppointmentAction?> _showAppointmentActionMenu(
-  BuildContext context,
-  TapDownDetails details,
-  AppointmentModel appointment,
-) {
-  final left = details.globalPosition.dx;
-  final top = details.globalPosition.dy;
-  final isPending = (appointment.status ?? AppointmentStatus.pending) ==
-      AppointmentStatus.pending;
-  final items = <PopupMenuEntry<_AppointmentAction>>[
-    if (isPending)
-      const PopupMenuItem(
-        height: 40,
-        value: _AppointmentAction.approve,
-        child: _AppointmentMenuRow(
-          icon: Icons.check_circle_outline,
-          label: "Approve",
-        ),
-      ),
-    if (isPending)
-      const PopupMenuItem(
-        height: 40,
-        value: _AppointmentAction.decline,
-        child: _AppointmentMenuRow(
-          icon: Icons.cancel_outlined,
-          label: "Decline",
-        ),
-      ),
-    const PopupMenuItem(
-      height: 40,
-      value: _AppointmentAction.reschedule,
-      child: _AppointmentMenuRow(
-        icon: EneftyIcons.calendar_search_outline,
-        label: "Reschedule",
-      ),
-    ),
-    const PopupMenuItem(
-      height: 40,
-      value: _AppointmentAction.note,
-      child: _AppointmentMenuRow(
-        icon: EneftyIcons.edit_2_outline,
-        label: "Notes",
-      ),
-    ),
-    const PopupMenuItem(
-      height: 40,
-      value: _AppointmentAction.delete,
-      child: _AppointmentMenuRow(
-        icon: EneftyIcons.trash_outline,
-        label: "Delete",
-      ),
-    ),
-  ];
-
-  return showMenu<_AppointmentAction>(
-    context: context,
-    position:
-        RelativeRect.fromLTRB(left, top, Get.width - left, Get.height - top),
-    elevation: 10,
-    color: Get.isDarkMode ? Colors.grey.shade900 : Colors.white,
-    surfaceTintColor: Get.isDarkMode ? Colors.grey.shade900 : Colors.white,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-    items: items,
-  );
-}
-
-class _AppointmentMenuRow extends StatelessWidget {
-  const _AppointmentMenuRow({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 18),
-        const SizedBox(width: 10),
-        Text(label),
-      ],
-    );
-  }
-}
 
 Future<void> _updateAppointmentStatus(
   BuildContext context,
@@ -852,6 +1064,9 @@ Future<void> _updateAppointmentStatus(
   try {
     final batch = FirebaseFirestore.instance.batch();
     final appointmentRef = FirestoreSchema.appointments().doc(appointment.id);
+    final doctorId =
+        appointment.doctorId ?? FirebaseAuth.instance.currentUser?.uid;
+    final patientId = _appointmentPatientId(appointment);
     batch.update(appointmentRef, {
       "status": status.name,
       "updatedAt": FieldValue.serverTimestamp(),
@@ -861,6 +1076,9 @@ Future<void> _updateAppointmentStatus(
         "declinedAt": FieldValue.serverTimestamp(),
     });
     _setPatientAppointmentRef(batch, appointment, {
+      "appointmentId": appointment.id,
+      if (patientId != null) "patientId": patientId,
+      if (doctorId != null) "doctorId": doctorId,
       "status": status.name,
       "updatedAt": FieldValue.serverTimestamp(),
     });
@@ -1452,23 +1670,44 @@ Future<void> _deleteAppointment(
   if (!confirmed || appointment.id == null) return;
 
   try {
+    // Rules only allow admin hard-delete — cancel via status update instead.
     final batch = FirebaseFirestore.instance.batch();
-    batch.delete(FirestoreSchema.appointments().doc(appointment.id));
+    final doctorId =
+        appointment.doctorId ?? FirebaseAuth.instance.currentUser?.uid;
     final patientId = _appointmentPatientId(appointment);
+    batch.set(
+      FirestoreSchema.appointments().doc(appointment.id),
+      {
+        "status": AppointmentStatus.canceled.name,
+        "canceledAt": FieldValue.serverTimestamp(),
+        "updatedAt": FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
     if (patientId != null) {
-      batch.delete(_patientAppointmentRef(patientId, appointment.id!));
+      batch.set(
+        _patientAppointmentRef(patientId, appointment.id!),
+        {
+          "appointmentId": appointment.id,
+          "patientId": patientId,
+          if (doctorId != null) "doctorId": doctorId,
+          "status": AppointmentStatus.canceled.name,
+          "updatedAt": FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
     }
     await _releaseAppointmentSlotIfPresent(batch, appointment);
     await batch.commit();
     Get.snackbar(
-      "Deleted",
-      "Appointment removed",
+      "Cancelled",
+      "Appointment cancelled and slot released",
       snackPosition: SnackPosition.BOTTOM,
     );
   } catch (e) {
     Get.snackbar(
       "Error",
-      "Failed to delete: $e",
+      "Failed to cancel: $e",
       snackPosition: SnackPosition.BOTTOM,
     );
   }
@@ -1534,11 +1773,6 @@ String? _appointmentPatientId(AppointmentModel appointment) {
   return value;
 }
 
-bool _hasAppointmentNote(AppointmentModel appointment) {
-  final note = appointment.doctorNote?.trim();
-  return note != null && note.isNotEmpty && note.toLowerCase() != "null";
-}
-
 DateTime _appointmentStartAt(DateTime date, String slotLabel) {
   final rawTime = slotLabel.split("-").first.trim();
   final match =
@@ -1563,108 +1797,4 @@ class _AppointmentActionException implements Exception {
   const _AppointmentActionException(this.message);
 
   final String message;
-}
-
-class _DoctorAppointmentsStream extends StatelessWidget {
-  const _DoctorAppointmentsStream({required this.builder});
-
-  final Widget Function(
-      BuildContext context, List<AppointmentModel> appointments) builder;
-
-  @override
-  Widget build(BuildContext context) {
-    final doctorId = FirebaseAuth.instance.currentUser?.uid;
-    if (doctorId == null) {
-      return const _AppointmentStateMessage(
-        title: "No Appointments",
-        message: "Sign in again to view your bookings.",
-      );
-    }
-
-    final appointmentsRef =
-        FirebaseFirestore.instance.collection("Appointments");
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream:
-          appointmentsRef.where("doctor_id", isEqualTo: doctorId).snapshots(),
-      builder: (context, legacySnapshot) {
-        return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: appointmentsRef
-              .where("doctorId", isEqualTo: doctorId)
-              .snapshots(),
-          builder: (context, canonicalSnapshot) {
-            if (legacySnapshot.connectionState == ConnectionState.waiting &&
-                canonicalSnapshot.connectionState == ConnectionState.waiting) {
-              return const AppointmentSkeletonList();
-            }
-            if (legacySnapshot.hasError || canonicalSnapshot.hasError) {
-              return const _AppointmentStateMessage(
-                title: "Unable to load appointments",
-                message: "Please check your connection and try again.",
-              );
-            }
-
-            final docs = {
-              for (final doc in legacySnapshot.data?.docs ?? []) doc.id: doc,
-              for (final doc in canonicalSnapshot.data?.docs ?? []) doc.id: doc,
-            };
-            if (docs.isEmpty) {
-              return const _AppointmentStateMessage(
-                title: "No Appointments",
-                message: "New patient bookings will appear here.",
-              );
-            }
-
-            final appointments = docs.values
-                .map((doc) => AppointmentModel.fromSnapshot(doc))
-                .toList();
-            return builder(context, appointments);
-          },
-        );
-      },
-    );
-  }
-}
-
-class _AppointmentStateMessage extends StatelessWidget {
-  const _AppointmentStateMessage({
-    required this.title,
-    required this.message,
-  });
-
-  final String title;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              EneftyIcons.calendar_2_outline,
-              size: 42,
-              color: Colors.grey.withValues(alpha: .8),
-            ),
-            12.hgap,
-            YarisaText(
-              text: title,
-              type: TextType.bodyBig,
-              weight: FontWeight.w600,
-              align: TextAlign.center,
-            ),
-            6.hgap,
-            YarisaText(
-              text: message,
-              type: TextType.bodySmall,
-              color: Colors.grey,
-              align: TextAlign.center,
-              lines: 3,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

@@ -30,6 +30,91 @@ class AvailabilityDaySummary {
   bool get hasOpenSlots => status && slots.isNotEmpty;
 }
 
+/// Outcome of publishing slots (additive merge).
+class AvailabilityWriteResult {
+  const AvailabilityWriteResult({
+    required this.added,
+    required this.skippedExisting,
+    required this.skippedBooked,
+  });
+
+  final int added;
+  final int skippedExisting;
+  final int skippedBooked;
+}
+
+class SlotBookingInfo {
+  const SlotBookingInfo({
+    required this.booked,
+    this.bookedBy,
+    this.appointmentId,
+  });
+
+  final bool booked;
+  final String? bookedBy;
+  final String? appointmentId;
+}
+
+class SlotBookedException implements Exception {
+  const SlotBookedException({
+    required this.slotLabel,
+    this.appointmentId,
+    this.bookedBy,
+  });
+
+  final String slotLabel;
+  final String? appointmentId;
+  final String? bookedBy;
+
+  @override
+  String toString() =>
+      'Slot "$slotLabel" is booked and cannot be removed from availability.';
+}
+
+/// One published slot for a day (open or booked).
+class DoctorAvailabilitySlot {
+  const DoctorAvailabilitySlot({
+    required this.label,
+    required this.open,
+    required this.booked,
+    this.bookedBy,
+    this.appointmentId,
+    this.patientName,
+  });
+
+  final String label;
+  final bool open;
+  final bool booked;
+  final String? bookedBy;
+  final String? appointmentId;
+  final String? patientName;
+
+  int get sortMinutes => slotLabelStartMinutes(label) ?? 24 * 60;
+}
+
+/// Start minutes from midnight for labels like `9:00 AM - 9:30 AM`.
+int? slotLabelStartMinutes(String label) {
+  final raw = label.split(RegExp(r'\s*[-–—]\s*')).first.trim().toUpperCase();
+  final match = RegExp(r'^(\d{1,2}):(\d{2})\s*(AM|PM)?$').firstMatch(raw);
+  if (match == null) return null;
+  var hour = int.tryParse(match.group(1)!);
+  final minute = int.tryParse(match.group(2)!);
+  if (hour == null || minute == null) return null;
+  final mer = match.group(3);
+  if (mer == 'PM' && hour < 12) hour += 12;
+  if (mer == 'AM' && hour == 12) hour = 0;
+  if (hour > 23 || minute > 59) return null;
+  return hour * 60 + minute;
+}
+
+int compareSlotLabelsAscending(String a, String b) {
+  final am = slotLabelStartMinutes(a) ?? 24 * 60;
+  final bm = slotLabelStartMinutes(b) ?? 24 * 60;
+  final c = am.compareTo(bm);
+  if (c != 0) return c;
+  return a.compareTo(b);
+}
+
 class ApiMethods extends ChangeNotifier {
   bool authenticating = false;
   bool loading = false;
@@ -370,17 +455,25 @@ class ApiMethods extends ChangeNotifier {
         date,
       ).get();
       if (canonicalDay.exists) {
-        final slots = await canonicalDay.reference
+        // Load ALL slots (open + booked) so the doctor can manage bookings.
+        final slotsSnap = await canonicalDay.reference
             .collection(DoctorSubcollections.slots)
-            .where("status", isEqualTo: true)
             .get();
+        final details = slotsSnap.docs
+            .map((doc) => _slotFromDoc(doc.data(), doc.id))
+            .whereType<DoctorAvailabilitySlot>()
+            .toList()
+          ..sort((a, b) => a.sortMinutes.compareTo(b.sortMinutes));
+        final openLabels = details
+            .where((s) => s.open)
+            .map((s) => s.label)
+            .toList();
         final data = {
           ...canonicalDay.data()!,
           "date": canonicalDay.data()!["date"] ?? date,
-          "slots": slots.docs
-              .map((doc) => doc.data()["label"]?.toString())
-              .whereType<String>()
-              .toList(),
+          // Keep legacy string list for callers that only need open times.
+          "slots": openLabels,
+          "slotDetails": details,
         };
         loading = false;
         notifyListeners();
@@ -396,10 +489,35 @@ class ApiMethods extends ChangeNotifier {
           .get();
 
       final legacyData = data.docs.firstOrNull?.data();
+      if (legacyData != null) {
+        final labels = List<dynamic>.from(legacyData['slots'] ?? [])
+            .map((slot) => slot.toString())
+            .where((slot) => slot.trim().isNotEmpty)
+            .toList()
+          ..sort(compareSlotLabelsAscending);
+        final details = labels
+            .map(
+              (label) => DoctorAvailabilitySlot(
+                label: label,
+                open: true,
+                booked: false,
+              ),
+            )
+            .toList();
+        final enriched = {
+          ...legacyData,
+          'slots': labels,
+          'slotDetails': details,
+        };
+        loading = false;
+        notifyListeners();
+        onSuccess?.call(enriched);
+        return enriched;
+      }
       loading = false;
       notifyListeners();
-      onSuccess?.call(legacyData);
-      return legacyData;
+      onSuccess?.call(null);
+      return null;
     } on FirebaseAuthException catch (e) {
       Logger().e(e);
 
@@ -447,7 +565,8 @@ class ApiMethods extends ChangeNotifier {
         final slots = slotDocs.docs
             .map((doc) => doc.data()['label']?.toString())
             .whereType<String>()
-            .toList();
+            .toList()
+          ..sort(compareSlotLabelsAscending);
         schedule[FirestoreSchema.dateKey(date)] = AvailabilityDaySummary(
           date: DateTime(date.year, date.month, date.day),
           status: data['status'] == true,
@@ -465,15 +584,17 @@ class ApiMethods extends ChangeNotifier {
         final date = _dateTimeFromValue(data['date']);
         if (date == null || !_dateInRange(date, start, end)) continue;
 
+        final labels = List<dynamic>.from(data['slots'] ?? [])
+            .map((slot) => slot.toString())
+            .where((slot) => slot.trim().isNotEmpty)
+            .toList()
+          ..sort(compareSlotLabelsAscending);
         schedule.putIfAbsent(
           FirestoreSchema.dateKey(date),
           () => AvailabilityDaySummary(
             date: DateTime(date.year, date.month, date.day),
             status: data['status'] == true,
-            slots: List<dynamic>.from(data['slots'] ?? [])
-                .map((slot) => slot.toString())
-                .where((slot) => slot.trim().isNotEmpty)
-                .toList(),
+            slots: labels,
           ),
         );
       }
@@ -525,18 +646,89 @@ class ApiMethods extends ChangeNotifier {
       required bool status,
       void Function(Map<String, dynamic>?)? onSuccess,
       void Function()? onFailed}) async {
+    final labels = timeSlots.trim().isEmpty
+        ? const <String>[]
+        : <String>[timeSlots.trim()];
+    await updateAvailabilitySlots(
+      date: date,
+      slotLabels: labels,
+      status: status,
+      onSuccess: onSuccess,
+      onFailed: onFailed,
+    );
+  }
+
+  /// Publish a day and optionally many slot labels in one write.
+  ///
+  /// **Policy: additive merge.** Existing slots are kept. Exact-label
+  /// duplicates are skipped. Booked slots are never reopened (status stays
+  /// closed / booked flags preserved).
+  Future<AvailabilityWriteResult> updateAvailabilitySlots({
+    required DateTime date,
+    required List<String> slotLabels,
+    required bool status,
+    void Function(Map<String, dynamic>?)? onSuccess,
+    void Function()? onFailed,
+  }) async {
     try {
-      final data = await checkAvailability(
-        date: date,
-      );
+      loading = true;
+      notifyListeners();
+      final data = await checkAvailability(date: date);
       final doctorId = auth.currentUser?.uid;
-      if (doctorId == null) return;
+      if (doctorId == null) {
+        loading = false;
+        notifyListeners();
+        onFailed?.call();
+        return const AvailabilityWriteResult(
+          added: 0,
+          skippedExisting: 0,
+          skippedBooked: 0,
+        );
+      }
       if (!await _isDoctorVerified(doctorId)) {
         loading = false;
         notifyListeners();
         onFailed?.call();
-        return;
+        return const AvailabilityWriteResult(
+          added: 0,
+          skippedExisting: 0,
+          skippedBooked: 0,
+        );
       }
+
+      final cleaned = slotLabels
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toSet()
+          .toList();
+
+      // Load existing slot docs to decide merge vs skip.
+      final existingSnap = await FirestoreSchema.availabilityDay(doctorId, date)
+          .collection(DoctorSubcollections.slots)
+          .get();
+      final existingById = {
+        for (final doc in existingSnap.docs) doc.id: doc.data(),
+      };
+
+      final toAdd = <String>[];
+      var skippedExisting = 0;
+      var skippedBooked = 0;
+
+      for (final label in cleaned) {
+        final id = FirestoreSchema.slotId(label);
+        final existing = existingById[id];
+        if (existing == null) {
+          toAdd.add(label);
+          continue;
+        }
+        if (_slotDataIsBooked(existing)) {
+          skippedBooked++;
+          continue;
+        }
+        // Already open with same label — nothing to do.
+        skippedExisting++;
+      }
+
       if (data != null) {
         await db
             .collection("Doctors")
@@ -544,13 +736,11 @@ class ApiMethods extends ChangeNotifier {
             .collection("Availability")
             .doc(data.id)
             .update(
-              timeSlots.trim().isEmpty
-                  ? {
-                      'status': status,
-                    }
+              toAdd.isEmpty
+                  ? {'status': status}
                   : {
                       'status': status,
-                      'slots': FieldValue.arrayUnion([timeSlots])
+                      'slots': FieldValue.arrayUnion(toAdd),
                     },
             );
       } else {
@@ -558,72 +748,135 @@ class ApiMethods extends ChangeNotifier {
             .collection("Doctors")
             .doc(doctorId)
             .collection("Availability")
-            .add(
+            .add({
+          'date': date,
+          'status': status,
+          'slots': toAdd,
+        });
+      }
+
+      final batch = db.batch();
+      batch.set(
+        FirestoreSchema.availabilityDay(doctorId, date),
+        {
+          "doctorId": doctorId,
+          "date": date,
+          "dateKey": FirestoreSchema.dateKey(date),
+          "status": status,
+          "updatedAt": FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+      for (final label in toAdd) {
+        // Create only — do not merge over booked docs.
+        batch.set(
+          FirestoreSchema.availabilitySlot(doctorId, date, label),
           {
-            'date': date,
-            'status': status,
-            'slots': FieldValue.arrayUnion([timeSlots])
+            "doctorId": doctorId,
+            "dateKey": FirestoreSchema.dateKey(date),
+            "slotId": FirestoreSchema.slotId(label),
+            "label": label,
+            "status": true,
+            "booked": false,
+            "createdAt": FieldValue.serverTimestamp(),
+            "updatedAt": FieldValue.serverTimestamp(),
           },
         );
       }
-      final batch = db.batch();
-      batch.set(
-          FirestoreSchema.availabilityDay(doctorId, date),
-          {
-            "doctorId": doctorId,
-            "date": date,
-            "dateKey": FirestoreSchema.dateKey(date),
-            "status": status,
-            "updatedAt": FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true));
-      if (timeSlots.trim().isNotEmpty) {
-        batch.set(
-            FirestoreSchema.availabilitySlot(doctorId, date, timeSlots),
-            {
-              "doctorId": doctorId,
-              "dateKey": FirestoreSchema.dateKey(date),
-              "slotId": FirestoreSchema.slotId(timeSlots),
-              "label": timeSlots,
-              "status": status,
-              "createdAt": FieldValue.serverTimestamp(),
-              "updatedAt": FieldValue.serverTimestamp(),
-            },
-            SetOptions(merge: true));
-      }
       await batch.commit();
 
-      final newData = await getAvailability(
-        date: date,
-      );
-
+      final newData = await getAvailability(date: date);
+      loading = false;
+      notifyListeners();
       onSuccess?.call(newData);
+      return AvailabilityWriteResult(
+        added: toAdd.length,
+        skippedExisting: skippedExisting,
+        skippedBooked: skippedBooked,
+      );
     } on FirebaseAuthException catch (e) {
       Logger().e(e);
-
       loading = false;
       notifyListeners();
       onFailed?.call();
+      return const AvailabilityWriteResult(
+        added: 0,
+        skippedExisting: 0,
+        skippedBooked: 0,
+      );
     } catch (e) {
       Logger().e(e);
-
       loading = false;
       notifyListeners();
       onFailed?.call();
+      return const AvailabilityWriteResult(
+        added: 0,
+        skippedExisting: 0,
+        skippedBooked: 0,
+      );
     }
   }
 
+  /// Whether a slot is reserved by a patient booking.
+  Future<SlotBookingInfo> getSlotBookingInfo({
+    required DateTime date,
+    required String timeSlots,
+  }) async {
+    final doctorId = auth.currentUser?.uid;
+    if (doctorId == null) {
+      return const SlotBookingInfo(booked: false);
+    }
+    try {
+      final snap = await FirestoreSchema.availabilitySlot(
+        doctorId,
+        date,
+        timeSlots,
+      ).get();
+      if (!snap.exists) {
+        return const SlotBookingInfo(booked: false);
+      }
+      final data = snap.data() ?? {};
+      if (!_slotDataIsBooked(data)) {
+        return const SlotBookingInfo(booked: false);
+      }
+      return SlotBookingInfo(
+        booked: true,
+        bookedBy: data['bookedBy']?.toString(),
+        appointmentId: data['bookedAppointmentId']?.toString(),
+      );
+    } catch (e) {
+      Logger().e(e);
+      return const SlotBookingInfo(booked: false);
+    }
+  }
+
+  /// Removes an **open** slot. Fails with [SlotBookedException] if booked.
   Future<void> removeTimeSlot(
       {required DateTime date,
       required String timeSlots,
       void Function(Map<String, dynamic>?)? onSuccess,
       void Function()? onFailed}) async {
     try {
-      final data = await checkAvailability(
-        date: date,
-      );
       final doctorId = auth.currentUser?.uid;
-      if (doctorId == null) return;
+      if (doctorId == null) {
+        onFailed?.call();
+        return;
+      }
+
+      final booking = await getSlotBookingInfo(
+        date: date,
+        timeSlots: timeSlots,
+      );
+      if (booking.booked) {
+        onFailed?.call();
+        throw SlotBookedException(
+          slotLabel: timeSlots,
+          appointmentId: booking.appointmentId,
+          bookedBy: booking.bookedBy,
+        );
+      }
+
+      final data = await checkAvailability(date: date);
       if (data != null) {
         await db
             .collection("Doctors")
@@ -642,11 +895,11 @@ class ApiMethods extends ChangeNotifier {
         "updatedAt": FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
-      final newData = await getAvailability(
-        date: date,
-      );
+      final newData = await getAvailability(date: date);
 
       onSuccess?.call(newData);
+    } on SlotBookedException {
+      rethrow;
     } on FirebaseAuthException catch (e) {
       Logger().e(e);
 
@@ -659,6 +912,130 @@ class ApiMethods extends ChangeNotifier {
       loading = false;
       notifyListeners();
       onFailed?.call();
+    }
+  }
+
+  bool _slotDataIsBooked(Map<String, dynamic> data) {
+    if (data['booked'] == true) return true;
+    final by = data['bookedBy']?.toString();
+    if (by != null && by.isNotEmpty) return true;
+    final appt = data['bookedAppointmentId']?.toString();
+    if (appt != null && appt.isNotEmpty) return true;
+    // Patient booking sets status:false while keeping the slot doc.
+    if (data['status'] == false &&
+        (data['booked'] == true ||
+            (data['bookedBy']?.toString().isNotEmpty ?? false))) {
+      return true;
+    }
+    return false;
+  }
+
+  DoctorAvailabilitySlot? _slotFromDoc(Map<String, dynamic> data, String id) {
+    final label = data['label']?.toString() ?? id;
+    if (label.trim().isEmpty) return null;
+    final booked = _slotDataIsBooked(data);
+    final open = !booked && data['status'] == true;
+    return DoctorAvailabilitySlot(
+      label: label,
+      open: open,
+      booked: booked,
+      bookedBy: data['bookedBy']?.toString(),
+      appointmentId: data['bookedAppointmentId']?.toString(),
+    );
+  }
+
+  /// Cancel the linked appointment and reopen the slot for booking.
+  Future<void> cancelBookedSlotAndFree({
+    required DateTime date,
+    required String slotLabel,
+    void Function()? onSuccess,
+    void Function(String message)? onFailed,
+  }) async {
+    try {
+      final doctorId = auth.currentUser?.uid;
+      if (doctorId == null) {
+        onFailed?.call('Not signed in');
+        return;
+      }
+      final info = await getSlotBookingInfo(date: date, timeSlots: slotLabel);
+      if (!info.booked) {
+        onFailed?.call('This slot is not booked');
+        return;
+      }
+
+      final batch = db.batch();
+      final appointmentId = info.appointmentId;
+      final patientId = info.bookedBy;
+
+      if (appointmentId != null && appointmentId.isNotEmpty) {
+        batch.set(
+          FirestoreSchema.appointments().doc(appointmentId),
+          {
+            'status': 'canceled',
+            'updatedAt': FieldValue.serverTimestamp(),
+            'canceledAt': FieldValue.serverTimestamp(),
+            'canceledBy': doctorId,
+            'cancelReason': 'Doctor freed the time slot',
+          },
+          SetOptions(merge: true),
+        );
+        if (patientId != null && patientId.isNotEmpty) {
+          batch.set(
+            db
+                .collection('Patients')
+                .doc(patientId)
+                .collection('AppointmentRefs')
+                .doc(appointmentId),
+            {
+              'appointmentId': appointmentId,
+              'patientId': patientId,
+              'doctorId': doctorId,
+              'status': 'canceled',
+              'updatedAt': FieldValue.serverTimestamp(),
+            },
+            SetOptions(merge: true),
+          );
+        }
+      }
+
+      batch.set(
+        FirestoreSchema.availabilitySlot(doctorId, date, slotLabel),
+        {
+          'status': true,
+          'booked': false,
+          'bookedBy': FieldValue.delete(),
+          'bookedAppointmentId': FieldValue.delete(),
+          'releasedAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+          'label': slotLabel,
+          'doctorId': doctorId,
+          'dateKey': FirestoreSchema.dateKey(date),
+          'slotId': FirestoreSchema.slotId(slotLabel),
+        },
+        SetOptions(merge: true),
+      );
+      // Ensure label is on the legacy array too.
+      final legacy = await checkAvailability(date: date);
+      if (legacy != null) {
+        batch.set(
+          db
+              .collection('Doctors')
+              .doc(doctorId)
+              .collection('Availability')
+              .doc(legacy.id),
+          {
+            'status': true,
+            'slots': FieldValue.arrayUnion([slotLabel]),
+          },
+          SetOptions(merge: true),
+        );
+      }
+
+      await batch.commit();
+      onSuccess?.call();
+    } catch (e) {
+      Logger().e(e);
+      onFailed?.call(e.toString());
     }
   }
 
@@ -675,19 +1052,13 @@ class ApiMethods extends ChangeNotifier {
         onFailed?.call([]);
         return [];
       }
-      final legacyAppointments = await FirestoreSchema.appointments()
-          .where("doctor_id", isEqualTo: doctorId)
-          .get();
-      final canonicalAppointments = await FirestoreSchema.appointments()
-          .where("doctorId", isEqualTo: doctorId)
-          .get();
-      final appointmentDocs = {
-        for (final doc in legacyAppointments.docs) doc.id: doc,
-        for (final doc in canonicalAppointments.docs) doc.id: doc,
-      }.values.toList();
+      // Query legacy + canonical fields independently so one rule/index
+      // failure does not wipe the whole load.
+      final appointmentDocs =
+          await _queryDoctorAppointmentDocs(doctorId);
 
       final data = appointmentDocs
-          .map((e) => (AppointmentModel.fromSnapshot(e)))
+          .map(AppointmentModel.fromSnapshot)
           .toList();
       if (kDebugMode) {
         print(data);
@@ -699,14 +1070,12 @@ class ApiMethods extends ChangeNotifier {
       return data;
     } on FirebaseAuthException catch (e) {
       Logger().e(e);
-      userAccount = null;
       authenticating = false;
       notifyListeners();
       onFailed?.call(null);
       return null;
     } catch (e) {
       Logger().e(e);
-      userAccount = null;
       authenticating = false;
       notifyListeners();
       onFailed?.call(null);
@@ -727,38 +1096,47 @@ class ApiMethods extends ChangeNotifier {
         onFailed?.call([]);
         return [];
       }
-      final patients = await db
-          .collection("Doctors")
-          .doc(doctorId)
-          .collection("Patients")
-          .get();
-      final patientMap = <String, PersonalPatientsModel>{
-        for (final patient in patients.docs)
-          (patient.data()['patientId']?.toString() ?? patient.id):
-              PersonalPatientsModel.fromMap({
+
+      final patientMap = <String, PersonalPatientsModel>{};
+
+      try {
+        final patients = await db
+            .collection("Doctors")
+            .doc(doctorId)
+            .collection("Patients")
+            .get();
+        for (final patient in patients.docs) {
+          final id =
+              patient.data()['patientId']?.toString() ?? patient.id;
+          patientMap[id] = PersonalPatientsModel.fromMap({
             ...patient.data(),
             'patientId': patient.data()['patientId'] ?? patient.id,
-          })
-      };
+          });
+        }
+      } catch (e) {
+        Logger().e('Doctors/$doctorId/Patients list failed: $e');
+      }
 
-      final appointmentsSnapshot = await FirestoreSchema.appointments()
-          .where("doctorId", isEqualTo: doctorId)
-          .get();
-      final appointmentDocs = appointmentsSnapshot.docs;
-
-      for (final appointmentDoc in appointmentDocs) {
-        final appointment = AppointmentModel.fromSnapshot(appointmentDoc);
-        final patientId = appointment.patientId ?? appointment.patient?.id;
-        if (patientId == null || patientId.trim().isEmpty) continue;
-        patientMap.putIfAbsent(
-          patientId,
-          () => PersonalPatientsModel(
-            patientId: patientId,
-            patientName: appointment.patient?.name ?? "Patient",
-            patientImage: appointment.patient?.photo ?? "",
-            status: "active",
-          ),
-        );
+      // Enrich from appointments when allowed; never fail the whole call.
+      try {
+        final appointmentDocs =
+            await _queryDoctorAppointmentDocs(doctorId);
+        for (final appointmentDoc in appointmentDocs) {
+          final appointment = AppointmentModel.fromSnapshot(appointmentDoc);
+          final patientId = appointment.patientId ?? appointment.patient?.id;
+          if (patientId == null || patientId.trim().isEmpty) continue;
+          patientMap.putIfAbsent(
+            patientId,
+            () => PersonalPatientsModel(
+              patientId: patientId,
+              patientName: appointment.patient?.name ?? "Patient",
+              patientImage: appointment.patient?.photo ?? "",
+              status: "active",
+            ),
+          );
+        }
+      } catch (e) {
+        Logger().e('getMyPatients appointment enrich failed: $e');
       }
 
       final data = patientMap.values.toList()
@@ -788,6 +1166,33 @@ class ApiMethods extends ChangeNotifier {
       onFailed?.call([]);
       return [];
     }
+  }
+
+  /// Loads doctor appointments under both field names without failing
+  /// the whole request if one query is denied or missing an index.
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>
+      _queryDoctorAppointmentDocs(String doctorId) async {
+    final docs = <String, QueryDocumentSnapshot<Map<String, dynamic>>>{};
+
+    Future<void> merge(String field) async {
+      try {
+        final snap = await FirestoreSchema.appointments()
+            .where(field, isEqualTo: doctorId)
+            .get();
+        for (final doc in snap.docs) {
+          docs[doc.id] = doc;
+        }
+      } catch (e) {
+        Logger().e('Appointments where $field == $doctorId failed: $e');
+      }
+    }
+
+    await Future.wait([
+      merge('doctorId'),
+      merge('doctor_id'),
+      merge('providerId'),
+    ]);
+    return docs.values.toList();
   }
 }
 

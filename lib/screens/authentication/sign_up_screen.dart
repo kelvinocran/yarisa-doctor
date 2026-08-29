@@ -2,14 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
 import 'package:yarisa_doctor/api/api_methods.dart';
+import 'package:yarisa_doctor/components/auth/auth_widgets.dart';
+import 'package:yarisa_doctor/components/formtextfield.dart';
 import 'package:yarisa_doctor/constants/yarisa_strings.dart';
-import 'package:yarisa_doctor/extensions/yarisa_extensions.dart';
 import 'package:yarisa_doctor/screens/authentication/complete_profile.dart';
-
-import '../../components/formtextfield.dart';
-import '../../constants/yarisa_constants.dart';
-import '../../constants/yarisa_enums.dart';
-import '../../constants/yarisa_widgets.dart';
+import 'package:yarisa_doctor/ui/doctor_ui.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
@@ -26,71 +23,109 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   bool _obscurePassword = true;
 
   @override
+  void dispose() {
+    name.dispose();
+    email.dispose();
+    password.dispose();
+    super.dispose();
+  }
+
+  Future<void> _signUp() async {
+    if (!key.currentState!.validate()) return;
+    final api = ref.read(apimethods);
+    await api.signUpUserAccount(
+      email: email.text.trim(),
+      password: password.text.trim(),
+      fullname: name.text.trim(),
+      onSuccess: (credential) {
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CompleteProfile(
+              email: email.text.trim(),
+              fullname: name.text.trim(),
+            ),
+          ),
+        );
+      },
+      onFailed: (error) {
+        if (!mounted) return;
+        showDoctorAuthSnack(context, error);
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final authenticating = ref.watch(apimethods).authenticating;
-    return Scaffold(
-        appBar: AppBar(),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+
+    return DoctorAuthScaffold(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const DoctorAuthHeader(
+            title: AppStrings.joinyarisa,
+            subtitle: AppStrings.createaccountsubtitle,
+            icon: Icons.person_add_alt_1_rounded,
+          ),
+          const SizedBox(height: 28),
+          DoctorAuthCard(
             child: Form(
               key: key,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const YarisaText(
-                    text: AppStrings.joinyarisa,
-                    type: TextType.heading,
-                    weight: FontWeight.w600,
-                    spacing: -1,
-                    height: 1.1,
-                    size: YarisaDimens.headlineMedium + 3,
-                  ),
-                  10.hgap,
-                  const YarisaText(
-                    text: AppStrings.createaccountsubtitle,
-                    type: TextType.bodySmall,
-                    // spacing: 0,
-                    color: Colors.grey,
-                  ),
-                  50.hgap,
                   FormTextField(
-                    radius: 100,
+                    radius: 14,
                     controller: name,
+                    autoFocus: false,
+                    filled: true,
+                    fillColor: DoctorUi.fieldBg,
                     inputType: TextInputType.name,
                     capitalization: TextCapitalization.words,
+                    action: TextInputAction.next,
+                    enabled: !authenticating,
                     validator: (p0) {
-                      if (p0!.isEmpty) {
+                      if (p0 == null || p0.isEmpty) {
                         return AppStrings.providename;
                       }
-
                       return null;
                     },
                     label: AppStrings.name,
                     hint: AppStrings.nameexample,
                   ),
-                  10.hgap,
+                  const SizedBox(height: 12),
                   FormTextField(
-                    radius: 100,
+                    radius: 14,
                     controller: email,
+                    autoFocus: false,
+                    filled: true,
+                    fillColor: DoctorUi.fieldBg,
                     inputType: TextInputType.emailAddress,
+                    capitalization: TextCapitalization.none,
+                    action: TextInputAction.next,
+                    enabled: !authenticating,
                     validator: (p0) {
-                      if (p0!.isEmpty) {
+                      if (p0 == null || p0.isEmpty) {
                         return AppStrings.provideemail;
                       }
-                      if (!p0.isEmail) {
-                        return AppStrings.invalidemail;
-                      }
+                      if (!p0.isEmail) return AppStrings.invalidemail;
                       return null;
                     },
                     label: AppStrings.email,
                     hint: AppStrings.emailexample,
                   ),
-                  10.hgap,
+                  const SizedBox(height: 12),
                   FormTextField(
-                    radius: 100,
+                    radius: 14,
                     controller: password,
+                    autoFocus: false,
+                    filled: true,
+                    fillColor: DoctorUi.fieldBg,
                     inputType: TextInputType.visiblePassword,
+                    capitalization: TextCapitalization.none,
+                    action: TextInputAction.done,
+                    enabled: !authenticating,
                     lines: 1,
                     obscure: _obscurePassword,
                     endicon: Icon(
@@ -98,69 +133,44 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
                       color: Colors.grey,
+                      size: 20,
                     ),
                     endIconFunction: () {
                       setState(() => _obscurePassword = !_obscurePassword);
                     },
                     validator: (p0) {
-                      if (p0!.isEmpty) {
+                      if (p0 == null || p0.isEmpty) {
                         return AppStrings.providepassword;
                       }
-                      if (p0.length < 6) {
-                        return AppStrings.invalidpassword;
-                      }
-
+                      if (p0.length < 6) return AppStrings.invalidpassword;
                       return null;
                     },
                     hint: AppStrings.password,
+                    label: AppStrings.password,
                   ),
-                  20.hgap,
-                  Visibility(
-                    visible: !authenticating,
-                    replacement: const Center(child: Loader()),
-                    child: ElevatedButton.icon(
-                        onPressed: authenticating
-                            ? null
-                            : () async {
-                                if (key.currentState!.validate()) {
-                                  final api = ref.read(apimethods);
-                                  await api.signUpUserAccount(
-                                    email: email.text.trim(),
-                                    password: password.text.trim(),
-                                    fullname: name.text.trim(),
-                                    onSuccess: (credential) {
-                                      Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) =>
-                                                  CompleteProfile(
-                                                    email: email.text.trim(),
-                                                    fullname: name.text.trim(),
-                                                  )));
-                                    },
-                                    onFailed: (error) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(error),
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      );
-                                    },
-                                  );
-                                }
-                              },
-                        style: const ButtonStyle(
-                            elevation: WidgetStatePropertyAll(0),
-                            minimumSize: WidgetStatePropertyAll(
-                                Size(double.infinity, 50))),
-                        icon: const Icon(Icons.mark_email_read_outlined),
-                        label: const Text(AppStrings.signupwithemail)),
+                  const SizedBox(height: 20),
+                  DoctorAuthPrimaryButton(
+                    label: AppStrings.signupwithemail,
+                    loading: authenticating,
+                    icon: Icons.mail_outline_rounded,
+                    onPressed: _signUp,
                   ),
                 ],
               ),
             ),
           ),
-        ));
+          const SizedBox(height: 20),
+          Text(
+            'After signing up you will complete your professional profile for verification.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: DoctorUi.muted,
+              fontSize: 12,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -2,19 +2,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:get/get.dart';
 import 'package:logger/logger.dart';
-
 import 'package:uicons_brands/uicons_brands.dart';
 import 'package:yarisa_doctor/api/api_methods.dart';
 import 'package:yarisa_doctor/api/config.dart';
-import 'package:yarisa_doctor/constants/yarisa_assets.dart';
-import 'package:yarisa_doctor/constants/yarisa_constants.dart';
+import 'package:yarisa_doctor/components/auth/auth_widgets.dart';
 import 'package:yarisa_doctor/constants/yarisa_strings.dart';
-import 'package:yarisa_doctor/extensions/yarisa_extensions.dart';
-import 'package:yarisa_doctor/screens/authentication/sign_in_screen.dart';
+import 'package:yarisa_doctor/ui/doctor_ui.dart';
 
+import 'sign_in_screen.dart';
 import 'sign_up_screen.dart';
 
 class WelcomeScreen extends ConsumerStatefulWidget {
@@ -25,180 +21,181 @@ class WelcomeScreen extends ConsumerStatefulWidget {
 }
 
 class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
+  bool _busy = false;
+
+  Future<void> _socialLanding(
+    Future<dynamic> Function() signIn,
+    String label,
+  ) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final userCredential = await signIn();
+      if (userCredential == null || !mounted) return;
+      await ref.read(apimethods).openDoctorLanding(
+            context,
+            email: userCredential.user?.email,
+            fullname: userCredential.user?.displayName,
+          );
+    } catch (e) {
+      Logger().e(e);
+      if (!mounted) return;
+      showDoctorAuthSnack(context, '$label sign-in failed: $e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        body: SafeArea(
-            child: Stack(
-      fit: StackFit.expand,
-      children: [
-        Positioned(
-          top: 20,
-          left: -100,
-          child: Opacity(
-            opacity: .05,
-            child: SvgPicture.asset(
-              YarisaAssets.heartbeaticon,
-              height: 500,
-              // ignore: deprecated_member_use
-              color: Colors.blueGrey,
+    final theme = Theme.of(context).textTheme;
+    final isDark = DoctorUi.isDark;
+
+    return DoctorAuthScaffold(
+      showBack: false,
+      scrollable: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 12),
+          Text(
+            AppStrings.appname,
+            style: theme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: DoctorUi.primary,
+              letterSpacing: -0.3,
             ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                AppStrings.appname,
-                style: context.headlineSmall,
+          const SizedBox(height: 36),
+          Container(
+            height: 72,
+            width: 72,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  DoctorUi.primary,
+                  DoctorUi.primary.withValues(alpha: .75),
+                ],
               ),
-              const Spacer(),
-              RichText(
-                  text: TextSpan(
-                      text: "Offer ",
-                      children: [
-                        TextSpan(
-                            text: "Medical Consultation ",
-                            style: context.headlineMedium),
-                        const TextSpan(text: "& "),
-                        TextSpan(text: "Help ", style: context.headlineMedium),
-                        const TextSpan(text: "to patients across the Globe.")
-                      ],
-                      style: context.headlineMedium?.copyWith(
-                          color:
-                              Colors.purple.shade300.withValues(alpha: .7)))),
-              50.hgap,
-              // if (Platform.isAndroid)
-              ElevatedButton.icon(
-                  onPressed: () async {
-                    try {
-                      final userCredential =
-                          await ref.read(authConfig).signInWithGoogle();
-                      if (userCredential != null) {
-                        if (!context.mounted) return;
-                        final api = ref.read(apimethods);
-                        await api.openDoctorLanding(
-                          context,
-                          email: userCredential.user?.email,
-                          fullname: userCredential.user?.displayName,
-                        );
-                      }
-                    } catch (e) {
-                      Logger().e(e);
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Google sign-in failed: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                  icon: Icon(
-                    const UIconsBrands().google,
-                    size: 20,
-                  ),
-                  label: const Text(AppStrings.signupwithgoogle)),
-              const SizedBox(height: 10),
-              // if (Platform.isIOS)
-              ElevatedButton.icon(
-                  onPressed: () async {
-                    try {
-                      final userCredential =
-                          await ref.read(authConfig).signInWithApple();
-                      if (userCredential != null) {
-                        if (!context.mounted) return;
-                        final api = ref.read(apimethods);
-                        await api.openDoctorLanding(
-                          context,
-                          email: userCredential.user?.email,
-                          fullname: userCredential.user?.displayName,
-                        );
-                      }
-                    } catch (e) {
-                      Logger().e(e);
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Apple sign-in failed: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.apple_outlined),
-                  label: const Text(AppStrings.signupwithapple)),
-              10.hgap,
-              ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const SignUpScreen()));
-                  },
-                  style: ButtonStyle(
-                      elevation: const WidgetStatePropertyAll(0),
-                      foregroundColor: WidgetStatePropertyAll(
-                          !Get.isDarkMode ? Colors.white : Colors.black),
-                      backgroundColor: WidgetStateColor.resolveWith((states) {
-                        if (states.contains(WidgetState.pressed)) {
-                          return Colors.grey.withValues(alpha: .5);
-                        }
-                        if (Get.isDarkMode) {
-                          return Colors.white;
-                        } else {
-                          return Colors.black;
-                        }
-                      })),
-                  icon: const Icon(Icons.mark_email_read_outlined),
-                  label: const Text(AppStrings.signupwithemail)),
-              15.hgap,
-              TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const SignInScreen()));
-                  },
-                  style: ButtonStyle(
-                    elevation: const WidgetStatePropertyAll(0),
-                    foregroundColor: WidgetStatePropertyAll(
-                        Get.isDarkMode ? Colors.white : Colors.black),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(AppStrings.ihaveanaccount),
-                      10.wgap,
-                      const Icon(Icons.navigate_next_rounded)
-                    ],
-                  )),
-              50.hgap,
-              RichText(
-                textAlign: TextAlign.center,
-                text: TextSpan(
-                    text: "By continuing you confirm that you agree to our ",
-                    children: [
-                      TextSpan(
-                          text: "Terms of Service",
-                          style: context.bodyMedium?.copyWith(
-                              decoration: TextDecoration.underline,
-                              fontSize: YarisaDimens.bodySmall)),
-                      const TextSpan(text: " and "),
-                      TextSpan(
-                          text: "Privacy Policy",
-                          style: context.bodyMedium?.copyWith(
-                              decoration: TextDecoration.underline,
-                              fontSize: YarisaDimens.bodySmall))
-                    ],
-                    style: context.bodySmall),
-              )
-            ],
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: DoctorUi.primary.withValues(alpha: .28),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.health_and_safety_rounded,
+              color: Colors.white,
+              size: 36,
+            ),
           ),
-        ),
-      ],
-    )));
+          const SizedBox(height: 28),
+          Text(
+            'Offer medical consultation & help to patients across the globe.',
+            style: theme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+              letterSpacing: -0.5,
+              fontSize: 28,
+              color: isDark ? Colors.white : const Color(0xFF1A1024),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Manage appointments, consultations, and patient care from one place.',
+            style: theme.bodyMedium?.copyWith(
+              color: DoctorUi.muted,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 40),
+          DoctorAuthPrimaryButton(
+            label: AppStrings.signupwithemail,
+            icon: Icons.mail_outline_rounded,
+            onPressed: _busy
+                ? null
+                : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SignUpScreen(),
+                      ),
+                    );
+                  },
+          ),
+          const SizedBox(height: 12),
+          DoctorAuthSecondaryButton(
+            label: AppStrings.signupwithgoogle,
+            icon: const UIconsBrands().google,
+            onPressed: _busy
+                ? null
+                : () => _socialLanding(
+                      () => ref.read(authConfig).signInWithGoogle(),
+                      'Google',
+                    ),
+            foregroundColor: Colors.red.shade700,
+          ),
+          if (Platform.isIOS) ...[
+            const SizedBox(height: 10),
+            DoctorAuthSecondaryButton(
+              label: AppStrings.signupwithapple,
+              icon: Icons.apple,
+              onPressed: _busy
+                  ? null
+                  : () => _socialLanding(
+                        () => ref.read(authConfig).signInWithApple(),
+                        'Apple',
+                      ),
+              backgroundColor: isDark ? Colors.white : Colors.black,
+              foregroundColor: isDark ? Colors.black : Colors.white,
+            ),
+          ],
+          const SizedBox(height: 20),
+          TextButton(
+            onPressed: _busy
+                ? null
+                : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SignInScreen(),
+                      ),
+                    );
+                  },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  AppStrings.ihaveanaccount,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 18,
+                  color: DoctorUi.primary,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 28),
+          Text(
+            'By continuing you confirm that you agree to our Terms of Service and Privacy Policy.',
+            textAlign: TextAlign.center,
+            style: theme.bodySmall?.copyWith(
+              color: DoctorUi.muted,
+              height: 1.4,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -3,13 +3,13 @@ import 'package:enefty_icons/enefty_icons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../../components/formtextfield.dart';
-import '../../constants/yarisa_constants.dart';
-import '../../constants/yarisa_enums.dart';
-import '../../constants/yarisa_widgets.dart';
-import '../../services/jitsi_call_service.dart';
-import '../../widgets/skeleton_loader.dart';
+import 'package:yarisa_doctor/components/chat/chat_widgets.dart';
+import 'package:yarisa_doctor/constants/yarisa_constants.dart';
+import 'package:yarisa_doctor/services/call_permissions.dart';
+import 'package:yarisa_doctor/services/jitsi_call_service.dart';
+import 'package:yarisa_doctor/services/presence_service.dart';
+import 'package:yarisa_doctor/ui/doctor_ui.dart';
+import 'package:yarisa_doctor/widgets/skeleton_loader.dart';
 
 class DoctorChatInboxScreen extends StatefulWidget {
   const DoctorChatInboxScreen({super.key});
@@ -32,43 +32,49 @@ class _DoctorChatInboxScreenState extends State<DoctorChatInboxScreen> {
   Widget build(BuildContext context) {
     final doctorId = FirebaseAuth.instance.currentUser?.uid;
     if (doctorId == null) {
-      return const Scaffold(
-        body: Center(child: Text("Sign in again to view chats.")),
+      return const DoctorScaffold(
+        title: 'Chats',
+        // Always pushed from FAB / deep links — keep back visible.
+        showBack: true,
+        body: DoctorEmptyState(
+          icon: EneftyIcons.message_2_outline,
+          title: 'Sign in required',
+          message: 'Sign in again to view chats.',
+        ),
       );
     }
 
-    return Scaffold(
-      appBar: yarisaAppBar(context, title: "Chats"),
+    return DoctorScaffold(
+      title: 'Chats',
+      subtitle: 'Patient conversations',
+      showBack: true,
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: FormTextField(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: DoctorSearchField(
               controller: _searchController,
               hint: 'Search chats',
-              radius: 100,
-              labeled: false,
-              autoFocus: false,
-              icon: EneftyIcons.search_normal_2_outline,
-              onChanged: (value) => setState(() => _query = value.trim()),
+              onChanged: (v) => setState(() => _query = v.trim()),
             ),
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: FirebaseFirestore.instance
-                  .collection("Messages")
+                  .collection('Messages')
                   .doc(doctorId)
-                  .collection("messages")
-                  .orderBy("timestamp", descending: true)
+                  .collection('messages')
+                  .orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const AppointmentSkeletonList();
                 }
                 if (snapshot.hasError) {
-                  return const _ChatStateMessage(
-                    title: "Unable to load chats",
-                    message: "Please check your connection and try again.",
+                  return const DoctorEmptyState(
+                    icon: EneftyIcons.warning_2_outline,
+                    title: 'Unable to load chats',
+                    message: 'Check your connection and try again.',
                   );
                 }
 
@@ -81,25 +87,26 @@ class _DoctorChatInboxScreenState extends State<DoctorChatInboxScreen> {
                     data['patientName'],
                     data['name'],
                     data['message'],
-                    _chatPreview(data),
+                    doctorChatPreview(data),
                   ].whereType<Object>().join(' ').toLowerCase().contains(query);
                 }).toList();
+
                 if (chats.isEmpty) {
-                  return _ChatStateMessage(
+                  return DoctorEmptyState(
+                    icon: EneftyIcons.message_2_outline,
                     title: snapshot.data?.docs.isEmpty == true
-                        ? "No chats yet"
-                        : "No chats found",
+                        ? 'No chats yet'
+                        : 'No chats found',
                     message: snapshot.data?.docs.isEmpty == true
-                        ? "Patient conversations will appear here."
+                        ? 'Patient conversations will appear here.'
                         : 'No conversations match "$_query".',
                   );
                 }
 
                 return ListView.separated(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                   itemCount: chats.length,
-                  separatorBuilder: (context, index) =>
-                      const Divider(height: 1),
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     return _PatientChatTile(chatSummary: chats[index]);
                   },
@@ -118,54 +125,80 @@ class _PatientChatTile extends StatelessWidget {
 
   final QueryDocumentSnapshot<Map<String, dynamic>> chatSummary;
 
+  void _openThread(
+    BuildContext context, {
+    required String patientName,
+    required String patientImage,
+  }) {
+    final me = FirebaseAuth.instance.currentUser?.uid;
+    final peerId = chatSummary.id;
+
+    // Navigate first — never await Firestore before push.
+    Get.to(
+      () => DoctorMessageThreadScreen(
+        patientId: peerId,
+        patientName: patientName,
+        patientImage: patientImage,
+      ),
+      transition: Transition.cupertino,
+      duration: const Duration(milliseconds: 220),
+    );
+
+    if (me != null) {
+      FirebaseFirestore.instance
+          .collection('Messages')
+          .doc(me)
+          .collection('messages')
+          .doc(peerId)
+          .set({
+        'unread': false,
+        'unreadCount': 0,
+      }, SetOptions(merge: true));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final summary = chatSummary.data();
+    final fallbackName = summary['patientName']?.toString() ??
+        summary['name']?.toString() ??
+        'Patient';
+    final fallbackImage = summary['patientImage']?.toString() ??
+        summary['image']?.toString() ??
+        '';
+    final lastMessage = doctorChatPreview(summary);
+    final ts = summary['timestamp'];
+    final time = ts is Timestamp ? ts.toDate() : null;
+
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance
-          .collection("Patients")
+          .collection('Patients')
           .doc(chatSummary.id)
           .snapshots(),
       builder: (context, patientSnapshot) {
         final patientData = patientSnapshot.data?.data();
-        final summary = chatSummary.data();
-        final patientName = patientData?["name"]?.toString() ??
-            summary["patientName"]?.toString() ??
-            summary["name"]?.toString() ??
-            "Patient";
-        final patientImage = patientData?["photo"]?.toString() ??
-            patientData?["pic"]?.toString() ??
-            summary["patientImage"]?.toString() ??
-            summary["image"]?.toString() ??
-            "";
-        final lastMessage = _chatPreview(summary);
+        final patientName = patientData?['name']?.toString() ?? fallbackName;
+        final patientImage = patientData?['photo']?.toString() ??
+            patientData?['pic']?.toString() ??
+            fallbackImage;
 
-        return ListTile(
-          contentPadding: const EdgeInsets.symmetric(vertical: 8),
-          leading: CircleImage(size: 48, image: patientImage),
-          title: Text(
-            patientName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
+        return StreamBuilder<bool>(
+          stream: PresenceService.watchOnline(
+            collection: 'Patients',
+            userId: chatSummary.id,
           ),
-          subtitle: Text(
-            lastMessage,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          trailing: const Icon(Icons.chevron_right_rounded),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DoctorMessageThreadScreen(
-                  patientId: chatSummary.id,
-                  patientName: patientName,
-                  patientImage: patientImage,
-                ),
+          builder: (context, onlineSnap) {
+            final isOnline = onlineSnap.data == true;
+            return ChatThreadTile(
+              name: patientName,
+              image: patientImage,
+              preview: lastMessage,
+              timestamp: time,
+              isOnline: isOnline,
+              onTap: () => _openThread(
+                context,
+                patientName: patientName,
+                patientImage: patientImage,
               ),
             );
           },
@@ -209,40 +242,110 @@ class _DoctorMessageThreadScreenState extends State<DoctorMessageThreadScreen> {
     final doctorId = FirebaseAuth.instance.currentUser?.uid;
     if (doctorId == null) {
       return const Scaffold(
-        body: Center(child: Text("Sign in again to view this chat.")),
+        body: Center(child: Text('Sign in again to view this chat.')),
       );
     }
 
     return Scaffold(
+      backgroundColor: DoctorUi.scaffoldBg,
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: DoctorUi.scaffoldBg,
+        surfaceTintColor: DoctorUi.scaffoldBg,
         titleSpacing: 0,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          tooltip: 'Back',
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              Get.back();
+            }
+          },
+        ),
         title: Row(
           children: [
-            CircleImage(size: 38, image: widget.patientImage),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                CircleImage(size: 38, image: widget.patientImage),
+                StreamBuilder<bool>(
+                  stream: PresenceService.watchOnline(
+                    collection: 'Patients',
+                    userId: widget.patientId,
+                  ),
+                  builder: (context, snap) {
+                    if (snap.data != true) return const SizedBox.shrink();
+                    return Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF22C55E),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: DoctorUi.scaffoldBg,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                widget.patientName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.patientName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                  StreamBuilder<bool>(
+                    stream: PresenceService.watchOnline(
+                      collection: 'Patients',
+                      userId: widget.patientId,
+                    ),
+                    builder: (context, snap) {
+                      final online = snap.data == true;
+                      return Text(
+                        online ? 'Online' : 'Patient',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: online
+                              ? const Color(0xFF22C55E)
+                              : DoctorUi.muted,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ],
         ),
         actions: [
-          Tooltip(
-            message: "Voice call",
-            child: IconButton(
-              onPressed: () => _startCall("voice"),
-              icon: const Icon(EneftyIcons.call_outline),
-            ),
+          IconButton(
+            tooltip: 'Voice call',
+            onPressed: () => _startCall('voice'),
+            icon: const Icon(EneftyIcons.call_outline),
           ),
-          Tooltip(
-            message: "Video call",
-            child: IconButton(
-              onPressed: () => _startCall("video"),
-              icon: const Icon(EneftyIcons.video_outline),
-            ),
+          IconButton(
+            tooltip: 'Video call',
+            onPressed: () => _startCall('video'),
+            icon: const Icon(EneftyIcons.video_outline),
           ),
         ],
       ),
@@ -251,12 +354,12 @@ class _DoctorMessageThreadScreenState extends State<DoctorMessageThreadScreen> {
           Expanded(
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: FirebaseFirestore.instance
-                  .collection("Messages")
+                  .collection('Messages')
                   .doc(doctorId)
-                  .collection("messages")
+                  .collection('messages')
                   .doc(widget.patientId)
-                  .collection("all")
-                  .orderBy("timestamp", descending: true)
+                  .collection('all')
+                  .orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -264,64 +367,39 @@ class _DoctorMessageThreadScreenState extends State<DoctorMessageThreadScreen> {
                 }
                 final messages = snapshot.data?.docs ?? [];
                 if (messages.isEmpty) {
-                  return const _ChatStateMessage(
-                    title: "No messages yet",
-                    message: "Send a message to start the conversation.",
+                  return const DoctorEmptyState(
+                    icon: EneftyIcons.message_2_outline,
+                    title: 'No messages yet',
+                    message: 'Send a message to start the conversation.',
                   );
                 }
-                return ListView.separated(
+                return ListView.builder(
                   reverse: true,
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
                   itemCount: messages.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 8),
                   itemBuilder: (context, index) {
-                    return _DoctorMessageBubble(data: messages[index].data());
+                    final data = messages[index].data();
+                    final isMe = data['sender']?.toString() == 'recipient';
+                    final type = data['type']?.toString() ?? 'text';
+                    final text = type == 'call'
+                        ? doctorChatPreview(data)
+                        : (data['message']?.toString() ?? '');
+                    final ts = data['timestamp'];
+                    final time = ts is Timestamp ? ts.toDate() : null;
+                    return ChatBubble(
+                      text: type == 'call' ? '📞 $text' : text,
+                      isMine: isMe,
+                      timestamp: time,
+                    );
                   },
                 );
               },
             ),
           ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      minLines: 1,
-                      maxLines: 4,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: InputDecoration(
-                        hintText: "Write a message...",
-                        filled: true,
-                        fillColor: Colors.grey.withValues(alpha: .12),
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide.none,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton.filled(
-                    onPressed: _sending ? null : _sendMessage,
-                    icon: _sending
-                        ? const SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.arrow_upward_rounded),
-                  ),
-                ],
-              ),
-            ),
+          ChatComposer(
+            controller: _messageController,
+            sending: _sending,
+            onSend: _sendMessage,
           ),
         ],
       ),
@@ -339,13 +417,13 @@ class _DoctorMessageThreadScreenState extends State<DoctorMessageThreadScreen> {
         patientName: widget.patientName,
         patientImage: widget.patientImage,
         message: text,
-        type: "text",
+        type: 'text',
       );
       _messageController.clear();
-    } catch (error) {
+    } catch (_) {
       Get.snackbar(
-        "Message failed",
-        "Unable to send this message.",
+        'Message failed',
+        'Unable to send this message.',
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
@@ -354,131 +432,48 @@ class _DoctorMessageThreadScreenState extends State<DoctorMessageThreadScreen> {
   }
 
   Future<void> _startCall(String type) async {
-    final doctor = await _doctorChatProfile();
-    final joined = await YarisaJitsiCallService.join(
-      room: widget.roomId ?? widget.patientId,
-      type: type,
-      subject: "Patient Appointment",
-      displayName: doctor.name,
-      avatarUrl: doctor.image,
-      email: doctor.email,
+    final ok = await CallPermissions.ensureBeforeCall(
+      video: type.toLowerCase() == 'video',
     );
-    if (!joined) return;
+    if (!ok) return;
 
+    final doctor = await doctorChatProfile();
+    final doctorId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final room = (widget.roomId != null && widget.roomId!.isNotEmpty)
+        ? widget.roomId!
+        : YarisaJitsiCallService.conversationRoom(doctorId, widget.patientId);
+
+    // Notify patient (FCM + CallKit) before joining Jitsi.
     await writeDoctorChatMessage(
       patientId: widget.patientId,
       patientName: widget.patientName,
       patientImage: widget.patientImage,
-      message: "",
-      type: "call",
-      extra: {"start_time": Timestamp.now(), "type": type},
+      message: '',
+      type: 'call',
+      extra: {'start_time': Timestamp.now(), 'type': type},
+    );
+
+    await YarisaJitsiCallService.join(
+      room: room,
+      type: type,
+      subject: 'Patient Appointment',
+      displayName: doctor.name,
+      avatarUrl: doctor.image,
+      email: doctor.email,
     );
   }
 }
 
-class _DoctorMessageBubble extends StatelessWidget {
-  const _DoctorMessageBubble({required this.data});
-
-  final Map<String, dynamic> data;
-
-  @override
-  Widget build(BuildContext context) {
-    final isMe = data["sender"]?.toString() == "recipient";
-    final type = data["type"]?.toString() ?? "text";
-    final message = type == "call" ? _chatPreview(data) : data["message"];
-
-    return Row(
-      mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-      children: [
-        Flexible(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 300),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: isMe
-                  ? Theme.of(context).primaryColor
-                  : Colors.grey.withValues(alpha: .16),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (type == "call") ...[
-                  Icon(
-                    EneftyIcons.call_outline,
-                    size: 18,
-                    color: isMe ? Colors.white : null,
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                Flexible(
-                  child: Text(
-                    message?.toString() ?? "",
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: isMe ? Colors.white : null,
-                        ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ChatStateMessage extends StatelessWidget {
-  const _ChatStateMessage({required this.title, required this.message});
-
-  final String title;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              EneftyIcons.message_2_outline,
-              size: 42,
-              color: Colors.grey.withValues(alpha: .8),
-            ),
-            const SizedBox(height: 12),
-            YarisaText(
-              text: title,
-              type: TextType.bodyBig,
-              weight: FontWeight.w600,
-              align: TextAlign.center,
-            ),
-            const SizedBox(height: 6),
-            YarisaText(
-              text: message,
-              type: TextType.bodySmall,
-              color: Colors.grey,
-              align: TextAlign.center,
-              lines: 3,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-String _chatPreview(Map<String, dynamic> data) {
-  final type = data["type"]?.toString();
-  if (type == "call") {
-    final callType = data["extra"] is Map
-        ? (data["extra"] as Map)["type"]?.toString()
+String doctorChatPreview(Map<String, dynamic> data) {
+  final type = data['type']?.toString();
+  if (type == 'call') {
+    final callType = data['extra'] is Map
+        ? (data['extra'] as Map)['type']?.toString()
         : null;
-    return "${callType == "video" ? "Video" : "Voice"} call";
+    return '${callType == 'video' ? 'Video' : 'Voice'} call';
   }
-  final message = data["message"]?.toString().trim();
-  if (message == null || message.isEmpty) return "Attachment";
+  final message = data['message']?.toString().trim();
+  if (message == null || message.isEmpty) return 'Attachment';
   return message;
 }
 
@@ -493,87 +488,113 @@ Future<void> writeDoctorChatMessage({
   final doctorId = FirebaseAuth.instance.currentUser?.uid;
   if (doctorId == null) return;
 
-  final doctor = await _doctorChatProfile();
+  final doctor = await doctorChatProfile();
   final timestamp = Timestamp.fromDate(DateTime.now());
+  final callKind = extra?['type']?.toString() ?? 'voice';
+  final displayMessage = type == 'call'
+      ? (callKind == 'video' ? 'Video call' : 'Voice call')
+      : message;
   final doctorSideMessage = {
-    "timestamp": timestamp,
-    "sender": "recipient",
-    "message": message,
-    "id": patientId,
-    "name": patientName,
-    "image": patientImage,
-    "type": type,
-    "extra": extra ?? {"file_name": "", "file_type": "", "file_size": ""},
+    'timestamp': timestamp,
+    'sender': 'recipient',
+    'message': displayMessage,
+    'id': patientId,
+    'name': patientName,
+    'image': patientImage,
+    'type': type,
+    'extra': extra ?? {'file_name': '', 'file_type': '', 'file_size': ''},
   };
   final patientSideMessage = {
     ...doctorSideMessage,
-    "id": doctorId,
-    "name": doctor.name,
-    "image": doctor.image,
+    'id': doctorId,
+    'name': doctor.name,
+    'image': doctor.image,
   };
 
   final doctorThread = FirebaseFirestore.instance
-      .collection("Messages")
+      .collection('Messages')
       .doc(doctorId)
-      .collection("messages")
+      .collection('messages')
       .doc(patientId);
   final patientThread = FirebaseFirestore.instance
-      .collection("Messages")
+      .collection('Messages')
       .doc(patientId)
-      .collection("messages")
+      .collection('messages')
       .doc(doctorId);
   final conversationRef = FirebaseFirestore.instance
-      .collection("Conversations")
+      .collection('Conversations')
       .doc(_conversationId(patientId, doctorId));
-  final canonicalMessageRef = conversationRef.collection("Messages").doc();
+  final canonicalMessageRef = conversationRef.collection('Messages').doc();
 
   final batch = FirebaseFirestore.instance.batch();
-  batch.set(doctorThread, doctorSideMessage, SetOptions(merge: true));
-  batch.set(patientThread, patientSideMessage, SetOptions(merge: true));
-  batch.set(doctorThread.collection("all").doc(), doctorSideMessage);
-  batch.set(patientThread.collection("all").doc(), patientSideMessage);
+  // Sender thread: clear unread for self.
+  batch.set(
+    doctorThread,
+    {
+      ...doctorSideMessage,
+      'unread': false,
+      'unreadCount': 0,
+    },
+    SetOptions(merge: true),
+  );
+  // Recipient thread: mark unread for badge.
+  batch.set(
+    patientThread,
+    {
+      ...patientSideMessage,
+      'unread': true,
+      'unreadCount': FieldValue.increment(1),
+    },
+    SetOptions(merge: true),
+  );
+  batch.set(doctorThread.collection('all').doc(), doctorSideMessage);
+  batch.set(patientThread.collection('all').doc(), patientSideMessage);
   batch.set(
     conversationRef,
     {
-      "conversationId": conversationRef.id,
-      "participants": [patientId, doctorId],
-      "patientId": patientId,
-      "doctorId": doctorId,
-      "lastMessage": type == "call" ? _chatPreview(doctorSideMessage) : message,
-      "lastMessageAt": FieldValue.serverTimestamp(),
-      "updatedAt": FieldValue.serverTimestamp(),
+      'conversationId': conversationRef.id,
+      'participants': [patientId, doctorId],
+      'patientId': patientId,
+      'doctorId': doctorId,
+      'lastMessage': displayMessage,
+      'lastMessageType': type,
+      'lastMessageAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
     },
     SetOptions(merge: true),
   );
   batch.set(canonicalMessageRef, {
     ...doctorSideMessage,
-    "senderId": doctorId,
-    "messageId": canonicalMessageRef.id,
-    "conversationId": conversationRef.id,
-    "createdAt": FieldValue.serverTimestamp(),
+    'senderId': doctorId,
+    'doctorId': doctorId,
+    'patientId': patientId,
+    'messageId': canonicalMessageRef.id,
+    'conversationId': conversationRef.id,
+    'createdAt': FieldValue.serverTimestamp(),
+    if (type == 'call') 'isCall': true,
   });
   await batch.commit();
 }
 
-Future<_DoctorChatProfile> _doctorChatProfile() async {
+Future<DoctorChatProfile> doctorChatProfile() async {
   final user = FirebaseAuth.instance.currentUser;
-  final doctorId = user?.uid ?? "";
-  var name = user?.displayName ?? "Doctor";
-  var image = user?.photoURL ?? "";
-  var email = user?.email ?? "";
+  final doctorId = user?.uid ?? '';
+  var name = user?.displayName ?? 'Doctor';
+  var image = user?.photoURL ?? '';
+  var email = user?.email ?? '';
 
   if (doctorId.isNotEmpty) {
     final snapshot = await FirebaseFirestore.instance
-        .collection("Doctors")
+        .collection('Doctors')
         .doc(doctorId)
         .get();
     final data = snapshot.data();
-    name = data?["fullname"]?.toString() ?? name;
-    image = data?["pic"]?.toString() ?? image;
-    email = data?["email"]?.toString() ?? email;
+    name = data?['fullname']?.toString() ?? name;
+    image = data?['pic']?.toString() ?? image;
+    email = data?['email']?.toString() ?? email;
   }
 
-  return _DoctorChatProfile(name: name, image: image, email: email);
+  return DoctorChatProfile(name: name, image: image, email: email);
 }
 
 String _conversationId(String firstUserId, String secondUserId) {
@@ -581,8 +602,8 @@ String _conversationId(String firstUserId, String secondUserId) {
   return participantIds.join('_');
 }
 
-class _DoctorChatProfile {
-  const _DoctorChatProfile({
+class DoctorChatProfile {
+  const DoctorChatProfile({
     required this.name,
     required this.image,
     required this.email,

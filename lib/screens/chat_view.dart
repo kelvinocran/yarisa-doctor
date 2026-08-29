@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:animate_do/animate_do.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_pdf_viewer/easy_pdf_viewer.dart';
 
 import 'package:enefty_icons/enefty_icons.dart';
@@ -29,9 +30,11 @@ import 'package:yarisa_doctor/screens/add_prescription.dart';
 import '../../components/formtextfield.dart';
 import '../models/chat_model.dart';
 import '../providers/chat_provider.dart';
+import '../services/call_permissions.dart';
 import '../services/jitsi_call_service.dart';
 import '../services/mqtt_listener.dart';
 import '../services/mqtt_service.dart';
+import 'main/chat_inbox_screen.dart' show writeDoctorChatMessage;
 
 final isSendingFile = ValueNotifier<bool>(false);
 
@@ -559,26 +562,32 @@ class _ChatViewState extends ConsumerState<ChatView>
 
   Future<void> _startCall(String type) async {
     final doctor = FirebaseAuth.instance.currentUser;
-    final joined = await YarisaJitsiCallService.join(
-      room: widget.patientId,
-      type: type,
-      subject: "Patient Appointment",
-      displayName: doctor?.displayName ?? "Doctor",
-      avatarUrl: doctor?.photoURL ?? "",
-      email: doctor?.email ?? "",
-    );
-    if (!joined) return;
+    final doctorId = doctor?.uid ?? '';
+    if (doctorId.isEmpty || widget.patientId.isEmpty) return;
 
-    await ref.read(chatconfig).saveOtherChat(widget.patientId, {
-      'message': type == "video" ? "Video call" : "Voice call",
-      'recipientId': widget.patientId,
-      'senderId': FirebaseAuth.instance.currentUser?.uid,
-      'senderName': "",
-      'recipientName': widget.patientName,
-      'date': DateTime.now().millisecondsSinceEpoch,
-      'isMe': true,
-      'type': MessageType.call.name,
-    });
+    final ok = await CallPermissions.ensureBeforeCall(
+      video: type.toLowerCase() == 'video',
+    );
+    if (!ok) return;
+
+    // Prefer the shared chat writer so Conversations + FCM fire for the patient.
+    await writeDoctorChatMessage(
+      patientId: widget.patientId,
+      patientName: widget.patientName ?? 'Patient',
+      patientImage: '',
+      message: '',
+      type: 'call',
+      extra: {'start_time': Timestamp.now(), 'type': type},
+    );
+
+    await YarisaJitsiCallService.join(
+      room: YarisaJitsiCallService.conversationRoom(doctorId, widget.patientId),
+      type: type,
+      subject: 'Patient Appointment',
+      displayName: doctor?.displayName ?? 'Doctor',
+      avatarUrl: doctor?.photoURL ?? '',
+      email: doctor?.email ?? '',
+    );
   }
 
   Future<void> sendPrescription(

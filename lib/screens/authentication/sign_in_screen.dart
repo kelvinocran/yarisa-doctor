@@ -6,14 +6,12 @@ import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:uicons_brands/uicons_brands.dart';
 import 'package:yarisa_doctor/api/api_methods.dart';
+import 'package:yarisa_doctor/api/config.dart';
+import 'package:yarisa_doctor/components/auth/auth_widgets.dart';
 import 'package:yarisa_doctor/components/formtextfield.dart';
-import 'package:yarisa_doctor/constants/yarisa_constants.dart';
-import 'package:yarisa_doctor/constants/yarisa_enums.dart';
 import 'package:yarisa_doctor/constants/yarisa_strings.dart';
-import 'package:yarisa_doctor/constants/yarisa_widgets.dart';
-import 'package:yarisa_doctor/extensions/yarisa_extensions.dart';
+import 'package:yarisa_doctor/ui/doctor_ui.dart';
 
-import '../../api/config.dart';
 import 'forgot_password_screen.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
@@ -28,175 +26,114 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   final email = TextEditingController();
   final password = TextEditingController();
   bool _obscurePassword = true;
+
+  @override
+  void dispose() {
+    email.dispose();
+    password.dispose();
+    super.dispose();
+  }
+
+  Future<void> _signInWithGoogle() async {
+    try {
+      final userCredential = await ref.read(authConfig).signInWithGoogle();
+      if (userCredential == null || !mounted) return;
+      await ref.read(apimethods).openDoctorLanding(
+            context,
+            email: userCredential.user?.email,
+            fullname: userCredential.user?.displayName,
+          );
+    } catch (e) {
+      Logger().e(e);
+      if (!mounted) return;
+      showDoctorAuthSnack(context, 'Google sign-in failed: $e');
+    }
+  }
+
+  Future<void> _signInWithApple() async {
+    try {
+      final userCredential = await ref.read(authConfig).signInWithApple();
+      if (userCredential == null || !mounted) return;
+      await ref.read(apimethods).openDoctorLanding(
+            context,
+            email: userCredential.user?.email,
+            fullname: userCredential.user?.displayName,
+          );
+    } catch (e) {
+      Logger().e(e);
+      if (!mounted) return;
+      showDoctorAuthSnack(context, 'Apple sign-in failed: $e');
+    }
+  }
+
+  Future<void> _signInWithEmail() async {
+    if (!key.currentState!.validate()) return;
+    final api = ref.read(apimethods);
+    await api.signInUserAccount(
+      email: email.text.trim(),
+      password: password.text.trim(),
+      onSuccess: (credential) async {
+        if (!mounted) return;
+        await api.openDoctorLanding(context);
+      },
+      onFailed: (error) {
+        if (!mounted) return;
+        showDoctorAuthSnack(context, error);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authenticating = ref.watch(apimethods).authenticating;
-    return Scaffold(
-        appBar: AppBar(),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+
+    return DoctorAuthScaffold(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const DoctorAuthHeader(
+            title: AppStrings.signintoaccount,
+            subtitle: AppStrings.signinsubtitle,
+            icon: Icons.lock_open_rounded,
+          ),
+          const SizedBox(height: 28),
+          DoctorAuthCard(
             child: Form(
               key: key,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const YarisaText(
-                    text: AppStrings.signintoaccount,
-                    type: TextType.heading,
-                    weight: FontWeight.w600,
-                    spacing: -1,
-                    height: 1.1,
-                    size: YarisaDimens.headlineMedium + 3,
-                  ),
-                  10.hgap,
-                  const YarisaText(
-                    text: AppStrings.signinsubtitle,
-                    type: TextType.bodySmall,
-                    // spacing: 0,
-                    color: Colors.grey,
-                  ),
-                  50.hgap,
-                  // if (Platform.isAndroid)
-                  ElevatedButton.icon(
-                      onPressed: authenticating
-                          ? null
-                          : () async {
-                              try {
-                                final userCredential = await ref
-                                    .read(authConfig)
-                                    .signInWithGoogle();
-                                if (userCredential != null) {
-                                  if (!context.mounted) return;
-                                  final api = ref.read(apimethods);
-                                  await api.openDoctorLanding(
-                                    context,
-                                    email: userCredential.user?.email,
-                                    fullname: userCredential.user?.displayName,
-                                  );
-                                }
-                              } catch (e) {
-                                Logger().e(e);
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Google sign-in failed: $e'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              }
-                            },
-                      icon: Icon(
-                        const UIconsBrands().google,
-                        size: 20,
-                      ),
-                      style: ButtonStyle(
-                          elevation: const WidgetStatePropertyAll(0),
-                          foregroundColor:
-                              const WidgetStatePropertyAll(Colors.white),
-                          backgroundColor:
-                              WidgetStateColor.resolveWith((states) {
-                            if (states.contains(WidgetState.pressed)) {
-                              return Colors.grey.withValues(alpha: .5);
-                            }
-
-                            return Colors.red;
-                          }),
-                          minimumSize: const WidgetStatePropertyAll(
-                              Size(double.infinity, 50))),
-                      label: const Text(AppStrings.signinwithgoogle)),
-                  10.hgap,
-                  if (Platform.isIOS)
-                    ElevatedButton.icon(
-                        onPressed: authenticating
-                            ? null
-                            : () async {
-                                try {
-                                  final userCredential = await ref
-                                      .read(authConfig)
-                                      .signInWithApple();
-                                  if (userCredential != null) {
-                                    if (!context.mounted) return;
-                                    final api = ref.read(apimethods);
-                                    await api.openDoctorLanding(
-                                      context,
-                                      email: userCredential.user?.email,
-                                      fullname:
-                                          userCredential.user?.displayName,
-                                    );
-                                  }
-                                } catch (e) {
-                                  Logger().e(e);
-                                  if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Apple sign-in failed: $e'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              },
-                        style: ButtonStyle(
-                            elevation: const WidgetStatePropertyAll(0),
-                            foregroundColor: WidgetStatePropertyAll(
-                                !Get.isDarkMode ? Colors.white : Colors.black),
-                            backgroundColor:
-                                WidgetStateColor.resolveWith((states) {
-                              if (states.contains(WidgetState.pressed)) {
-                                return Colors.grey.withValues(alpha: .5);
-                              }
-                              if (Get.isDarkMode) {
-                                return Colors.white;
-                              } else {
-                                return Colors.black;
-                              }
-                            }),
-                            minimumSize: const WidgetStatePropertyAll(
-                                Size(double.infinity, 50))),
-                        icon: const Icon(Icons.apple_outlined),
-                        label: const Text(AppStrings.signinwithapple)),
-                  20.hgap,
-                  const Row(
-                    children: [
-                      Expanded(
-                        child: Divider(
-                          endIndent: 15,
-                        ),
-                      ),
-                      YarisaText(text: "OR", type: TextType.bodySmall),
-                      Expanded(
-                        child: Divider(
-                          indent: 15,
-                        ),
-                      )
-                    ],
-                  ),
-                  30.hgap,
                   FormTextField(
-                      radius: 100,
-                      controller: email,
-                      enabled: !authenticating,
-                      capitalization: TextCapitalization.none,
-                      inputType: TextInputType.emailAddress,
-                      validator: (p0) {
-                        if (p0!.isEmpty) {
-                          return AppStrings.provideemail;
-                        }
-                        if (!p0.isEmail) {
-                          return AppStrings.invalidemail;
-                        }
-                        return null;
-                      },
-                      hint: AppStrings.emailexample,
-                      label: AppStrings.email),
-                  10.hgap,
+                    radius: 14,
+                    controller: email,
+                    enabled: !authenticating,
+                    autoFocus: false,
+                    filled: true,
+                    fillColor: DoctorUi.fieldBg,
+                    capitalization: TextCapitalization.none,
+                    inputType: TextInputType.emailAddress,
+                    action: TextInputAction.next,
+                    validator: (p0) {
+                      if (p0 == null || p0.isEmpty) {
+                        return AppStrings.provideemail;
+                      }
+                      if (!p0.isEmail) return AppStrings.invalidemail;
+                      return null;
+                    },
+                    hint: AppStrings.emailexample,
+                    label: AppStrings.email,
+                  ),
+                  const SizedBox(height: 12),
                   FormTextField(
-                    radius: 100,
+                    radius: 14,
                     enabled: !authenticating,
                     controller: password,
                     hint: AppStrings.password,
+                    autoFocus: false,
+                    filled: true,
+                    fillColor: DoctorUi.fieldBg,
                     capitalization: TextCapitalization.none,
                     inputType: TextInputType.visiblePassword,
+                    action: TextInputAction.done,
                     lines: 1,
                     obscure: _obscurePassword,
                     endicon: Icon(
@@ -204,70 +141,71 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
                       color: Colors.grey,
+                      size: 20,
                     ),
                     endIconFunction: () {
                       setState(() => _obscurePassword = !_obscurePassword);
                     },
                     validator: (p0) {
-                      if (p0!.isEmpty) {
+                      if (p0 == null || p0.isEmpty) {
                         return AppStrings.providepassword;
                       }
-                      if (p0.length < 7) {
-                        return AppStrings.invalidpassword;
-                      }
+                      if (p0.length < 6) return AppStrings.invalidpassword;
                       return null;
                     },
                   ),
-                  20.hgap,
-                  Visibility(
-                    visible: !authenticating,
-                    replacement: const Center(
-                      child: Loader(),
-                    ),
-                    child: ElevatedButton.icon(
-                        onPressed: authenticating
-                            ? null
-                            : () async {
-                                if (key.currentState!.validate()) {
-                                  final api = ref.read(apimethods);
-                                  api.signInUserAccount(
-                                      email: email.text.trim(),
-                                      password: password.text.trim(),
-                                      onSuccess: (credential) async {
-                                        if (!mounted) return;
-                                        await api.openDoctorLanding(context);
-                                      });
-                                }
-                              },
-                        style: const ButtonStyle(
-                            elevation: WidgetStatePropertyAll(0),
-                            minimumSize: WidgetStatePropertyAll(
-                                Size(double.infinity, 50))),
-                        icon: const Icon(Icons.mark_email_read_outlined),
-                        label: const Text(AppStrings.signinwithemail)),
-                  ),
-                  15.hgap,
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                          onPressed: () {
-                            Navigator.push(
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: authenticating
+                          ? null
+                          : () {
+                              Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) =>
-                                        const ForgotPasswordScreen()));
-                          },
-                          style: const ButtonStyle(
-                            elevation: WidgetStatePropertyAll(0),
-                          ),
-                          child: const Text(AppStrings.forgotpassword)),
-                    ],
+                                  builder: (_) =>
+                                      const ForgotPasswordScreen(),
+                                ),
+                              );
+                            },
+                      child: const Text(
+                        AppStrings.forgotpassword,
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  DoctorAuthPrimaryButton(
+                    label: AppStrings.signinwithemail,
+                    loading: authenticating,
+                    icon: Icons.mail_outline_rounded,
+                    onPressed: _signInWithEmail,
                   ),
                 ],
               ),
             ),
           ),
-        ));
+          const SizedBox(height: 22),
+          const DoctorAuthOrDivider(),
+          const SizedBox(height: 18),
+          DoctorAuthSecondaryButton(
+            label: AppStrings.signinwithgoogle,
+            icon: const UIconsBrands().google,
+            onPressed: authenticating ? null : _signInWithGoogle,
+            foregroundColor: Colors.red.shade700,
+          ),
+          if (Platform.isIOS) ...[
+            const SizedBox(height: 10),
+            DoctorAuthSecondaryButton(
+              label: AppStrings.signinwithapple,
+              icon: Icons.apple,
+              onPressed: authenticating ? null : _signInWithApple,
+              backgroundColor: DoctorUi.isDark ? Colors.white : Colors.black,
+              foregroundColor: DoctorUi.isDark ? Colors.black : Colors.white,
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }

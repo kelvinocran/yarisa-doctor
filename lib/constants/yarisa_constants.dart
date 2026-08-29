@@ -9,7 +9,9 @@ import 'package:yarisa_doctor/extensions/yarisa_extensions.dart';
 import 'package:yarisa_doctor/screens/main/appointment_screen.dart';
 import 'package:yarisa_doctor/screens/main/availability_screen.dart';
 import 'package:yarisa_doctor/screens/main/home_screen.dart';
+import 'package:yarisa_doctor/screens/main/notifications_screen.dart';
 import 'package:yarisa_doctor/screens/main/patients_screen.dart';
+import 'package:yarisa_doctor/screens/settings_screen.dart';
 
 import '../models/appointment_model.dart';
 import 'yarisa_enums.dart';
@@ -21,11 +23,14 @@ class YarisaConstants {
   static const poppins = "Poppins";
   static final font = GoogleFonts.poppins();
 
+  /// Order must match [BaseScreen] bottom nav items.
   static final List<Widget> basePages = [
     const HomeScreen(),
     const AppointmentScreen(),
     const AvailabilityScreen(),
-    const PatientsScreen()
+    const PatientsScreen(),
+    const DoctorNotificationsScreen(),
+    const SettingsScreen(),
   ];
 }
 

@@ -1,12 +1,9 @@
-import 'package:enefty_icons/enefty_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yarisa_doctor/api/api_methods.dart';
-import 'package:yarisa_doctor/components/formtextfield.dart';
+import 'package:yarisa_doctor/components/patients/patient_widgets.dart';
 import 'package:yarisa_doctor/screens/main/patient_detail.dart';
-
-import '../../constants/yarisa_strings.dart';
-import '../../constants/yarisa_widgets.dart';
+import 'package:yarisa_doctor/ui/doctor_ui.dart';
 
 class PatientsScreen extends ConsumerStatefulWidget {
   const PatientsScreen({super.key});
@@ -23,8 +20,7 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _refreshPatients();
+      if (mounted) _refreshPatients();
     });
   }
 
@@ -42,7 +38,7 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
   Widget build(BuildContext context) {
     final mypatients = ref.watch(apimethods).mypatients;
     final query = _query.toLowerCase();
-    final filteredPatients = query.isEmpty
+    final filtered = query.isEmpty
         ? mypatients
         : mypatients.where((patient) {
             return [
@@ -51,74 +47,72 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
               patient.status,
             ].whereType<String>().join(' ').toLowerCase().contains(query);
           }).toList();
-    return Scaffold(
-        appBar: yarisaAppBar(
-          context,
-          title: AppStrings.patients,
-        ),
-        body: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: FormTextField(
-                controller: _searchController,
-                hint: 'Search patients',
-                radius: 100,
-                labeled: false,
-                autoFocus: false,
-                icon: EneftyIcons.search_normal_2_outline,
-                onChanged: (value) => setState(() => _query = value.trim()),
-              ),
+
+    // Auto: back when pushed, hidden in bottom-nav (avoids hot-reload null on fields).
+    final showBack = Navigator.of(context).canPop();
+
+    return DoctorScaffold(
+      title: 'Patients',
+      subtitle: mypatients.isEmpty
+          ? 'People who book with you'
+          : '${mypatients.length} patient${mypatients.length == 1 ? '' : 's'}',
+      showBack: showBack,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: DoctorSearchField(
+              controller: _searchController,
+              hint: 'Search by name',
+              onChanged: (value) => setState(() => _query = value.trim()),
             ),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: _refreshPatients,
-                child: filteredPatients.isEmpty
-                    ? ListView(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 80),
-                            child: Text(
-                              mypatients.isEmpty
-                                  ? "No Patients"
-                                  : 'No patients match "$_query"',
-                              textAlign: TextAlign.center,
-                            ),
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              color: DoctorUi.primary,
+              onRefresh: _refreshPatients,
+              child: filtered.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.45,
+                          child: PatientsEmptyState(
+                            title: mypatients.isEmpty
+                                ? 'No patients yet'
+                                : 'No matches',
+                            message: mypatients.isEmpty
+                                ? 'Patients appear here when they book an appointment or add you as their doctor.'
+                                : 'No patients match "$_query".',
                           ),
-                        ],
-                      )
-                    : ListView.separated(
-                        separatorBuilder: (context, index) => const Divider(),
-                        itemCount: filteredPatients.length,
-                        padding: const EdgeInsets.all(20),
-                        itemBuilder: (context, index) {
-                          final patient = filteredPatients[index];
-                          return ListTile(
-                            onTap: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => PatientDetailScreen(
-                                          patient: patient)));
-                            },
-                            contentPadding: EdgeInsets.zero,
-                            tileColor: Colors.transparent,
-                            leading: CircleAvatar(
-                              backgroundImage: safeCachedNetworkImageProvider(
-                                  patient.patientImage),
-                              child: safeCachedNetworkImageProvider(
-                                          patient.patientImage) ==
-                                      null
-                                  ? const Icon(EneftyIcons.profile_bold)
-                                  : null,
-                            ),
-                            title: Text("${patient.patientName}"),
-                            trailing: const Icon(Icons.navigate_next_rounded),
-                          );
-                        }),
-              ),
+                        ),
+                      ],
+                    )
+                  : ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final patient = filtered[index];
+                        return PatientListTileCard(
+                          patient: patient,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    PatientDetailScreen(patient: patient),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
             ),
-          ],
-        ));
+          ),
+        ],
+      ),
+    );
   }
 }
