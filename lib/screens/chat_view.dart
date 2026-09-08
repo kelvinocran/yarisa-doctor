@@ -31,6 +31,7 @@ import '../../components/formtextfield.dart';
 import '../models/chat_model.dart';
 import '../providers/chat_provider.dart';
 import '../services/call_permissions.dart';
+import '../services/call_session_service.dart';
 import '../services/jitsi_call_service.dart';
 import '../services/mqtt_listener.dart';
 import '../services/mqtt_service.dart';
@@ -570,18 +571,29 @@ class _ChatViewState extends ConsumerState<ChatView>
     );
     if (!ok) return;
 
-    // Prefer the shared chat writer so Conversations + FCM fire for the patient.
+    final room =
+        YarisaJitsiCallService.conversationRoom(doctorId, widget.patientId);
+
     await writeDoctorChatMessage(
       patientId: widget.patientId,
       patientName: widget.patientName ?? 'Patient',
       patientImage: '',
       message: '',
       type: 'call',
-      extra: {'start_time': Timestamp.now(), 'type': type},
+      room: room,
+      extra: {'start_time': Timestamp.now(), 'type': type, 'room': room},
+    );
+
+    await CallSessionService.start(
+      room: room,
+      peerId: widget.patientId,
+      callType: type,
+      direction: 'outbound',
+      peerName: widget.patientName,
     );
 
     await YarisaJitsiCallService.join(
-      room: YarisaJitsiCallService.conversationRoom(doctorId, widget.patientId),
+      room: room,
       type: type,
       subject: 'Patient Appointment',
       displayName: doctor?.displayName ?? 'Doctor',

@@ -12,6 +12,8 @@ import '../../components/formtextfield.dart';
 import '../../constants/yarisa_constants.dart';
 import '../../constants/yarisa_enums.dart';
 import '../../constants/yarisa_widgets.dart';
+import '../../services/call_permissions.dart';
+import '../../services/call_session_service.dart';
 import '../../services/jitsi_call_service.dart';
 import '../../widgets/skeleton_loader.dart';
 import 'chat_inbox_screen.dart';
@@ -384,23 +386,40 @@ class _SecondOpinionDetailBody extends StatelessWidget {
     final patientId = data['patientId']?.toString() ?? '';
     if (currentUser == null || patientId.isEmpty) return;
 
-    final joined = await YarisaJitsiCallService.join(
-      room: YarisaJitsiCallService.secondOpinionRoom(requestId),
+    final permitted = await CallPermissions.ensureBeforeCall(
+      video: type.toLowerCase() == 'video',
+    );
+    if (!permitted) return;
+
+    final room = YarisaJitsiCallService.secondOpinionRoom(requestId);
+    final patientName = data['patientName']?.toString() ?? 'Patient';
+    final patientImage = data['patientImage']?.toString() ?? '';
+
+    await writeDoctorChatMessage(
+      patientId: patientId,
+      patientName: patientName,
+      patientImage: patientImage,
+      message: '',
+      type: 'call',
+      room: room,
+      extra: {'start_time': Timestamp.now(), 'type': type, 'room': room},
+    );
+
+    await CallSessionService.start(
+      room: room,
+      peerId: patientId,
+      callType: type,
+      direction: 'outbound',
+      peerName: patientName,
+    );
+
+    await YarisaJitsiCallService.join(
+      room: room,
       type: type,
       subject: 'Second Opinion',
       displayName: currentUser.displayName ?? 'Doctor',
       avatarUrl: currentUser.photoURL ?? '',
       email: currentUser.email ?? '',
-    );
-    if (!joined) return;
-
-    await writeDoctorChatMessage(
-      patientId: patientId,
-      patientName: data['patientName']?.toString() ?? 'Patient',
-      patientImage: data['patientImage']?.toString() ?? '',
-      message: '',
-      type: 'call',
-      extra: {'start_time': Timestamp.now(), 'type': type},
     );
   }
 

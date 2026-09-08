@@ -1,16 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:omni_jitsi_meet/jitsi_meet.dart';
+import 'package:yarisa_doctor/services/call_session_service.dart';
 
 /// Voice/video via embedded Jitsi Meet SDK ([omni_jitsi_meet]).
 ///
 /// **Production:** Contabo self-host (see [JITSI_SELF_HOST_DOCKER.md]).
-/// Keep doctor + patient [serverURL] identical. No JWT needed while
-/// `ENABLE_AUTH=0` / guests are open on the server.
-///
-/// Later options: real domain on the same VM, or 8x8 JaaS + server-minted JWT
-/// (see [JAAS_8X8_SETUP.md]).
 class YarisaJitsiCallService {
   /// Contabo self-hosted Jitsi. Swap to https://meet.yourdomain.com when DNS is ready.
   static String serverURL = 'https://169.58.215.253.sslip.io';
@@ -18,10 +15,8 @@ class YarisaJitsiCallService {
   /// Null for open self-host. Set only for JaaS / secured Prosody.
   static String? jwtToken;
 
-  /// Shared room helpers so patient and doctor always join the same conference.
   static String conversationRoom(String firstUserId, String secondUserId) {
     final ids = [firstUserId, secondUserId]..sort();
-    // Long unique room names reduce collisions on public infrastructure.
     return 'yarisa_chat_${ids.join('_')}';
   }
 
@@ -38,6 +33,7 @@ class YarisaJitsiCallService {
     required String avatarUrl,
     required String email,
     String? token,
+    bool trackSession = true,
   }) async {
     try {
       final features = <FeatureFlagEnum, Object>{
@@ -62,7 +58,6 @@ class YarisaJitsiCallService {
         FeatureFlagEnum.TOOLBOX_ALWAYS_VISIBLE: true,
       };
 
-      // Client-side flags; server .env (ENABLE_AUTH / ENABLE_LOBBY) is authoritative.
       final configOverrides = <String, Object?>{
         'prejoinPageEnabled': false,
         'prejoinConfig': {'enabled': false},
@@ -80,6 +75,7 @@ class YarisaJitsiCallService {
       };
 
       final effectiveToken = token ?? jwtToken;
+      final myId = FirebaseAuth.instance.currentUser?.uid;
 
       final options = JitsiMeetingOptions(
         room: room,
@@ -103,7 +99,30 @@ class YarisaJitsiCallService {
         );
       }
 
-      await JitsiMeet.joinMeeting(options);
+      final listener = JitsiMeetingListener(
+        onConferenceJoined: (_) {
+          if (!trackSession) return;
+          CallSessionService.markAnswered();
+          if (myId != null) {
+            CallSessionService.markParticipantJoined(userId: myId);
+          }
+        },
+        onParticipantJoined: (email, name, role, participantId) {
+          if (!trackSession) return;
+          // Remote participant joined the conference.
+          CallSessionService.markAnswered();
+        },
+        onConferenceTerminated: (_, __) {
+          if (!trackSession) return;
+          CallSessionService.end(status: 'ended');
+        },
+        onClosed: () {
+          if (!trackSession) return;
+          CallSessionService.end(status: 'ended');
+        },
+      );
+
+      await JitsiMeet.joinMeeting(options, listener: listener);
       return true;
     } on MissingPluginException catch (_) {
       _showUnavailableMessage();

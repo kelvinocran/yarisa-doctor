@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:yarisa_doctor/components/chat/chat_widgets.dart';
 import 'package:yarisa_doctor/constants/yarisa_constants.dart';
 import 'package:yarisa_doctor/services/call_permissions.dart';
+import 'package:yarisa_doctor/services/call_session_service.dart';
 import 'package:yarisa_doctor/services/jitsi_call_service.dart';
 import 'package:yarisa_doctor/services/presence_service.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
@@ -440,17 +441,27 @@ class _DoctorMessageThreadScreenState extends State<DoctorMessageThreadScreen> {
     final doctor = await doctorChatProfile();
     final doctorId = FirebaseAuth.instance.currentUser?.uid ?? '';
     final room = (widget.roomId != null && widget.roomId!.isNotEmpty)
-        ? widget.roomId!
+        ? (widget.roomId!.startsWith('yarisa_')
+            ? widget.roomId!
+            : YarisaJitsiCallService.appointmentRoom(widget.roomId!))
         : YarisaJitsiCallService.conversationRoom(doctorId, widget.patientId);
 
-    // Notify patient (FCM + CallKit) before joining Jitsi.
     await writeDoctorChatMessage(
       patientId: widget.patientId,
       patientName: widget.patientName,
       patientImage: widget.patientImage,
       message: '',
       type: 'call',
-      extra: {'start_time': Timestamp.now(), 'type': type},
+      room: room,
+      extra: {'start_time': Timestamp.now(), 'type': type, 'room': room},
+    );
+
+    await CallSessionService.start(
+      room: room,
+      peerId: widget.patientId,
+      callType: type,
+      direction: 'outbound',
+      peerName: widget.patientName,
     );
 
     await YarisaJitsiCallService.join(
@@ -484,6 +495,7 @@ Future<void> writeDoctorChatMessage({
   required String message,
   required String type,
   Map<String, dynamic>? extra,
+  String? room,
 }) async {
   final doctorId = FirebaseAuth.instance.currentUser?.uid;
   if (doctorId == null) return;
@@ -494,6 +506,14 @@ Future<void> writeDoctorChatMessage({
   final displayMessage = type == 'call'
       ? (callKind == 'video' ? 'Video call' : 'Voice call')
       : message;
+  final resolvedRoom = room ??
+      (type == 'call'
+          ? YarisaJitsiCallService.conversationRoom(doctorId, patientId)
+          : null);
+  final callExtra = <String, dynamic>{
+    ...(extra ?? {'file_name': '', 'file_type': '', 'file_size': ''}),
+    if (resolvedRoom != null) 'room': resolvedRoom,
+  };
   final doctorSideMessage = {
     'timestamp': timestamp,
     'sender': 'recipient',
@@ -502,7 +522,8 @@ Future<void> writeDoctorChatMessage({
     'name': patientName,
     'image': patientImage,
     'type': type,
-    'extra': extra ?? {'file_name': '', 'file_type': '', 'file_size': ''},
+    'extra': callExtra,
+    if (type == 'call') 'isCall': true,
   };
   final patientSideMessage = {
     ...doctorSideMessage,
@@ -572,7 +593,27 @@ Future<void> writeDoctorChatMessage({
     'conversationId': conversationRef.id,
     'createdAt': FieldValue.serverTimestamp(),
     if (type == 'call') 'isCall': true,
+    if (resolvedRoom != null) 'room': resolvedRoom,
   });
+
+  // Mirror into Calls/{uid} so patient Calls tab shows doctor-originated calls.
+  if (type == 'call') {
+    batch.set(
+      FirebaseFirestore.instance.collection('Calls').doc(doctorId),
+      {
+        'calls': FieldValue.arrayUnion([doctorSideMessage]),
+      },
+      SetOptions(merge: true),
+    );
+    batch.set(
+      FirebaseFirestore.instance.collection('Calls').doc(patientId),
+      {
+        'calls': FieldValue.arrayUnion([patientSideMessage]),
+      },
+      SetOptions(merge: true),
+    );
+  }
+
   await batch.commit();
 }
 
