@@ -31,7 +31,8 @@ class MainActivity : FlutterActivity() {
       NotificationChannel(
         "JitsiOngoingConferenceChannel",
         "Ongoing call",
-        NotificationManager.IMPORTANCE_LOW,
+        // DEFAULT (not LOW/NONE): some OEMs reject FGS notifications on silent channels.
+        NotificationManager.IMPORTANCE_DEFAULT,
       ).apply {
         description = "Shown while a video or voice call is in progress"
         setShowBadge(false)

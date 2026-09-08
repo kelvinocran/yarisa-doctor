@@ -9,6 +9,7 @@ import 'package:yarisa_doctor/screens/main/patient_detail.dart';
 import 'package:yarisa_doctor/screens/main/patients_screen.dart';
 import 'package:yarisa_doctor/screens/main/second_opinions_screen.dart';
 import 'package:yarisa_doctor/models/personal_patients_model.dart';
+import 'package:yarisa_doctor/services/chat_unread_service.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
 
 /// In-app activity feed for the doctor (bottom-nav Alerts tab).
@@ -23,15 +24,12 @@ class DoctorNotificationsScreen extends StatefulWidget {
 }
 
 class _DoctorNotificationsScreenState extends State<DoctorNotificationsScreen> {
-  Future<void> _markRead(String id) async {
-    try {
-      await FirebaseFirestore.instance.collection('Notifications').doc(id).set({
-        'read': true,
-        'readAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-    } catch (_) {
-      // Best-effort; still navigate.
-    }
+  Future<void> _markRead(String id, {String? peerId}) async {
+    // Also clear matching chat-thread unread so nav badges stay in sync.
+    await ChatUnreadService.markThreadReadFromNotification(
+      peerId: peerId,
+      notificationId: id,
+    );
   }
 
   Future<void> _markAllRead(String doctorId) async {
@@ -74,7 +72,10 @@ class _DoctorNotificationsScreenState extends State<DoctorNotificationsScreen> {
 
   void _openItem(_FeedItem item) {
     if (item.notificationId != null) {
-      _markRead(item.notificationId!);
+      _markRead(item.notificationId!, peerId: item.patientId);
+    } else if ((item.patientId ?? '').isNotEmpty &&
+        (item.kind == _FeedKind.message || item.kind == _FeedKind.call)) {
+      ChatUnreadService.markThreadRead(item.patientId!);
     }
     final nav = Navigator.of(context);
     switch (item.kind) {

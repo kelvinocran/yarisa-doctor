@@ -63,10 +63,12 @@
             android:value="yarisa_doctor_general" />
 
         <!-- Ensure Jitsi ongoing-call FGS has an explicit type merge on API 34+. -->
+        <!-- Match Jitsi SDK startForeground types (do not add camera here). -->
         <service
             android:name="org.jitsi.meet.sdk.JitsiMeetOngoingConferenceService"
             android:exported="false"
-            android:foregroundServiceType="mediaPlayback|microphone|camera"
+            android:foregroundServiceType="mediaPlayback|microphone"
+            tools:replace="android:foregroundServiceType"
             tools:node="merge" />
     </application>
     <queries>
