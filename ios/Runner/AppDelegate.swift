@@ -79,7 +79,7 @@ import flutter_callkit_incoming
       handle: handle,
       type: isVideo ? 1 : 0
     )
-    data.extra = dict
+    data.extra = dict as NSDictionary
 
     SwiftFlutterCallkitIncomingPlugin.sharedInstance?.showCallkitIncoming(
       data,
