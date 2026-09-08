@@ -152,11 +152,30 @@ class ApiMethods extends ChangeNotifier {
       return;
     }
 
-    final profile = await FirestoreSchema.doctorDoc(currentUser.uid).get();
+    // Prefer server so a stale offline cache cannot send completed doctors
+    // back to the "Tell us about you" onboarding flow.
+    DocumentSnapshot<Map<String, dynamic>> profile;
+    try {
+      profile = await FirestoreSchema.doctorDoc(currentUser.uid).get(
+        const GetOptions(source: Source.server),
+      );
+    } catch (e) {
+      Logger().w(
+        'Doctor profile server read failed for ${currentUser.uid}, '
+        'falling back to cache: $e',
+      );
+      profile = await FirestoreSchema.doctorDoc(currentUser.uid).get();
+    }
+
     final profileData = profile.data();
     if (profile.exists && profileData != null) {
       userAccount = UserModel.fromDocumentSnapshot(profile);
       notifyListeners();
+    } else {
+      Logger().w(
+        'No Doctors/${currentUser.uid} document for landing '
+        '(exists=${profile.exists}). Showing CompleteProfile.',
+      );
     }
 
     final destination = _doctorLandingScreen(
@@ -185,7 +204,7 @@ class ApiMethods extends ChangeNotifier {
       );
     }
 
-    if (profileData['isVerified'] == true) {
+    if (_asBool(profileData['isVerified']) == true) {
       return const BaseScreen();
     }
 
@@ -193,17 +212,30 @@ class ApiMethods extends ChangeNotifier {
   }
 
   bool _doctorProfileComplete(Map<String, dynamic> profileData) {
-    if (profileData['profileComplete'] == true) return true;
-    if (profileData['onboardingStep'] == 'complete') return true;
-    if (profileData['profileComplete'] == false) return false;
+    if (_asBool(profileData['profileComplete']) == true) return true;
+    if (profileData['onboardingStep']?.toString().trim() == 'complete') {
+      return true;
+    }
+    if (_asBool(profileData['profileComplete']) == false) return false;
 
+    // Fallback: career fields present (legacy docs without profileComplete).
     return _hasProfileValue(profileData['speciality']) &&
         _hasProfileValue(profileData['licenseCode']) &&
         _hasProfileValue(profileData['clinic']);
   }
 
   bool _hasProfileValue(dynamic value) {
-    return value?.toString().trim().isNotEmpty == true;
+    final text = value?.toString().trim();
+    return text != null && text.isNotEmpty && text.toLowerCase() != 'null';
+  }
+
+  /// Firestore / dashboards sometimes store booleans as strings.
+  bool? _asBool(dynamic value) {
+    if (value is bool) return value;
+    final text = value?.toString().toLowerCase().trim();
+    if (text == 'true' || text == '1' || text == 'yes') return true;
+    if (text == 'false' || text == '0' || text == 'no') return false;
+    return null;
   }
 
   Future<UserCredential?> signInUserAccount(

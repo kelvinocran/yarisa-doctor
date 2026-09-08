@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:yarisa_doctor/api/api_methods.dart';
+import 'package:yarisa_doctor/api/firestore_schema.dart';
 import 'package:yarisa_doctor/components/auth/auth_widgets.dart';
 import 'package:yarisa_doctor/components/auth/onboarding_widgets.dart';
 import 'package:yarisa_doctor/components/auth/picker_sheets.dart';
@@ -60,11 +61,38 @@ class _CompleteProfileState extends ConsumerState<CompleteProfile> {
     super.initState();
     if (widget.fullname != null) fullname.text = widget.fullname!;
     if (widget.email != null) email.text = widget.email!;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(apimethods).ensureDoctorProfileSeed(
-            fullname: widget.fullname,
-            email: widget.email,
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Safety net: if Firestore already marks this doctor complete, leave
+      // onboarding instead of showing "Tell us about you" again.
+      final api = ref.read(apimethods);
+      final uid = api.auth.currentUser?.uid;
+      if (uid != null && mounted) {
+        try {
+          final snap = await FirestoreSchema.doctorDoc(uid).get(
+            const GetOptions(source: Source.server),
           );
+          final data = snap.data();
+          final complete = data != null &&
+              (data['profileComplete'] == true ||
+                  data['profileComplete']?.toString() == 'true' ||
+                  data['onboardingStep']?.toString() == 'complete');
+          if (complete && mounted) {
+            await api.openDoctorLanding(
+              context,
+              email: widget.email,
+              fullname: widget.fullname,
+            );
+            return;
+          }
+        } catch (_) {
+          // Fall through to normal onboarding seed/load.
+        }
+      }
+      if (!mounted) return;
+      api.ensureDoctorProfileSeed(
+        fullname: widget.fullname,
+        email: widget.email,
+      );
       _loadSpecialityOptions();
     });
   }
