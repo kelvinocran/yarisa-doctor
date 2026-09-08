@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:yarisa_doctor/components/patients/patient_widgets.dart';
 import 'package:yarisa_doctor/constants/yarisa_constants.dart';
 import 'package:yarisa_doctor/constants/yarisa_enums.dart';
+import 'package:yarisa_doctor/constants/yarisa_widgets.dart';
 import 'package:yarisa_doctor/models/appointment_model.dart';
 import 'package:yarisa_doctor/models/personal_patients_model.dart';
 import 'package:yarisa_doctor/screens/main/appointment_screen.dart';
@@ -267,7 +268,7 @@ class HomeRecentPatients extends StatelessWidget {
                 final name =
                     (data['patientName'] ?? data['name'] ?? 'Patient')
                         .toString();
-                final image =
+                final image = patientAvatarUrl(data) ??
                     (data['patientImage'] ?? data['photo'] ?? '').toString();
                 final source = data['source']?.toString();
                 final patient = PersonalPatientsModel(
@@ -379,7 +380,11 @@ class HomeRecentBookings extends StatelessWidget {
                           ),
                           leading: CircleImage(
                             size: 42,
-                            image: appointment.patient?.photo,
+                            image: patientAvatarUrl({
+                                  'photo': appointment.patient?.photo,
+                                  'patientImage': appointment.patient?.photo,
+                                }) ??
+                                appointment.patient?.photo,
                           ),
                           title: Text(
                             appointmentPatientName(appointment),

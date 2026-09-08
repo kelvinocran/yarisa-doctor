@@ -7,6 +7,7 @@ import 'package:logger/logger.dart';
 import 'package:yarisa_doctor/models/appointment_model.dart';
 
 import 'package:yarisa_doctor/api/firestore_schema.dart';
+import 'package:yarisa_doctor/constants/yarisa_widgets.dart';
 import 'package:yarisa_doctor/models/personal_patients_model.dart';
 import 'package:yarisa_doctor/screens/authentication/complete_profile.dart';
 import 'package:yarisa_doctor/screens/authentication/doctor_verification_pending_screen.dart';
@@ -388,6 +389,16 @@ class ApiMethods extends ChangeNotifier {
         "verificationStatus": "pending",
         "isAvailable": false,
         "createdAt": FieldValue.serverTimestamp(),
+        "notificationPreferences": {
+          "appointments": true,
+          "messages": true,
+          "secondOpinions": true,
+          "prescriptions": true,
+          "labRequests": true,
+          "patientUpdates": true,
+          "platformAlerts": true,
+          "updatedAt": FieldValue.serverTimestamp(),
+        },
       });
     }
 
@@ -1169,6 +1180,25 @@ class ApiMethods extends ChangeNotifier {
         }
       } catch (e) {
         Logger().e('getMyPatients appointment enrich failed: $e');
+      }
+
+      // Prefer live Patients/{id}.photo over stale Doctors/.../Patients mirrors.
+      try {
+        final ids = patientMap.keys.take(40).toList();
+        final snaps = await Future.wait(
+          ids.map((id) => db.collection('Patients').doc(id).get()),
+        );
+        for (var i = 0; i < ids.length; i++) {
+          final snap = snaps[i];
+          if (!snap.exists) continue;
+          final live = patientAvatarUrl(snap.data());
+          if (live == null || live.isEmpty) continue;
+          final existing = patientMap[ids[i]];
+          if (existing == null) continue;
+          patientMap[ids[i]] = existing.copyWith(patientImage: live);
+        }
+      } catch (e) {
+        Logger().e('getMyPatients live photo enrich failed: $e');
       }
 
       final data = patientMap.values.toList()

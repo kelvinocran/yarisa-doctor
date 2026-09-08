@@ -1,11 +1,7 @@
-import 'dart:io';
-
 import 'package:enefty_icons/enefty_icons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:yarisa_doctor/api/api_methods.dart';
 import 'package:yarisa_doctor/constants/yarisa_constants.dart';
@@ -15,6 +11,7 @@ import 'package:yarisa_doctor/screens/edit_profile_screen.dart';
 import 'package:yarisa_doctor/screens/more_screen.dart';
 import 'package:yarisa_doctor/screens/notification_preferences_screen.dart';
 import 'package:yarisa_doctor/services/deep_link_router.dart';
+import 'package:yarisa_doctor/services/doctor_profile_photo.dart';
 import 'package:yarisa_doctor/services/presence_service.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
 import 'package:yarisa_doctor/widgets/confirmation_dialog.dart';
@@ -83,36 +80,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _updateProfilePic() async {
+    if (_uploadingPic) return;
+    setState(() => _uploadingPic = true);
     try {
-      final res = await ImagePicker().pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 85,
-      );
-      if (res == null) return;
-
-      setState(() => _uploadingPic = true);
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid == null) return;
-
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('profile_pictures')
-          .child('$uid.jpg');
-      await storageRef.putFile(File(res.path));
-      final downloadUrl = await storageRef.getDownloadURL();
-      await ref.read(apimethods).updateDoctorProfile({'pic': downloadUrl});
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile photo updated')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update photo: $e')),
-        );
-      }
+      await DoctorProfilePhoto.pickAndUpload(context, ref);
     } finally {
       if (mounted) setState(() => _uploadingPic = false);
     }

@@ -2,12 +2,11 @@ import 'dart:io';
 
 import 'package:enefty_icons/enefty_icons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:yarisa_doctor/api/api_methods.dart';
 import 'package:yarisa_doctor/models/user_model.dart';
+import 'package:yarisa_doctor/services/doctor_profile_photo.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
 
 /// Full-screen redesigned doctor profile editor.
@@ -81,41 +80,23 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Future<void> _pickPhoto() async {
+    if (_uploadingPic) return;
+    setState(() => _uploadingPic = true);
     try {
-      final res = await ImagePicker().pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 85,
-        maxWidth: 1200,
-      );
-      if (res == null) return;
-      setState(() => _localPicPath = res.path);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not pick photo: $e')),
-      );
+      final url = await DoctorProfilePhoto.pickAndUpload(context, ref);
+      if (url == null || !mounted) return;
+      setState(() {
+        _remotePic = url;
+        _localPicPath = null;
+      });
+    } finally {
+      if (mounted) setState(() => _uploadingPic = false);
     }
   }
 
   Future<String?> _uploadPicIfNeeded() async {
-    final path = _localPicPath;
-    if (path == null) return _remotePic;
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return _remotePic;
-
-    setState(() => _uploadingPic = true);
-    try {
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('profile_pictures')
-          .child('$uid.jpg');
-      await storageRef.putFile(File(path));
-      final url = await storageRef.getDownloadURL();
-      _remotePic = url;
-      return url;
-    } finally {
-      if (mounted) setState(() => _uploadingPic = false);
-    }
+    // Photos upload immediately on pick; keep remote URL for form save.
+    return _remotePic;
   }
 
   Future<void> _save() async {
