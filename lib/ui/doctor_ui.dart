@@ -197,19 +197,25 @@ class DoctorCard extends StatelessWidget {
     required this.child,
     this.padding = const EdgeInsets.all(14),
     this.onTap,
+    this.color,
+    this.borderColor,
   });
 
   final Widget child;
   final EdgeInsets padding;
   final VoidCallback? onTap;
+  final Color? color;
+  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(18);
+    final bg = color ?? DoctorUi.surface;
+    final border = borderColor ?? DoctorUi.border;
     final decoration = BoxDecoration(
-      color: DoctorUi.surface,
+      color: bg,
       borderRadius: radius,
-      border: Border.all(color: DoctorUi.border),
+      border: Border.all(color: border),
     );
 
     if (onTap == null) {
@@ -217,7 +223,7 @@ class DoctorCard extends StatelessWidget {
     }
 
     return Material(
-      color: DoctorUi.surface,
+      color: bg,
       borderRadius: radius,
       child: InkWell(
         onTap: onTap,
@@ -226,7 +232,7 @@ class DoctorCard extends StatelessWidget {
           padding: padding,
           decoration: BoxDecoration(
             borderRadius: radius,
-            border: Border.all(color: DoctorUi.border),
+            border: Border.all(color: border),
           ),
           child: child,
         ),

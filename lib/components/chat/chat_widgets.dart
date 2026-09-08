@@ -13,6 +13,8 @@ class ChatThreadTile extends StatelessWidget {
     required this.onTap,
     this.timestamp,
     this.isOnline = false,
+    this.isUnread = false,
+    this.unreadCount = 0,
   });
 
   final String name;
@@ -21,6 +23,8 @@ class ChatThreadTile extends StatelessWidget {
   final DateTime? timestamp;
   final VoidCallback onTap;
   final bool isOnline;
+  final bool isUnread;
+  final int unreadCount;
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +32,9 @@ class ChatThreadTile extends StatelessWidget {
     return DoctorCard(
       onTap: onTap,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      color: isUnread ? DoctorUi.primary.withValues(alpha: .06) : null,
+      borderColor:
+          isUnread ? DoctorUi.primary.withValues(alpha: .28) : null,
       child: Row(
         children: [
           Stack(
@@ -48,6 +55,20 @@ class ChatThreadTile extends StatelessWidget {
                     ),
                   ),
                 ),
+              if (isUnread)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade600,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: DoctorUi.surface, width: 2),
+                    ),
+                  ),
+                ),
             ],
           ),
           const SizedBox(width: 12),
@@ -63,7 +84,8 @@ class ChatThreadTile extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
+                          fontWeight:
+                              isUnread ? FontWeight.w800 : FontWeight.w700,
                         ),
                       ),
                     ),
@@ -71,8 +93,9 @@ class ChatThreadTile extends StatelessWidget {
                       Text(
                         _formatTime(timestamp!),
                         style: theme.bodySmall?.copyWith(
-                          color: DoctorUi.muted,
+                          color: isUnread ? DoctorUi.primary : DoctorUi.muted,
                           fontSize: 11,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                   ],
@@ -99,7 +122,13 @@ class ChatThreadTile extends StatelessWidget {
                         preview,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.bodySmall?.copyWith(color: DoctorUi.muted),
+                        style: theme.bodySmall?.copyWith(
+                          color: isUnread
+                              ? theme.bodyMedium?.color
+                              : DoctorUi.muted,
+                          fontWeight:
+                              isUnread ? FontWeight.w700 : FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
@@ -107,7 +136,26 @@ class ChatThreadTile extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.chevron_right_rounded, color: DoctorUi.muted, size: 22),
+          if (isUnread)
+            Container(
+              constraints: const BoxConstraints(minWidth: 22),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.red.shade600,
+                borderRadius: BorderRadius.circular(50),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                unreadCount > 99 ? '99+' : '$unreadCount',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            )
+          else
+            Icon(Icons.chevron_right_rounded, color: DoctorUi.muted, size: 22),
         ],
       ),
     );

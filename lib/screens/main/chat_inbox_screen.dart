@@ -170,6 +170,17 @@ class _PatientChatTile extends StatelessWidget {
     final lastMessage = doctorChatPreview(summary);
     final ts = summary['timestamp'];
     final time = ts is Timestamp ? ts.toDate() : null;
+    final unreadRaw = summary['unread'];
+    final isUnread = unreadRaw == true ||
+        unreadRaw?.toString().toLowerCase() == 'true';
+    final countRaw = summary['unreadCount'];
+    final unreadCount = !isUnread
+        ? 0
+        : (countRaw is int && countRaw > 0
+            ? countRaw
+            : (countRaw is num && countRaw > 0
+                ? countRaw.toInt()
+                : 1));
 
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance
@@ -196,6 +207,8 @@ class _PatientChatTile extends StatelessWidget {
               preview: lastMessage,
               timestamp: time,
               isOnline: isOnline,
+              isUnread: isUnread,
+              unreadCount: unreadCount,
               onTap: () => _openThread(
                 context,
                 patientName: patientName,

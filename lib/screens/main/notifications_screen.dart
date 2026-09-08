@@ -480,6 +480,9 @@ class _NotificationTile extends StatelessWidget {
     return DoctorCard(
       onTap: onTap,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      color: item.read ? null : DoctorUi.primary.withValues(alpha: .06),
+      borderColor:
+          item.read ? null : DoctorUi.primary.withValues(alpha: .28),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
