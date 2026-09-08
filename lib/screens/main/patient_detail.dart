@@ -9,6 +9,8 @@ import 'package:yarisa_doctor/models/personal_patients_model.dart';
 import 'package:yarisa_doctor/screens/main/chat_inbox_screen.dart';
 import 'package:yarisa_doctor/screens/main/lab_requests_screen.dart';
 import 'package:yarisa_doctor/screens/main/prescriptions_screen.dart';
+import 'package:yarisa_doctor/services/call_permissions.dart';
+import 'package:yarisa_doctor/services/call_session_service.dart';
 import 'package:yarisa_doctor/services/jitsi_call_service.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
 
@@ -45,8 +47,48 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
     BuildContext context, {
     required String type,
     required String patientId,
+    required String patientName,
+    required String patientImage,
   }) async {
-    final ok = await joinMeeting(type, '', '', patientId, '');
+    final permitted = await CallPermissions.ensureBeforeCall(
+      video: type.toLowerCase() == 'video',
+    );
+    if (!permitted) return;
+
+    final doctor = FirebaseAuth.instance.currentUser;
+    final doctorId = doctor?.uid ?? '';
+    if (doctorId.isEmpty || patientId.isEmpty) return;
+
+    final room =
+        YarisaJitsiCallService.conversationRoom(doctorId, patientId);
+
+    // Notify patient (Conversations → FCM → CallKit) before joining.
+    await writeDoctorChatMessage(
+      patientId: patientId,
+      patientName: patientName,
+      patientImage: patientImage,
+      message: '',
+      type: 'call',
+      room: room,
+      extra: {'start_time': Timestamp.now(), 'type': type, 'room': room},
+    );
+
+    await CallSessionService.start(
+      room: room,
+      peerId: patientId,
+      callType: type,
+      direction: 'outbound',
+      peerName: patientName,
+    );
+
+    final ok = await YarisaJitsiCallService.join(
+      room: room,
+      type: type,
+      subject: 'Patient Appointment',
+      displayName: doctor?.displayName ?? 'Doctor',
+      avatarUrl: doctor?.photoURL ?? '',
+      email: doctor?.email ?? '',
+    );
     if (!context.mounted || ok) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -163,6 +205,8 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
                     onTap: () => _startCall(
                       context,
                       type: 'voice',
+                      patientName: name,
+                      patientImage: pic ?? '',
                       patientId: id,
                     ),
                   ),
@@ -173,6 +217,8 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
                     onTap: () => _startCall(
                       context,
                       type: 'video',
+                      patientName: name,
+                      patientImage: pic ?? '',
                       patientId: id,
                     ),
                   ),
@@ -304,22 +350,4 @@ String _patientValue(
   return 'Not set';
 }
 
-Future<bool> joinMeeting(
-  String type,
-  String email,
-  String name,
-  String id,
-  String image,
-) async {
-  final doctor = FirebaseAuth.instance.currentUser;
-  final doctorId = doctor?.uid ?? '';
-  if (doctorId.isEmpty || id.isEmpty) return false;
-  return YarisaJitsiCallService.join(
-    room: YarisaJitsiCallService.conversationRoom(doctorId, id),
-    type: type,
-    subject: 'Patient Appointment',
-    displayName: doctor?.displayName ?? 'Doctor',
-    avatarUrl: doctor?.photoURL ?? '',
-    email: doctor?.email ?? '',
-  );
-}
+

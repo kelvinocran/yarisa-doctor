@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,8 @@ import 'package:flutter_callkit_incoming/entities/notification_params.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:get/get.dart';
 import 'package:yarisa_doctor/main.dart' show appNavigatorKey;
+import 'package:yarisa_doctor/services/call_permissions.dart';
+import 'package:yarisa_doctor/services/call_session_service.dart';
 import 'package:yarisa_doctor/services/jitsi_call_service.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
 
@@ -70,18 +73,54 @@ class CallKitService {
             Map<String, dynamic>.from(_activePayload),
           );
         case CallEventActionCallDecline():
+          _dismissFallback();
+          if (!_joining) {
+            await CallSessionService.end(status: 'declined');
+            _activePayload = {};
+            _activeCallId = null;
+          }
         case CallEventActionCallTimeout():
+          _dismissFallback();
+          if (!_joining) {
+            await CallSessionService.end(status: 'missed');
+            _activePayload = {};
+            _activeCallId = null;
+          }
         case CallEventActionCallEnded():
           _dismissFallback();
           // Don't clear mid-join; only when not joining.
           if (!_joining) {
+            await CallSessionService.end(status: 'ended');
             _activePayload = {};
             _activeCallId = null;
           }
+        case CallEventActionDidUpdateDevicePushTokenVoip():
+          await persistVoipToken();
         default:
           break;
       }
     });
+
+    // Best-effort: pick up VoIP token if PushKit already registered.
+    Future<void>.delayed(const Duration(seconds: 2), persistVoipToken);
+  }
+
+  /// Persist iOS PushKit VoIP token onto the signed-in doctor profile.
+  static Future<void> persistVoipToken() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return;
+    try {
+      final token = await FlutterCallkitIncoming.getDevicePushTokenVoIP();
+      if (token == null || token.isEmpty) return;
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      await FirebaseFirestore.instance.collection('Doctors').doc(user.uid).set({
+        'voipToken': token,
+        'voipTokenUpdatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      if (kDebugMode) debugPrint('Saved doctor voipToken');
+    } catch (e) {
+      if (kDebugMode) debugPrint('persistVoipToken failed: $e');
+    }
   }
 
   /// Shared accept path: debounce triple-fire + avoid CallKit error 6.
@@ -100,23 +139,34 @@ class CallKitService {
     _joining = true;
     _lastAcceptedCallId = callId;
     try {
-      // Mark connected before joining — answering a dead UUID causes error 6.
+      final callType =
+          (data['callType'] ?? data['extra_type'] ?? 'voice').toString();
+      final permitted = await CallPermissions.ensureBeforeCall(
+        video: callType.toLowerCase() == 'video',
+      );
+      if (!permitted) {
+        try {
+          await FlutterCallkitIncoming.endCall(callId);
+        } catch (_) {}
+        return;
+      }
+
       try {
         await FlutterCallkitIncoming.setCallConnected(callId);
       } catch (e) {
         if (kDebugMode) debugPrint('setCallConnected: $e');
       }
+
       await _joinFromPayload(data);
+
+      // Delay ending CallKit so Jitsi Activity can take over (Android crash fix).
+      Future<void>.delayed(const Duration(seconds: 2), () async {
+        try {
+          await FlutterCallkitIncoming.endCall(callId);
+        } catch (_) {}
+      });
     } finally {
       _joining = false;
-      // End CallKit UI after join so iOS doesn't keep a phantom call.
-      try {
-        await FlutterCallkitIncoming.endCall(callId);
-      } catch (_) {
-        try {
-          await FlutterCallkitIncoming.endAllCalls();
-        } catch (_) {}
-      }
     }
   }
 
@@ -408,16 +458,33 @@ class CallKitService {
       if (kDebugMode) {
         debugPrint('CallKit join skipped: peerId=$peerId myId=$myId');
       }
-      Get.snackbar(
-        'Call',
-        'Could not join — missing caller id.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      try {
+        Get.snackbar(
+          'Call',
+          'Could not join — missing caller id.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      } catch (_) {}
       return;
     }
 
+    final rawRoom =
+        (data['room'] ?? data['roomId'])?.toString().trim() ?? '';
+    final room = rawRoom.isNotEmpty
+        ? rawRoom
+        : YarisaJitsiCallService.conversationRoom(myId, peerId);
+
+    await CallSessionService.start(
+      room: room,
+      peerId: peerId,
+      callType: isVideo ? 'video' : 'voice',
+      direction: 'inbound',
+      peerName: (data['peerName'] ?? data['senderName'] ?? data['patientName'])
+          ?.toString(),
+    );
+
     await YarisaJitsiCallService.join(
-      room: YarisaJitsiCallService.conversationRoom(myId, peerId),
+      room: room,
       type: isVideo ? 'video' : 'voice',
       subject: isVideo ? 'Video call' : 'Voice call',
       displayName: me?.displayName ?? 'Doctor',

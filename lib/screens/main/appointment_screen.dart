@@ -14,6 +14,8 @@ import '../../api/firestore_schema.dart';
 import '../../api/api_methods.dart';
 import '../../constants/yarisa_constants.dart';
 import '../../constants/yarisa_enums.dart';
+import '../../services/call_permissions.dart';
+import '../../services/call_session_service.dart';
 import '../../services/jitsi_call_service.dart';
 import '../../models/appointment_model.dart';
 import '../../widgets/confirmation_dialog.dart';
@@ -988,6 +990,12 @@ Future<void> _startAppointmentCall(
 ) async {
   final patientId = _appointmentPatientId(appointment);
   if (patientId == null) return;
+
+  final permitted = await CallPermissions.ensureBeforeCall(
+    video: type.toLowerCase() == 'video',
+  );
+  if (!permitted) return;
+
   final doctor = FirebaseAuth.instance.currentUser;
   final appointmentId = appointment.id;
   final room = (appointmentId != null && appointmentId.isNotEmpty)
@@ -996,15 +1004,6 @@ Future<void> _startAppointmentCall(
           doctor?.uid ?? "",
           patientId,
         );
-  final joined = await YarisaJitsiCallService.join(
-    room: room,
-    type: type,
-    subject: "Patient Appointment",
-    displayName: doctor?.displayName ?? "Doctor",
-    avatarUrl: doctor?.photoURL ?? "",
-    email: doctor?.email ?? "",
-  );
-  if (!joined) return;
 
   await writeDoctorChatMessage(
     patientId: patientId,
@@ -1012,7 +1011,25 @@ Future<void> _startAppointmentCall(
     patientImage: appointment.patient?.photo ?? "",
     message: "",
     type: "call",
-    extra: {"start_time": Timestamp.now(), "type": type},
+    room: room,
+    extra: {"start_time": Timestamp.now(), "type": type, "room": room},
+  );
+
+  await CallSessionService.start(
+    room: room,
+    peerId: patientId,
+    callType: type,
+    direction: 'outbound',
+    peerName: appointmentPatientName(appointment),
+  );
+
+  await YarisaJitsiCallService.join(
+    room: room,
+    type: type,
+    subject: "Patient Appointment",
+    displayName: doctor?.displayName ?? "Doctor",
+    avatarUrl: doctor?.photoURL ?? "",
+    email: doctor?.email ?? "",
   );
 }
 
