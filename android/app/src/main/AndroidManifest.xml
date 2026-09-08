@@ -25,10 +25,10 @@
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY"/>
     <application
         android:label="Yarisa Doctor"
-        android:name="${applicationName}"
+        android:name=".YarisaApp"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true"
-        tools:replace="android:label,android:enableOnBackInvokedCallback">
+        tools:replace="android:name,android:label,android:enableOnBackInvokedCallback">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -54,7 +54,7 @@
             android:value="2" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@mipmap/ic_launcher" />
+            android:resource="@drawable/ic_notification" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/notification_color" />
@@ -62,14 +62,15 @@
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="yarisa_doctor_general" />
 
-        <!-- Ensure Jitsi ongoing-call FGS has an explicit type merge on API 34+. -->
-        <!-- Match Jitsi SDK startForeground types (do not add camera here). -->
+        <!--
+          Disable Jitsi's ongoing-conference FGS. On Android 14+ (esp. when
+          answering from CallkitIncomingActivity) startForeground throws
+          CannotPostForegroundServiceNotificationException and kills the process.
+          Jitsi catches the failed startForegroundService and continues the call.
+        -->
         <service
             android:name="org.jitsi.meet.sdk.JitsiMeetOngoingConferenceService"
-            android:exported="false"
-            android:foregroundServiceType="mediaPlayback|microphone"
-            tools:replace="android:foregroundServiceType"
-            tools:node="merge" />
+            tools:node="remove" />
     </application>
     <queries>
         <intent>

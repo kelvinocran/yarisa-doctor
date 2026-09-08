@@ -55,6 +55,10 @@ class YarisaJitsiCallService {
         FeatureFlagEnum.CLOSE_CAPTIONS_ENABLED: false,
         FeatureFlagEnum.MEETING_PASSWORD_ENABLED: false,
         FeatureFlagEnum.NOTIFICATIONS_ENABLED: false,
+        // Avoid ConnectionService / telecom integration races with CallKit.
+        FeatureFlagEnum.CALL_INTEGRATION_ENABLED: false,
+        FeatureFlagEnum.ANDROID_SCREENSHARING_ENABLED: false,
+        FeatureFlagEnum.PIP_ENABLED: true,
         FeatureFlagEnum.TOOLBOX_ALWAYS_VISIBLE: true,
       };
 

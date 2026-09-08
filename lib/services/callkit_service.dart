@@ -157,9 +157,13 @@ class CallKitService {
         if (kDebugMode) debugPrint('setCallConnected: $e');
       }
 
+      // Let CallkitIncomingActivity finish before launching Jitsi, otherwise
+      // Jitsi's ongoing FGS can race and crash the process on Android 14+.
+      await Future<void>.delayed(const Duration(milliseconds: 450));
+
       await _joinFromPayload(data);
 
-      // Delay ending CallKit so Jitsi Activity can take over (Android crash fix).
+      // Delay ending CallKit so Jitsi Activity can take over.
       Future<void>.delayed(const Duration(seconds: 2), () async {
         try {
           await FlutterCallkitIncoming.endCall(callId);
