@@ -39,6 +39,30 @@ class DoctorNotificationPreferencesScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _enableAll(BuildContext context, String doctorId) async {
+    try {
+      final payload = <String, dynamic>{
+        for (final e in _defaults.entries)
+          'notificationPreferences.${e.key}': e.value,
+        'notificationPreferences.updatedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+      await FirebaseFirestore.instance
+          .collection('Doctors')
+          .doc(doctorId)
+          .set(payload, SetOptions(merge: true));
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('All notification preferences enabled')),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not update preferences')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final doctorId = FirebaseAuth.instance.currentUser?.uid;
@@ -47,6 +71,14 @@ class DoctorNotificationPreferencesScreen extends StatelessWidget {
       title: 'Notification preferences',
       subtitle: 'Choose what alerts you receive',
       showBack: Navigator.of(context).canPop(),
+      actions: doctorId == null
+          ? null
+          : [
+              TextButton(
+                onPressed: () => _enableAll(context, doctorId),
+                child: const Text('Enable all'),
+              ),
+            ],
       body: doctorId == null
           ? const DoctorEmptyState(
               icon: EneftyIcons.notification_outline,
@@ -59,6 +91,20 @@ class DoctorNotificationPreferencesScreen extends StatelessWidget {
                   .doc(doctorId)
                   .snapshots(),
               builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting &&
+                    !snapshot.hasData) {
+                  return const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2.2),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return DoctorEmptyState(
+                    icon: EneftyIcons.warning_2_outline,
+                    title: 'Could not load preferences',
+                    message: snapshot.error.toString(),
+                  );
+                }
+
                 final preferences = _parsePreferences(snapshot.data?.data());
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
@@ -78,65 +124,60 @@ class DoctorNotificationPreferencesScreen extends StatelessWidget {
                       padding: EdgeInsets.zero,
                       child: Column(
                         children: [
-                          _PreferenceSwitch(
-                            icon: EneftyIcons.calendar_2_outline,
-                            title: 'Appointments',
-                            subtitle: 'Bookings, cancellations, reschedules',
-                            value: preferences['appointments'] ?? true,
-                            onChanged: (v) => _save(context, 'appointments', v),
-                          ),
-                          _div(),
-                          _PreferenceSwitch(
-                            icon: EneftyIcons.message_2_outline,
-                            title: 'Messages',
-                            subtitle: 'Patient conversations',
-                            value: preferences['messages'] ?? true,
-                            onChanged: (v) => _save(context, 'messages', v),
-                          ),
-                          _div(),
-                          _PreferenceSwitch(
-                            icon: EneftyIcons.health_outline,
-                            title: 'Second opinions',
-                            subtitle: 'New requests and responses',
-                            value: preferences['secondOpinions'] ?? true,
-                            onChanged: (v) =>
-                                _save(context, 'secondOpinions', v),
-                          ),
-                          _div(),
-                          _PreferenceSwitch(
-                            icon: EneftyIcons.document_text_outline,
-                            title: 'Prescriptions',
-                            subtitle: 'Rx activity and follow-ups',
-                            value: preferences['prescriptions'] ?? true,
-                            onChanged: (v) =>
-                                _save(context, 'prescriptions', v),
-                          ),
-                          _div(),
-                          _PreferenceSwitch(
-                            icon: EneftyIcons.bucket_outline,
-                            title: 'Lab requests',
-                            subtitle: 'Orders and result updates',
-                            value: preferences['labRequests'] ?? true,
-                            onChanged: (v) => _save(context, 'labRequests', v),
-                          ),
-                          _div(),
-                          _PreferenceSwitch(
-                            icon: EneftyIcons.profile_2user_outline,
-                            title: 'Patient updates',
-                            subtitle: 'New patients and profile changes',
-                            value: preferences['patientUpdates'] ?? true,
-                            onChanged: (v) =>
-                                _save(context, 'patientUpdates', v),
-                          ),
-                          _div(),
-                          _PreferenceSwitch(
-                            icon: EneftyIcons.notification_outline,
-                            title: 'Platform alerts',
-                            subtitle: 'Product news and maintenance',
-                            value: preferences['platformAlerts'] ?? true,
-                            onChanged: (v) =>
-                                _save(context, 'platformAlerts', v),
-                          ),
+                          for (final entry in [
+                            (
+                              'appointments',
+                              EneftyIcons.calendar_2_outline,
+                              'Appointments',
+                              'Bookings, cancellations, reschedules',
+                            ),
+                            (
+                              'messages',
+                              EneftyIcons.message_2_outline,
+                              'Messages',
+                              'Patient conversations',
+                            ),
+                            (
+                              'secondOpinions',
+                              EneftyIcons.health_outline,
+                              'Second opinions',
+                              'New requests and responses',
+                            ),
+                            (
+                              'prescriptions',
+                              EneftyIcons.document_text_outline,
+                              'Prescriptions',
+                              'Rx activity and follow-ups',
+                            ),
+                            (
+                              'labRequests',
+                              EneftyIcons.bucket_outline,
+                              'Lab requests',
+                              'Orders and result updates',
+                            ),
+                            (
+                              'patientUpdates',
+                              EneftyIcons.profile_2user_outline,
+                              'Patient updates',
+                              'New patients and profile changes',
+                            ),
+                            (
+                              'platformAlerts',
+                              EneftyIcons.notification_outline,
+                              'Platform alerts',
+                              'Product news and maintenance',
+                            ),
+                          ]) ...[
+                            _PreferenceSwitch(
+                              icon: entry.$2,
+                              title: entry.$3,
+                              subtitle: entry.$4,
+                              value: preferences[entry.$1]!,
+                              onChanged: (v) =>
+                                  _save(context, entry.$1, v),
+                            ),
+                            if (entry.$1 != 'platformAlerts') _div(),
+                          ],
                         ],
                       ),
                     ),
@@ -149,13 +190,22 @@ class DoctorNotificationPreferencesScreen extends StatelessWidget {
 
   Widget _div() => Divider(height: 1, color: DoctorUi.border);
 
+  static bool? _asBool(dynamic value) {
+    if (value is bool) return value;
+    final text = value?.toString().toLowerCase().trim();
+    if (text == 'true' || text == '1' || text == 'yes') return true;
+    if (text == 'false' || text == '0' || text == 'no') return false;
+    return null;
+  }
+
   Map<String, bool> _parsePreferences(Map<String, dynamic>? data) {
-    final raw = data?['notificationPreferences'];
     final map = <String, bool>{..._defaults};
+    final raw = data?['notificationPreferences'];
     if (raw is Map) {
       for (final entry in raw.entries) {
-        if (entry.value is bool) {
-          map[entry.key.toString()] = entry.value as bool;
+        final parsed = _asBool(entry.value);
+        if (parsed != null) {
+          map[entry.key.toString()] = parsed;
         }
       }
     }

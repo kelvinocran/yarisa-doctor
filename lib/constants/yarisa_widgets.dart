@@ -105,6 +105,21 @@ String? validNetworkImageUrl(String? value) {
   return trimmed;
 }
 
+/// Prefer live patient profile fields (`photo` / `pic`) over stale mirrors.
+String? patientAvatarUrl(Map<String, dynamic>? data) {
+  if (data == null) return null;
+  final nested = data['patient'] is Map
+      ? Map<String, dynamic>.from(data['patient'] as Map)
+      : const <String, dynamic>{};
+  for (final key in ['photo', 'pic', 'patientImage', 'image', 'avatar']) {
+    final fromTop = validNetworkImageUrl(data[key]?.toString());
+    if (fromTop != null) return fromTop;
+    final fromNested = validNetworkImageUrl(nested[key]?.toString());
+    if (fromNested != null) return fromNested;
+  }
+  return null;
+}
+
 ImageProvider? safeCachedNetworkImageProvider(String? value) {
   final imageUrl = validNetworkImageUrl(value);
   return imageUrl == null ? null : CachedNetworkImageProvider(imageUrl);
