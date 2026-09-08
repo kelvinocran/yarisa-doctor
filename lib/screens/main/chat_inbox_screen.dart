@@ -7,6 +7,7 @@ import 'package:yarisa_doctor/components/chat/chat_widgets.dart';
 import 'package:yarisa_doctor/constants/yarisa_constants.dart';
 import 'package:yarisa_doctor/services/call_permissions.dart';
 import 'package:yarisa_doctor/services/call_session_service.dart';
+import 'package:yarisa_doctor/services/chat_unread_service.dart';
 import 'package:yarisa_doctor/services/jitsi_call_service.dart';
 import 'package:yarisa_doctor/services/presence_service.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
@@ -131,7 +132,6 @@ class _PatientChatTile extends StatelessWidget {
     required String patientName,
     required String patientImage,
   }) {
-    final me = FirebaseAuth.instance.currentUser?.uid;
     final peerId = chatSummary.id;
 
     // Navigate first — never await Firestore before push.
@@ -145,17 +145,8 @@ class _PatientChatTile extends StatelessWidget {
       duration: const Duration(milliseconds: 220),
     );
 
-    if (me != null) {
-      FirebaseFirestore.instance
-          .collection('Messages')
-          .doc(me)
-          .collection('messages')
-          .doc(peerId)
-          .set({
-        'unread': false,
-        'unreadCount': 0,
-      }, SetOptions(merge: true));
-    }
+    // Clear chat badge and related Alerts for this patient.
+    ChatUnreadService.markThreadRead(peerId);
   }
 
   @override
