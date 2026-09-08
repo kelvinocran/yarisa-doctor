@@ -8,6 +8,7 @@ import 'package:yarisa_doctor/constants/yarisa_constants.dart';
 import 'package:yarisa_doctor/screens/main/chat_inbox_screen.dart';
 import 'package:yarisa_doctor/services/deep_link_router.dart';
 import 'package:yarisa_doctor/services/presence_service.dart';
+import 'package:yarisa_doctor/widgets/active_call_banner.dart';
 import 'package:yarisa_doctor/widgets/nav_badge.dart';
 
 class BaseScreen extends ConsumerStatefulWidget {
@@ -99,7 +100,12 @@ class _BaseScreenState extends ConsumerState<BaseScreen> {
                       ),
                     )
                   : null,
-              body: YarisaConstants.basePages.elementAt(selectedIndex),
+              body: Stack(
+                children: [
+                  YarisaConstants.basePages.elementAt(selectedIndex),
+                  const ActiveCallBanner(),
+                ],
+              ),
               bottomNavigationBar: BottomBar(
                 index: selectedIndex,
                 onTap: (index) {

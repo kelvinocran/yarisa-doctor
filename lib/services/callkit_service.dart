@@ -157,18 +157,13 @@ class CallKitService {
         if (kDebugMode) debugPrint('setCallConnected: $e');
       }
 
-      // Let CallkitIncomingActivity finish before launching Jitsi, otherwise
-      // Jitsi's ongoing FGS can race and crash the process on Android 14+.
-      await Future<void>.delayed(const Duration(milliseconds: 450));
+      // Tear down CallKit UI/FGS before Jitsi so no ongoing notification races.
+      try {
+        await FlutterCallkitIncoming.endCall(callId);
+      } catch (_) {}
+      await Future<void>.delayed(const Duration(milliseconds: 300));
 
       await _joinFromPayload(data);
-
-      // Delay ending CallKit so Jitsi Activity can take over.
-      Future<void>.delayed(const Duration(seconds: 2), () async {
-        try {
-          await FlutterCallkitIncoming.endCall(callId);
-        } catch (_) {}
-      });
     } finally {
       _joining = false;
     }
@@ -234,14 +229,20 @@ class CallKitService {
         ...data,
         'callId': id,
       },
+      // Critical on Android 14+: ongoing "calling" FGS uses IMPORTANCE_LOW /
+      // CallStyle and throws CannotPostForegroundServiceNotificationException
+      // on Accept. Disable it — Jitsi owns the in-call UI.
+      callingNotification: const NotificationParams(
+        showNotification: false,
+      ),
       missedCallNotification: const NotificationParams(
         showNotification: true,
         isShowCallback: true,
         subtitle: 'Missed call',
         callbackText: 'Call back',
       ),
-      android: AndroidParams(
-        isCustomNotification: true,
+      android: const AndroidParams(
+        isCustomNotification: false,
         isCustomSmallExNotification: false,
         isShowLogo: false,
         isShowCallID: false,
@@ -494,6 +495,9 @@ class CallKitService {
       displayName: me?.displayName ?? 'Doctor',
       avatarUrl: me?.photoURL ?? '',
       email: me?.email ?? '',
+      peerId: peerId,
+      peerName: (data['peerName'] ?? data['senderName'] ?? data['patientName'])
+          ?.toString(),
     );
   }
 

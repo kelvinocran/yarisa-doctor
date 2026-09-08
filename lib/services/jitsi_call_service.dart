@@ -3,16 +3,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:omni_jitsi_meet/jitsi_meet.dart';
+import 'package:yarisa_doctor/services/active_call_controller.dart';
 import 'package:yarisa_doctor/services/call_session_service.dart';
 
 /// Voice/video via embedded Jitsi Meet SDK ([omni_jitsi_meet]).
-///
-/// **Production:** Contabo self-host (see [JITSI_SELF_HOST_DOCKER.md]).
 class YarisaJitsiCallService {
-  /// Contabo self-hosted Jitsi. Swap to https://meet.yourdomain.com when DNS is ready.
   static String serverURL = 'https://169.58.215.253.sslip.io';
-
-  /// Null for open self-host. Set only for JaaS / secured Prosody.
   static String? jwtToken;
 
   static String conversationRoom(String firstUserId, String secondUserId) {
@@ -25,6 +21,12 @@ class YarisaJitsiCallService {
 
   static String secondOpinionRoom(String requestId) => 'yarisa_so_$requestId';
 
+  static Future<void> close() async {
+    try {
+      await JitsiMeet.closeMeeting();
+    } catch (_) {}
+  }
+
   static Future<bool> join({
     required String room,
     required String type,
@@ -34,6 +36,8 @@ class YarisaJitsiCallService {
     required String email,
     String? token,
     bool trackSession = true,
+    String? peerId,
+    String? peerName,
   }) async {
     try {
       final features = <FeatureFlagEnum, Object>{
@@ -55,7 +59,6 @@ class YarisaJitsiCallService {
         FeatureFlagEnum.CLOSE_CAPTIONS_ENABLED: false,
         FeatureFlagEnum.MEETING_PASSWORD_ENABLED: false,
         FeatureFlagEnum.NOTIFICATIONS_ENABLED: false,
-        // Avoid ConnectionService / telecom integration races with CallKit.
         FeatureFlagEnum.CALL_INTEGRATION_ENABLED: false,
         FeatureFlagEnum.ANDROID_SCREENSHARING_ENABLED: false,
         FeatureFlagEnum.PIP_ENABLED: true,
@@ -80,6 +83,23 @@ class YarisaJitsiCallService {
 
       final effectiveToken = token ?? jwtToken;
       final myId = FirebaseAuth.instance.currentUser?.uid;
+      final active = ActiveCallController.instance;
+
+      if (peerId != null && peerId.isNotEmpty) {
+        active.bindOutgoing(
+          room: room,
+          callType: type,
+          peerId: peerId,
+          peerName: peerName,
+        );
+      } else if (active.room != room) {
+        active.bindOutgoing(
+          room: room,
+          callType: type,
+          peerId: active.peerId ?? '',
+          peerName: active.peerName,
+        );
+      }
 
       final options = JitsiMeetingOptions(
         room: room,
@@ -105,6 +125,7 @@ class YarisaJitsiCallService {
 
       final listener = JitsiMeetingListener(
         onConferenceJoined: (_) {
+          active.onJoined();
           if (!trackSession) return;
           CallSessionService.markAnswered();
           if (myId != null) {
@@ -112,15 +133,20 @@ class YarisaJitsiCallService {
           }
         },
         onParticipantJoined: (email, name, role, participantId) {
+          active.onRemoteJoined();
           if (!trackSession) return;
-          // Remote participant joined the conference.
           CallSessionService.markAnswered();
         },
+        onParticipantLeft: (participantId) {
+          active.onRemoteLeft();
+        },
         onConferenceTerminated: (_, __) {
+          active.onTerminated(userEnded: false);
           if (!trackSession) return;
           CallSessionService.end(status: 'ended');
         },
         onClosed: () {
+          active.onTerminated(userEnded: false);
           if (!trackSession) return;
           CallSessionService.end(status: 'ended');
         },
