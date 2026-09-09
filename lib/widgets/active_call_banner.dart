@@ -119,8 +119,9 @@ class _ActiveCallBannerState extends State<ActiveCallBanner> {
   }
 }
 
-/// Hosts the call chip on the app Overlay instead of wrapping the navigator
-/// in a Stack (which crashes when pushing routes / dismissing sheets).
+/// Provides its own [Overlay] so the call chip can float without
+/// OverlayPortal (MaterialApp.builder has no Overlay ancestor) and
+/// without a Stack around the navigator (that crashes on route changes).
 class ActiveCallOverlay extends StatefulWidget {
   const ActiveCallOverlay({super.key, required this.child});
 
@@ -131,27 +132,68 @@ class ActiveCallOverlay extends StatefulWidget {
 }
 
 class _ActiveCallOverlayState extends State<ActiveCallOverlay> {
-  final _portal = OverlayPortalController();
+  late final OverlayEntry _root;
+
+  @override
+  void initState() {
+    super.initState();
+    _root = OverlayEntry(
+      opaque: true,
+      maintainState: true,
+      builder: (context) => _CallBannerHost(child: widget.child),
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant ActiveCallOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.child != widget.child) {
+      _root.markNeedsBuild();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Overlay(initialEntries: [_root]);
+  }
+}
+
+class _CallBannerHost extends StatefulWidget {
+  const _CallBannerHost({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_CallBannerHost> createState() => _CallBannerHostState();
+}
+
+class _CallBannerHostState extends State<_CallBannerHost> {
+  OverlayEntry? _banner;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _portal.show();
+      if (!mounted || _banner != null) return;
+      final overlay = Overlay.maybeOf(context);
+      if (overlay == null) return;
+      _banner = OverlayEntry(
+        builder: (context) => const Align(
+          alignment: Alignment.topCenter,
+          child: ActiveCallBanner(),
+        ),
+      );
+      overlay.insert(_banner!);
     });
   }
 
   @override
-  Widget build(BuildContext context) {
-    return OverlayPortal(
-      controller: _portal,
-      overlayChildBuilder: (context) {
-        return const Align(
-          alignment: Alignment.topCenter,
-          child: ActiveCallBanner(),
-        );
-      },
-      child: widget.child,
-    );
+  void dispose() {
+    _banner?.remove();
+    _banner = null;
+    super.dispose();
   }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
