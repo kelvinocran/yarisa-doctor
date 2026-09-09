@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:yarisa_doctor/screens/main/appointment_screen.dart';
 import 'package:yarisa_doctor/screens/main/chat_inbox_screen.dart';
+import 'package:yarisa_doctor/screens/main/lab_requests_screen.dart';
 import 'package:yarisa_doctor/screens/main/patient_detail.dart';
 import 'package:yarisa_doctor/screens/main/patients_screen.dart';
+import 'package:yarisa_doctor/screens/main/prescriptions_screen.dart';
 import 'package:yarisa_doctor/screens/main/second_opinions_screen.dart';
 import 'package:yarisa_doctor/models/personal_patients_model.dart';
 import 'package:yarisa_doctor/services/chat_unread_service.dart';
@@ -24,6 +26,15 @@ class DoctorNotificationsScreen extends StatefulWidget {
 }
 
 class _DoctorNotificationsScreenState extends State<DoctorNotificationsScreen> {
+  final _search = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
   Future<void> _markRead(String id, {String? peerId}) async {
     // Also clear matching chat-thread unread so nav badges stay in sync.
     await ChatUnreadService.markThreadReadFromNotification(
@@ -137,6 +148,54 @@ class _DoctorNotificationsScreenState extends State<DoctorNotificationsScreen> {
           );
         }
         break;
+      case _FeedKind.prescription:
+        nav.push(
+          MaterialPageRoute(
+            builder: (_) => PrescriptionsScreen(
+              patient: (item.patientId ?? '').isEmpty
+                  ? null
+                  : PersonalPatientsModel(
+                      patientId: item.patientId,
+                      patientName: item.patientName ?? 'Patient',
+                      patientImage: item.imageUrl ?? '',
+                      status: 'active',
+                    ),
+            ),
+          ),
+        );
+        break;
+      case _FeedKind.labRequest:
+        nav.push(
+          MaterialPageRoute(
+            builder: (_) => LabRequestsScreen(
+              patient: (item.patientId ?? '').isEmpty
+                  ? null
+                  : PersonalPatientsModel(
+                      patientId: item.patientId,
+                      patientName: item.patientName ?? 'Patient',
+                      patientImage: item.imageUrl ?? '',
+                      status: 'active',
+                    ),
+            ),
+          ),
+        );
+        break;
+      case _FeedKind.clinicalNote:
+        if ((item.patientId ?? '').isNotEmpty) {
+          nav.push(
+            MaterialPageRoute(
+              builder: (_) => PatientDetailScreen(
+                patient: PersonalPatientsModel(
+                  patientId: item.patientId,
+                  patientName: item.patientName ?? 'Patient',
+                  patientImage: item.imageUrl ?? '',
+                  status: 'active',
+                ),
+              ),
+            ),
+          );
+        }
+        break;
       case _FeedKind.general:
         break;
     }
@@ -148,7 +207,7 @@ class _DoctorNotificationsScreenState extends State<DoctorNotificationsScreen> {
 
     return DoctorScaffold(
       title: 'Alerts',
-      subtitle: 'What needs your attention',
+      subtitle: 'Search and open what needs your attention',
       showBack: false,
       actions: doctorId == null
           ? null
@@ -165,9 +224,25 @@ class _DoctorNotificationsScreenState extends State<DoctorNotificationsScreen> {
               title: 'Sign in required',
               message: 'Sign in again to view your alerts.',
             )
-          : _DoctorFeedBody(
-              doctorId: doctorId,
-              onOpen: _openItem,
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                  child: DoctorSearchField(
+                    controller: _search,
+                    hint: 'Search alerts…',
+                    onChanged: (value) =>
+                        setState(() => _query = value.trim()),
+                  ),
+                ),
+                Expanded(
+                  child: _DoctorFeedBody(
+                    doctorId: doctorId,
+                    query: _query,
+                    onOpen: _openItem,
+                  ),
+                ),
+              ],
             ),
     );
   }
@@ -176,10 +251,12 @@ class _DoctorNotificationsScreenState extends State<DoctorNotificationsScreen> {
 class _DoctorFeedBody extends StatelessWidget {
   const _DoctorFeedBody({
     required this.doctorId,
+    required this.query,
     required this.onOpen,
   });
 
   final String doctorId;
+  final String query;
   final ValueChanged<_FeedItem> onOpen;
 
   @override
@@ -274,18 +351,25 @@ class _DoctorFeedBody extends StatelessWidget {
                       }
                     }
 
-                    final feed = byKey.values.toList()
+                    final q = query.toLowerCase();
+                    final feed = byKey.values.where((item) {
+                      if (q.isEmpty) return true;
+                      return '${item.title} ${item.body} ${item.patientName ?? ''}'
+                          .toLowerCase()
+                          .contains(q);
+                    }).toList()
                       ..sort((a, b) => b.at.compareTo(a.at));
 
                     // Cap list for performance
                     final visible = feed.take(80).toList();
 
                     if (visible.isEmpty) {
-                      return const DoctorEmptyState(
+                      return DoctorEmptyState(
                         icon: EneftyIcons.notification_outline,
-                        title: 'No alerts yet',
-                        message:
-                            'New appointments, patients, messages, and second opinions will show up here.',
+                        title: query.isEmpty ? 'No alerts yet' : 'No matches',
+                        message: query.isEmpty
+                            ? 'New appointments, patients, messages, and second opinions will show up here.'
+                            : 'No alerts match "$query".',
                       );
                     }
 
@@ -339,7 +423,17 @@ class _DoctorFeedBody extends StatelessWidget {
   }
 }
 
-enum _FeedKind { appointment, patient, message, call, secondOpinion, general }
+enum _FeedKind {
+  appointment,
+  patient,
+  message,
+  call,
+  secondOpinion,
+  prescription,
+  labRequest,
+  clinicalNote,
+  general,
+}
 
 class _FeedItem {
   const _FeedItem({
@@ -521,6 +615,18 @@ class _FeedItem {
     if (type.contains('second') || type.contains('opinion')) {
       return _FeedKind.secondOpinion;
     }
+    if (type.contains('prescription')) {
+      return _FeedKind.prescription;
+    }
+    if (type.contains('lab_request') ||
+        (type.contains('lab') && !type.contains('report'))) {
+      return _FeedKind.labRequest;
+    }
+    if (type.contains('clinical_note') ||
+        type.contains('recommendation') ||
+        type.contains('care_note')) {
+      return _FeedKind.clinicalNote;
+    }
     if (type.contains('patient')) {
       return _FeedKind.patient;
     }
@@ -553,6 +659,9 @@ class _NotificationTile extends StatelessWidget {
       _FeedKind.message => EneftyIcons.message_2_outline,
       _FeedKind.call => Icons.call_rounded,
       _FeedKind.secondOpinion => EneftyIcons.document_text_outline,
+      _FeedKind.prescription => Icons.medication_outlined,
+      _FeedKind.labRequest => Icons.science_outlined,
+      _FeedKind.clinicalNote => EneftyIcons.note_2_outline,
       _FeedKind.general => EneftyIcons.notification_outline,
     };
     final accent = switch (item.kind) {
@@ -561,6 +670,9 @@ class _NotificationTile extends StatelessWidget {
       _FeedKind.message => Colors.teal,
       _FeedKind.call => Colors.green,
       _FeedKind.secondOpinion => Colors.orange,
+      _FeedKind.prescription => Colors.teal,
+      _FeedKind.labRequest => Colors.deepOrange,
+      _FeedKind.clinicalNote => Colors.indigo,
       _FeedKind.general => DoctorUi.primary,
     };
 

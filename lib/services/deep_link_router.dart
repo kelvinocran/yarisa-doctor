@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:yarisa_doctor/models/personal_patients_model.dart';
 import 'package:yarisa_doctor/screens/main/appointment_screen.dart';
 import 'package:yarisa_doctor/screens/main/chat_inbox_screen.dart';
+import 'package:yarisa_doctor/screens/main/lab_requests_screen.dart';
+import 'package:yarisa_doctor/screens/main/patient_detail.dart';
+import 'package:yarisa_doctor/screens/main/prescriptions_screen.dart';
 import 'package:yarisa_doctor/screens/main/second_opinions_screen.dart';
 import 'package:yarisa_doctor/services/callkit_service.dart';
 
@@ -146,6 +150,67 @@ class DeepLinkRouter {
       }
       nav.push(
         MaterialPageRoute(builder: (_) => const DoctorChatInboxScreen()),
+      );
+      return;
+    }
+
+    if (type.contains('clinical_note') ||
+        type.contains('recommendation') ||
+        type.contains('care_note') ||
+        data['clinicalNoteId'] != null) {
+      if (patientId.isNotEmpty) {
+        nav.push(
+          MaterialPageRoute(
+            builder: (_) => PatientDetailScreen(
+              patient: PersonalPatientsModel(
+                patientId: patientId,
+                patientName: patientName,
+                patientImage: patientImage,
+                status: 'active',
+              ),
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    if (type.contains('prescription') ||
+        data['prescriptionId'] != null ||
+        data['sourceCollection']?.toString() == 'Prescriptions') {
+      nav.push(
+        MaterialPageRoute(
+          builder: (_) => PrescriptionsScreen(
+            patient: patientId.isEmpty
+                ? null
+                : PersonalPatientsModel(
+                    patientId: patientId,
+                    patientName: patientName,
+                    patientImage: patientImage,
+                    status: 'active',
+                  ),
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (type.contains('lab_request') ||
+        data['labRequestId'] != null ||
+        data['sourceCollection']?.toString() == 'LabRequests') {
+      nav.push(
+        MaterialPageRoute(
+          builder: (_) => LabRequestsScreen(
+            patient: patientId.isEmpty
+                ? null
+                : PersonalPatientsModel(
+                    patientId: patientId,
+                    patientName: patientName,
+                    patientImage: patientImage,
+                    status: 'active',
+                  ),
+          ),
+        ),
       );
       return;
     }
