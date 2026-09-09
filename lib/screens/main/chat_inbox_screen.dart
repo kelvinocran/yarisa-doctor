@@ -11,6 +11,7 @@ import 'package:yarisa_doctor/services/chat_unread_service.dart';
 import 'package:yarisa_doctor/services/jitsi_call_service.dart';
 import 'package:yarisa_doctor/services/presence_service.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
+import 'package:yarisa_doctor/widgets/app_snack.dart';
 import 'package:yarisa_doctor/widgets/skeleton_loader.dart';
 
 class DoctorChatInboxScreen extends StatefulWidget {
@@ -220,12 +221,16 @@ class DoctorMessageThreadScreen extends StatefulWidget {
     required this.patientName,
     required this.patientImage,
     this.roomId,
+    this.contextLabel,
+    this.secondOpinionId,
   });
 
   final String patientId;
   final String patientName;
   final String patientImage;
   final String? roomId;
+  final String? contextLabel;
+  final String? secondOpinionId;
 
   @override
   State<DoctorMessageThreadScreen> createState() =>
@@ -356,6 +361,36 @@ class _DoctorMessageThreadScreenState extends State<DoctorMessageThreadScreen> {
       ),
       body: Column(
         children: [
+          if ((widget.contextLabel ?? '').isNotEmpty)
+            Material(
+              color: DoctorUi.primary.withValues(alpha: .08),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      EneftyIcons.document_text_outline,
+                      size: 16,
+                      color: DoctorUi.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        widget.contextLabel!,
+                        style: TextStyle(
+                          color: DoctorUi.primary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           Expanded(
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: FirebaseFirestore.instance
@@ -423,14 +458,16 @@ class _DoctorMessageThreadScreenState extends State<DoctorMessageThreadScreen> {
         patientImage: widget.patientImage,
         message: text,
         type: 'text',
+        extra: {
+          if ((widget.secondOpinionId ?? '').isNotEmpty)
+            'secondOpinionId': widget.secondOpinionId,
+          if ((widget.contextLabel ?? '').isNotEmpty)
+            'contextType': 'second_opinion',
+        },
       );
       _messageController.clear();
     } catch (_) {
-      Get.snackbar(
-        'Message failed',
-        'Unable to send this message.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      if (mounted) AppSnack.error(context, 'Unable to send this message.');
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -457,7 +494,15 @@ class _DoctorMessageThreadScreenState extends State<DoctorMessageThreadScreen> {
       message: '',
       type: 'call',
       room: room,
-      extra: {'start_time': Timestamp.now(), 'type': type, 'room': room},
+      extra: {
+        'start_time': Timestamp.now(),
+        'type': type,
+        'room': room,
+        if ((widget.secondOpinionId ?? '').isNotEmpty)
+          'secondOpinionId': widget.secondOpinionId,
+        if ((widget.contextLabel ?? '').isNotEmpty)
+          'contextType': 'second_opinion',
+      },
     );
 
     await CallSessionService.start(

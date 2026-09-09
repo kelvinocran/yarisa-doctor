@@ -8,6 +8,7 @@ import 'package:yarisa_doctor/models/personal_patients_model.dart';
 import 'package:yarisa_doctor/screens/add_prescription.dart';
 import 'package:yarisa_doctor/services/care_team_service.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
+import 'package:yarisa_doctor/widgets/app_snack.dart';
 
 class PrescriptionsScreen extends ConsumerStatefulWidget {
   const PrescriptionsScreen({super.key, this.patient});
@@ -42,11 +43,7 @@ class _PrescriptionsScreenState extends ConsumerState<PrescriptionsScreen> {
     final options = ref.read(apimethods).mypatients;
     if (!mounted) return null;
     if (options.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No patients yet. Accept an appointment first.'),
-        ),
-      );
+      AppSnack.info(context, 'No patients yet. Accept an appointment first.');
       return null;
     }
     return showModalBottomSheet<PersonalPatientsModel>(
@@ -142,14 +139,10 @@ class _PrescriptionsScreenState extends ConsumerState<PrescriptionsScreen> {
         patientImage: patient.patientImage ?? '',
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Prescription saved')),
-      );
+      AppSnack.success(context, 'Prescription saved');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save prescription: $e')),
-      );
+      AppSnack.error(context, 'Failed to save prescription.');
     } finally {
       if (mounted) setState(() => _saving = false);
     }
