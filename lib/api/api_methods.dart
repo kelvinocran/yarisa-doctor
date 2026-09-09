@@ -1209,6 +1209,15 @@ class ApiMethods extends ChangeNotifier {
         print(data);
       }
       mypatients = data;
+      try {
+        await db.collection('Doctors').doc(doctorId).set({
+          'patientCount': data.length,
+          'patientsCount': data.length,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      } catch (e) {
+        Logger().e('Unable to denormalize patientCount: $e');
+      }
       authenticating = false;
       notifyListeners();
       onSuccess?.call(data);
