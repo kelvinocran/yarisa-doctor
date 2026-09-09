@@ -39,11 +39,13 @@ class CareTeamService {
   static bool isPersonalDoctor(
     Map<String, dynamic>? link, {
     Map<String, dynamic>? patient,
+    Map<String, dynamic>? user,
     String? doctorId,
   }) {
     if ((link?['source'] ?? '').toString() == 'personal_doctor') return true;
-    if (doctorId != null) return patientListsDoctor(patient, doctorId);
-    return false;
+    if (doctorId == null) return false;
+    return patientListsDoctor(patient, doctorId) ||
+        patientListsDoctor(user, doctorId);
   }
 
   static Future<void> ensureTreatingLink({
@@ -71,6 +73,20 @@ class CareTeamService {
         if (patientListsDoctor(patient.data(), doctorId)) {
           source = 'personal_doctor';
         }
+      }
+      if (source == 'personal_doctor') {
+        try {
+          await FirebaseFirestore.instance
+              .collection('Patients')
+              .doc(patientId)
+              .set(
+            {
+              'personalDoctorIds': FieldValue.arrayUnion([doctorId]),
+              'updatedAt': FieldValue.serverTimestamp(),
+            },
+            SetOptions(merge: true),
+          );
+        } catch (_) {}
       }
       await ref.set(
         {

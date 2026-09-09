@@ -133,23 +133,41 @@ class PatientHealthRecord extends StatelessWidget {
             isPersonalDoctor,
           ),
         ),
-        if (isPersonalDoctor) ...[
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            height: 44,
-            child: FilledButton.icon(
-              onPressed: () => showClinicalNoteComposer(
-                context,
-                patientId: patientId,
-                patientName: patientName,
-              ),
-              icon: const Icon(Icons.add_rounded, size: 18),
-              label: const Text('Add care note'),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          height: 44,
+          child: FilledButton.icon(
+            onPressed: isPersonalDoctor
+                ? () => showClinicalNoteComposer(
+                      context,
+                      patientId: patientId,
+                      patientName: patientName,
+                    )
+                : () => AppSnack.info(
+                      context,
+                      'Ask the patient to add you under Personal Doctors. They can remove and add you again if the link is missing.',
+                    ),
+            icon: const Icon(Icons.add_rounded, size: 18),
+            label: Text(
+              isPersonalDoctor ? 'Add care note' : 'Add care note',
             ),
           ),
+        ),
+        if (!isPersonalDoctor)
+          Padding(
+            padding: const EdgeInsets.only(top: 6, bottom: 8),
+            child: Text(
+              'Care notes unlock after this patient adds you as a personal doctor.',
+              style: TextStyle(
+                color: DoctorUi.muted,
+                fontSize: 12,
+                height: 1.35,
+              ),
+            ),
+          )
+        else
           const SizedBox(height: 8),
-        ],
         _CareNotesList(
           patientId: patientId,
           canAdd: isPersonalDoctor,

@@ -182,11 +182,15 @@ class ChatBubble extends StatelessWidget {
     required this.text,
     required this.isMine,
     this.timestamp,
+    this.secondOpinionId,
+    this.onOpenSecondOpinion,
   });
 
   final String text;
   final bool isMine;
   final DateTime? timestamp;
+  final String? secondOpinionId;
+  final VoidCallback? onOpenSecondOpinion;
 
   @override
   Widget build(BuildContext context) {
@@ -217,6 +221,31 @@ class ChatBubble extends StatelessWidget {
             crossAxisAlignment:
                 isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
+              if ((secondOpinionId ?? '').isNotEmpty) ...[
+                GestureDetector(
+                  onTap: onOpenSecondOpinion,
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: (isMine ? Colors.white : DoctorUi.primary)
+                          .withValues(alpha: isMine ? .18 : .1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Second opinion · View request',
+                      style: TextStyle(
+                        color: isMine ? Colors.white : DoctorUi.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
               Text(
                 text,
                 style: theme.bodyMedium?.copyWith(

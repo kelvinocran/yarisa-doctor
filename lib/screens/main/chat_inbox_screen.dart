@@ -10,6 +10,7 @@ import 'package:yarisa_doctor/services/call_session_service.dart';
 import 'package:yarisa_doctor/services/chat_unread_service.dart';
 import 'package:yarisa_doctor/services/jitsi_call_service.dart';
 import 'package:yarisa_doctor/services/presence_service.dart';
+import 'package:yarisa_doctor/screens/main/second_opinion_detail_screen.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
 import 'package:yarisa_doctor/widgets/app_snack.dart';
 import 'package:yarisa_doctor/widgets/skeleton_loader.dart';
@@ -426,10 +427,38 @@ class _DoctorMessageThreadScreenState extends State<DoctorMessageThreadScreen> {
                         : (data['message']?.toString() ?? '');
                     final ts = data['timestamp'];
                     final time = ts is Timestamp ? ts.toDate() : null;
+                    final extra = data['extra'];
+                    final extraMap = extra is Map
+                        ? Map<String, dynamic>.from(extra)
+                        : <String, dynamic>{};
+                    final soId = (extraMap['secondOpinionId'] ??
+                            extraMap['second_opinion_id'] ??
+                            '')
+                        .toString();
+                    final room = (extraMap['room'] ?? data['room'] ?? '')
+                        .toString();
+                    final linkedId = soId.isNotEmpty
+                        ? soId
+                        : room.startsWith('yarisa_so_')
+                            ? room.substring('yarisa_so_'.length)
+                            : '';
                     return ChatBubble(
                       text: type == 'call' ? '📞 $text' : text,
                       isMine: isMe,
                       timestamp: time,
+                      secondOpinionId:
+                          linkedId.isEmpty ? null : linkedId,
+                      onOpenSecondOpinion: linkedId.isEmpty
+                          ? null
+                          : () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      SecondOpinionDetailScreen(
+                                    requestId: linkedId,
+                                  ),
+                                ),
+                              ),
                     );
                   },
                 );
