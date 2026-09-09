@@ -17,6 +17,35 @@ class CareTeamService {
         .doc(patientId);
   }
 
+  static bool patientListsDoctor(Map<String, dynamic>? patient, String doctorId) {
+    if (patient == null || doctorId.isEmpty) return false;
+    final ids = patient['personalDoctorIds'];
+    if (ids is List &&
+        ids.map((item) => item.toString()).contains(doctorId)) {
+      return true;
+    }
+    final listed = patient['personal_doctors'];
+    if (listed is List) {
+      for (final entry in listed) {
+        if (entry is! Map) continue;
+        final id = (entry['doctorid'] ?? entry['doctorId'] ?? entry['id'])
+            ?.toString();
+        if (id == doctorId) return true;
+      }
+    }
+    return false;
+  }
+
+  static bool isPersonalDoctor(
+    Map<String, dynamic>? link, {
+    Map<String, dynamic>? patient,
+    String? doctorId,
+  }) {
+    if ((link?['source'] ?? '').toString() == 'personal_doctor') return true;
+    if (doctorId != null) return patientListsDoctor(patient, doctorId);
+    return false;
+  }
+
   static Future<void> ensureTreatingLink({
     required String patientId,
     required String patientName,
@@ -29,25 +58,32 @@ class CareTeamService {
     try {
       final existing = await ref.get();
       final currentSource = existing.data()?['source']?.toString();
+      var source = currentSource == 'personal_doctor'
+          ? 'personal_doctor'
+          : ((currentSource != null && currentSource.isNotEmpty)
+              ? currentSource
+              : 'treating');
+      if (source != 'personal_doctor') {
+        final patient = await FirebaseFirestore.instance
+            .collection('Patients')
+            .doc(patientId)
+            .get();
+        if (patientListsDoctor(patient.data(), doctorId)) {
+          source = 'personal_doctor';
+        }
+      }
       await ref.set(
         {
           'patientId': patientId,
           'patientName': patientName,
           'patientImage': patientImage,
           'status': 'active',
+          'source': source,
           'updatedAt': FieldValue.serverTimestamp(),
-          if (currentSource != 'personal_doctor')
-            'source': (currentSource != null && currentSource.isNotEmpty)
-                ? currentSource
-                : 'treating',
           if (!existing.exists) 'createdAt': FieldValue.serverTimestamp(),
         },
         SetOptions(merge: true),
       );
     } catch (_) {}
-  }
-
-  static bool isPersonalDoctor(Map<String, dynamic>? link) {
-    return (link?['source'] ?? '').toString() == 'personal_doctor';
   }
 }

@@ -11,6 +11,7 @@ import '../../services/call_permissions.dart';
 import '../../services/call_session_service.dart';
 import '../../services/jitsi_call_service.dart';
 import '../../ui/doctor_ui.dart';
+import '../../widgets/app_snack.dart';
 import '../../widgets/in_app_media_viewers.dart';
 import 'chat_inbox_screen.dart';
 
@@ -70,7 +71,7 @@ class SecondOpinionDetailScreen extends StatelessWidget {
   }
 }
 
-class _SecondOpinionDetailBody extends StatelessWidget {
+class _SecondOpinionDetailBody extends StatefulWidget {
   const _SecondOpinionDetailBody({
     required this.requestId,
     required this.data,
@@ -78,6 +79,39 @@ class _SecondOpinionDetailBody extends StatelessWidget {
 
   final String requestId;
   final Map<String, dynamic> data;
+
+  @override
+  State<_SecondOpinionDetailBody> createState() =>
+      _SecondOpinionDetailBodyState();
+}
+
+class _SecondOpinionDetailBodyState extends State<_SecondOpinionDetailBody> {
+  String get requestId => widget.requestId;
+  Map<String, dynamic> get data => widget.data;
+  late String _status;
+
+  @override
+  void initState() {
+    super.initState();
+    _status = _normalizedStatus(data['status']);
+  }
+
+  @override
+  void didUpdateWidget(covariant _SecondOpinionDetailBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final next = _normalizedStatus(widget.data['status']);
+    if (next != _status) {
+      _status = next;
+    }
+  }
+
+  String _normalizedStatus(dynamic value) {
+    return (value ?? 'pending')
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replaceAll(' ', '_');
+  }
 
   String _fmt(dynamic ts) {
     if (ts is Timestamp) {
@@ -111,9 +145,7 @@ class _SecondOpinionDetailBody extends StatelessWidget {
     final url = map['url']?.toString() ?? '';
     final name = map['name']?.toString() ?? 'Attachment';
     if (url.isEmpty || url.startsWith('Error')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This file is not available yet.')),
-      );
+      AppSnack.info(context, 'This file is not available yet.');
       return;
     }
     if (_isImage(map)) {
@@ -165,113 +197,67 @@ class _SecondOpinionDetailBody extends StatelessWidget {
       updateData,
       SetOptions(merge: true),
     );
-    await batch.commit();
+    try {
+      await batch.commit();
+    } catch (e) {
+      if (context.mounted) {
+        AppSnack.error(context, 'Could not update this request.');
+      }
+      rethrow;
+    }
+
+    if (updates['status'] != null) {
+      final next = _normalizedStatus(updates['status']);
+      if (mounted && next != _status) {
+        setState(() => _status = next);
+      }
+    }
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Second opinion updated')),
+      final status = updates['status']?.toString();
+      AppSnack.success(
+        context,
+        status == 'in_review'
+            ? 'Marked in review. The patient will be notified.'
+            : status == 'completed'
+                ? 'Response sent. The patient will be notified.'
+                : 'Second opinion updated.',
       );
     }
   }
 
   Future<void> _showResponseSheet(BuildContext context) async {
-    final responseController = TextEditingController(
-      text: data['doctorResponse']?.toString() ?? '',
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: DoctorUi.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => _ResponseSheet(
+        initialText: data['doctorResponse']?.toString() ?? '',
+        onSave: (response) async {
+          await _updateRequest(context, {
+            'doctorResponse': response,
+            'status': 'completed',
+            'completedAt': FieldValue.serverTimestamp(),
+          });
+          await writeDoctorChatMessage(
+            patientId: data['patientId']?.toString() ?? '',
+            patientName: data['patientName']?.toString() ?? 'Patient',
+            patientImage: data['patientImage']?.toString() ?? '',
+            message: response,
+            type: 'text',
+            extra: {
+              'secondOpinionId': requestId,
+              'contextType': 'second_opinion',
+            },
+          );
+        },
+      ),
     );
-    var saving = false;
-
-    try {
-      await showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: DoctorUi.surface,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        builder: (sheetContext) => StatefulBuilder(
-          builder: (sheetContext, setSheetState) {
-            Future<void> saveResponse() async {
-              final response = responseController.text.trim();
-              if (response.isEmpty) return;
-              setSheetState(() => saving = true);
-              await _updateRequest(context, {
-                'doctorResponse': response,
-                'status': 'completed',
-                'completedAt': FieldValue.serverTimestamp(),
-              });
-              await writeDoctorChatMessage(
-                patientId: data['patientId']?.toString() ?? '',
-                patientName: data['patientName']?.toString() ?? 'Patient',
-                patientImage: data['patientImage']?.toString() ?? '',
-                message: response,
-                type: 'text',
-              );
-              if (sheetContext.mounted) Navigator.pop(sheetContext);
-            }
-
-            return Padding(
-              padding: EdgeInsets.fromLTRB(
-                20,
-                16,
-                20,
-                MediaQuery.of(sheetContext).viewInsets.bottom + 20,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Your response',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'The patient will see this on their request and in chat.',
-                    style: TextStyle(color: DoctorUi.muted, fontSize: 12.5),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: responseController,
-                    minLines: 5,
-                    maxLines: 10,
-                    textCapitalization: TextCapitalization.sentences,
-                    decoration: InputDecoration(
-                      hintText: 'Write your clinical opinion and next steps',
-                      filled: true,
-                      fillColor: DoctorUi.fieldBg,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: DoctorUi.border),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: FilledButton(
-                      onPressed: saving ? null : saveResponse,
-                      child: saving
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('Save response'),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      );
-    } finally {
-      responseController.dispose();
-    }
   }
 
   Future<void> _startCall(BuildContext context, String type) async {
@@ -295,7 +281,13 @@ class _SecondOpinionDetailBody extends StatelessWidget {
       message: '',
       type: 'call',
       room: room,
-      extra: {'start_time': Timestamp.now(), 'type': type, 'room': room},
+      extra: {
+        'start_time': Timestamp.now(),
+        'type': type,
+        'room': room,
+        'secondOpinionId': requestId,
+        'contextType': 'second_opinion',
+      },
     );
 
     await CallSessionService.start(
@@ -322,7 +314,7 @@ class _SecondOpinionDetailBody extends StatelessWidget {
     final patientId = data['patientId']?.toString() ?? '';
     final patientName = data['patientName']?.toString() ?? 'Patient';
     final patientImage = data['patientImage']?.toString() ?? '';
-    final status = data['status']?.toString() ?? 'pending';
+    final status = _status;
     final concern = data['concern']?.toString() ?? '';
     final diagnosis = data['currentDiagnosis']?.toString() ?? '';
     final medication = data['currentMedication']?.toString() ?? '';
@@ -333,6 +325,9 @@ class _SecondOpinionDetailBody extends StatelessWidget {
     final created = _fmt(data['createdAt']);
     final isUrgent = urgency == 'urgent';
     final isOpen = status != 'completed' && status != 'declined';
+    final inReview = status == 'in_review' ||
+        status == 'in-progress' ||
+        status == 'in_progress';
 
     return Column(
       children: [
@@ -362,12 +357,16 @@ class _SecondOpinionDetailBody extends StatelessWidget {
               else
                 _DetailCard(
                   icon: EneftyIcons.timer_outline,
-                  title: 'Waiting for your review',
+                  title: inReview
+                      ? 'In review'
+                      : 'Waiting for your review',
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Write a clinical opinion for this patient. They will see it on their request and in chat.',
+                        inReview
+                            ? 'The patient has been notified that you are reviewing this request. Add your opinion when you are ready.'
+                            : 'Write a clinical opinion for this patient. They will see it on their request and in chat.',
                         style: theme.bodyMedium?.copyWith(
                           height: 1.4,
                           color: DoctorUi.muted,
@@ -386,16 +385,20 @@ class _SecondOpinionDetailBody extends StatelessWidget {
                           label: const Text('Respond'),
                         ),
                       ),
-                      if (isOpen && status != 'in_review') ...[
+                      if (isOpen && !inReview) ...[
                         const SizedBox(height: 8),
                         SizedBox(
                           width: double.infinity,
                           height: 44,
                           child: OutlinedButton.icon(
-                            onPressed: () => _updateRequest(
-                              context,
-                              {'status': 'in_review'},
-                            ),
+                            onPressed: () async {
+                              try {
+                                await _updateRequest(
+                                  context,
+                                  {'status': 'in_review'},
+                                );
+                              } catch (_) {}
+                            },
                             icon: const Icon(
                               EneftyIcons.tick_circle_outline,
                               size: 16,
@@ -481,7 +484,11 @@ class _SecondOpinionDetailBody extends StatelessWidget {
                             patientId: patientId,
                             patientName: patientName,
                             patientImage: patientImage,
-                            roomId: requestId,
+                            roomId: YarisaJitsiCallService.secondOpinionRoom(
+                              requestId,
+                            ),
+                            contextLabel: 'Second opinion',
+                            secondOpinionId: requestId,
                           ),
                         ),
                       ),
@@ -508,6 +515,112 @@ class _SecondOpinionDetailBody extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _ResponseSheet extends StatefulWidget {
+  const _ResponseSheet({
+    required this.initialText,
+    required this.onSave,
+  });
+
+  final String initialText;
+  final Future<void> Function(String response) onSave;
+
+  @override
+  State<_ResponseSheet> createState() => _ResponseSheetState();
+}
+
+class _ResponseSheetState extends State<_ResponseSheet> {
+  late final TextEditingController _controller;
+  var _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialText);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final response = _controller.text.trim();
+    if (response.isEmpty) {
+      AppSnack.info(context, 'Write your clinical opinion first.');
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await widget.onSave(response);
+      if (mounted) Navigator.pop(context);
+    } catch (_) {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        16,
+        20,
+        MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Your response',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'The patient will see this on their request and in chat.',
+            style: TextStyle(color: DoctorUi.muted, fontSize: 12.5),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _controller,
+            minLines: 5,
+            maxLines: 10,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              hintText: 'Write your clinical opinion and next steps',
+              filled: true,
+              fillColor: DoctorUi.fieldBg,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: DoctorUi.border),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: FilledButton(
+              onPressed: _saving ? null : _save,
+              child: _saving
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Save response'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

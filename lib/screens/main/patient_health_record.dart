@@ -3,7 +3,9 @@ import 'package:enefty_icons/enefty_icons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:yarisa_doctor/screens/main/patient_chart_list_screen.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
+import 'package:yarisa_doctor/widgets/app_snack.dart';
 
 /// Allergies, medications, medical history, and personal-doctor care notes.
 class PatientHealthRecord extends StatelessWidget {
@@ -38,13 +40,24 @@ class PatientHealthRecord extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        const DoctorSectionHeader(title: 'Allergies'),
+        DoctorSectionHeader(
+          title: 'Allergies',
+          actionLabel: 'See all',
+          onAction: () => _openList(
+            context,
+            PatientChartSection.allergies,
+            patientId,
+            patientName,
+            isPersonalDoctor,
+          ),
+        ),
         _SubcollectionList(
           collection: 'Allergies',
           patientId: patientId,
           empty: 'No allergies recorded',
           icon: EneftyIcons.warning_2_outline,
           accent: Colors.red,
+          section: PatientChartSection.allergies,
           titleOf: (data) =>
               (data['allergy'] ?? data['name'] ?? 'Allergy').toString(),
           subtitleOf: (data) {
@@ -54,13 +67,24 @@ class PatientHealthRecord extends StatelessWidget {
           },
         ),
         const SizedBox(height: 16),
-        const DoctorSectionHeader(title: 'Medications'),
+        DoctorSectionHeader(
+          title: 'Medications',
+          actionLabel: 'See all',
+          onAction: () => _openList(
+            context,
+            PatientChartSection.medications,
+            patientId,
+            patientName,
+            isPersonalDoctor,
+          ),
+        ),
         _SubcollectionList(
           collection: 'Medications',
           patientId: patientId,
           empty: 'No medications recorded',
           icon: Icons.medication_outlined,
           accent: Colors.teal,
+          section: PatientChartSection.medications,
           titleOf: (data) {
             final name = (data['medicine'] ?? data['name'] ?? '').toString();
             final dosage = (data['dosage'] ?? '').toString();
@@ -72,13 +96,24 @@ class PatientHealthRecord extends StatelessWidget {
                   .toString(),
         ),
         const SizedBox(height: 16),
-        const DoctorSectionHeader(title: 'Medical history'),
+        DoctorSectionHeader(
+          title: 'Medical history',
+          actionLabel: 'See all',
+          onAction: () => _openList(
+            context,
+            PatientChartSection.history,
+            patientId,
+            patientName,
+            isPersonalDoctor,
+          ),
+        ),
         _SubcollectionList(
           collection: 'MedicalHistory',
           patientId: patientId,
           empty: 'No medical history recorded',
           icon: EneftyIcons.document_text_outline,
           accent: Colors.indigo,
+          section: PatientChartSection.history,
           titleOf: (data) =>
               (data['disease'] ?? data['illness'] ?? data['title'] ?? 'Record')
                   .toString(),
@@ -89,15 +124,32 @@ class PatientHealthRecord extends StatelessWidget {
         const SizedBox(height: 16),
         DoctorSectionHeader(
           title: 'Care notes',
-          actionLabel: isPersonalDoctor ? 'Add note' : null,
-          onAction: isPersonalDoctor
-              ? () => showClinicalNoteComposer(
-                    context,
-                    patientId: patientId,
-                    patientName: patientName,
-                  )
-              : null,
+          actionLabel: 'See all',
+          onAction: () => _openList(
+            context,
+            PatientChartSection.notes,
+            patientId,
+            patientName,
+            isPersonalDoctor,
+          ),
         ),
+        if (isPersonalDoctor) ...[
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: FilledButton.icon(
+              onPressed: () => showClinicalNoteComposer(
+                context,
+                patientId: patientId,
+                patientName: patientName,
+              ),
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: const Text('Add care note'),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         _CareNotesList(
           patientId: patientId,
           canAdd: isPersonalDoctor,
@@ -106,6 +158,33 @@ class PatientHealthRecord extends StatelessWidget {
       ],
     );
   }
+}
+
+void _openList(
+  BuildContext context,
+  PatientChartSection section,
+  String patientId,
+  String patientName,
+  bool canAddNotes,
+) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => PatientChartListScreen(
+        section: section,
+        patientId: patientId,
+        patientName: patientName,
+        canAddNotes: canAddNotes,
+        onAddNote: canAddNotes
+            ? () => showClinicalNoteComposer(
+                  context,
+                  patientId: patientId,
+                  patientName: patientName,
+                )
+            : null,
+      ),
+    ),
+  );
 }
 
 class _SubcollectionList extends StatelessWidget {
@@ -117,6 +196,7 @@ class _SubcollectionList extends StatelessWidget {
     required this.accent,
     required this.titleOf,
     required this.subtitleOf,
+    required this.section,
   });
 
   final String collection;
@@ -124,6 +204,7 @@ class _SubcollectionList extends StatelessWidget {
   final String empty;
   final IconData icon;
   final Color accent;
+  final PatientChartSection section;
   final String Function(Map<String, dynamic>) titleOf;
   final String Function(Map<String, dynamic>) subtitleOf;
 
@@ -164,11 +245,21 @@ class _SubcollectionList extends StatelessWidget {
         return DoctorCard(
           padding: EdgeInsets.zero,
           child: Column(
-            children: docs.take(8).map((doc) {
+            children: docs.take(3).map((doc) {
               final data = doc.data();
               final title = titleOf(data);
               final subtitle = subtitleOf(data);
               return ListTile(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PatientChartItemScreen(
+                      section: section,
+                      title: title.isEmpty ? 'Record' : title,
+                      data: data,
+                    ),
+                  ),
+                ),
                 dense: true,
                 leading: Container(
                   width: 36,
@@ -258,7 +349,7 @@ class _CareNotesList extends StatelessWidget {
           );
         }
         return Column(
-          children: docs.take(6).map((doc) {
+          children: docs.take(3).map((doc) {
             final data = doc.data();
             final title = (data['title'] ?? 'Care note').toString();
             final body = (data['description'] ??
@@ -273,7 +364,16 @@ class _CareNotesList extends StatelessWidget {
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: DoctorCard(
-                onTap: () => _showNoteDetail(context, data),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PatientChartItemScreen(
+                      section: PatientChartSection.notes,
+                      title: title,
+                      data: data,
+                    ),
+                  ),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -318,64 +418,6 @@ class _CareNotesList extends StatelessWidget {
       },
     );
   }
-
-  void _showNoteDetail(BuildContext context, Map<String, dynamic> data) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: DoctorUi.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.fromLTRB(
-            20,
-            16,
-            20,
-            MediaQuery.of(context).viewInsets.bottom + 24,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  (data['title'] ?? 'Care note').toString(),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 18,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '${data['doctorName'] ?? data['recommendedBy'] ?? 'Doctor'} · ${_formatDate(data['createdAt'] ?? data['timestamp'])}',
-                  style: TextStyle(color: DoctorUi.muted),
-                ),
-                const SizedBox(height: 16),
-                if ((data['description'] ?? '').toString().isNotEmpty) ...[
-                  const Text(
-                    'Findings',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(data['description'].toString()),
-                  const SizedBox(height: 14),
-                ],
-                if ((data['recommendations'] ?? '').toString().isNotEmpty) ...[
-                  const Text(
-                    'Recommendations',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(data['recommendations'].toString()),
-                ],
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
 
 Future<void> showClinicalNoteComposer(
@@ -405,10 +447,9 @@ Future<void> showClinicalNoteComposer(
             final findings = findingsController.text.trim();
             final recs = recsController.text.trim();
             if (title.isEmpty || (findings.isEmpty && recs.isEmpty)) {
-              ScaffoldMessenger.of(sheetContext).showSnackBar(
-                const SnackBar(
-                  content: Text('Add a title and findings or recommendations.'),
-                ),
+              AppSnack.info(
+                sheetContext,
+                'Add a title and findings or recommendations.',
               );
               return;
             }
@@ -457,12 +498,13 @@ Future<void> showClinicalNoteComposer(
                 'updatedAt': FieldValue.serverTimestamp(),
               });
               if (sheetContext.mounted) Navigator.pop(sheetContext);
+              if (context.mounted) {
+                AppSnack.success(context, 'Care note saved.');
+              }
             } catch (e) {
               setSheet(() => saving = false);
               if (sheetContext.mounted) {
-                ScaffoldMessenger.of(sheetContext).showSnackBar(
-                  SnackBar(content: Text('Could not save note: $e')),
-                );
+                AppSnack.error(sheetContext, 'Could not save note.');
               }
             }
           }

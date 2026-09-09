@@ -13,6 +13,7 @@ import 'package:yarisa_doctor/screens/main/second_opinions_screen.dart';
 import 'package:yarisa_doctor/models/personal_patients_model.dart';
 import 'package:yarisa_doctor/services/chat_unread_service.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
+import 'package:yarisa_doctor/widgets/app_snack.dart';
 
 /// In-app activity feed for the doctor (bottom-nav Alerts tab).
 /// Prefers `Notifications` docs, and merges recent bookings / new patients
@@ -53,9 +54,7 @@ class _DoctorNotificationsScreenState extends State<DoctorNotificationsScreen> {
       final unread = snap.docs.where((d) => d.data()['read'] != true).toList();
       if (unread.isEmpty) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Nothing to mark as read')),
-          );
+          AppSnack.info(context, 'Nothing to mark as read');
         }
         return;
       }
@@ -69,15 +68,11 @@ class _DoctorNotificationsScreenState extends State<DoctorNotificationsScreen> {
       }
       await batch.commit();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('All notifications marked as read')),
-        );
+        AppSnack.success(context, 'All notifications marked as read');
       }
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not mark all as read')),
-      );
+      AppSnack.error(context, 'Could not mark all as read');
     }
   }
 

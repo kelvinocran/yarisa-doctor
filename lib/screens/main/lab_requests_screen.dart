@@ -7,6 +7,7 @@ import 'package:yarisa_doctor/constants/yarisa_constants.dart';
 import 'package:yarisa_doctor/models/personal_patients_model.dart';
 import 'package:yarisa_doctor/services/care_team_service.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
+import 'package:yarisa_doctor/widgets/app_snack.dart';
 
 class LabRequestsScreen extends ConsumerStatefulWidget {
   const LabRequestsScreen({super.key, this.patient});
@@ -40,11 +41,7 @@ class _LabRequestsScreenState extends ConsumerState<LabRequestsScreen> {
     final options = ref.read(apimethods).mypatients;
     if (!mounted) return null;
     if (options.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No patients yet. Accept an appointment first.'),
-        ),
-      );
+      AppSnack.info(context, 'No patients yet. Accept an appointment first.');
       return null;
     }
     return showModalBottomSheet<PersonalPatientsModel>(
@@ -146,14 +143,10 @@ class _LabRequestsScreenState extends ConsumerState<LabRequestsScreen> {
         patientImage: patient.patientImage ?? '',
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lab request created')),
-      );
+      AppSnack.success(context, 'Lab request created');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create lab request: $e')),
-      );
+      AppSnack.error(context, 'Failed to create lab request.');
     } finally {
       if (mounted) setState(() => _saving = false);
     }

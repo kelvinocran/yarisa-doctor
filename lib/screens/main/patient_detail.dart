@@ -15,6 +15,7 @@ import 'package:yarisa_doctor/services/care_team_service.dart';
 import 'package:yarisa_doctor/services/call_session_service.dart';
 import 'package:yarisa_doctor/services/jitsi_call_service.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
+import 'package:yarisa_doctor/widgets/app_snack.dart';
 
 class PatientDetailScreen extends ConsumerStatefulWidget {
   const PatientDetailScreen({super.key, required this.patient});
@@ -106,15 +107,11 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
       email: doctor?.email ?? '',
     );
     if (!context.mounted || ok) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          type == 'video'
-              ? 'Video calls need a full app build on a real device or Android emulator with native plugins. Simulators often cannot start Jitsi.'
-              : 'Voice calls need a full app build on a real device or Android emulator with native plugins. Simulators often cannot start Jitsi.',
-        ),
-        duration: const Duration(seconds: 5),
-      ),
+    AppSnack.info(
+      context,
+      type == 'video'
+          ? 'Video calls need a full app build on a real device or Android emulator with native plugins. Simulators often cannot start Jitsi.'
+          : 'Voice calls need a full app build on a real device or Android emulator with native plugins. Simulators often cannot start Jitsi.',
     );
   }
 
@@ -124,9 +121,7 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
     required String image,
   }) {
     if (patientId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Patient details are missing.')),
-      );
+      AppSnack.info(context, 'Patient details are missing.');
       return;
     }
     Navigator.push(
@@ -323,8 +318,11 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
                         .doc(id)
                         .snapshots(),
                 builder: (context, linkSnap) {
+                  final doctorId = FirebaseAuth.instance.currentUser?.uid;
                   final isPersonal = CareTeamService.isPersonalDoctor(
                     linkSnap.data?.data(),
+                    patient: patientData,
+                    doctorId: doctorId,
                   );
                   return PatientHealthRecord(
                     patientId: id,
