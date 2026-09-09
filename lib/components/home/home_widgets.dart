@@ -12,6 +12,7 @@ import 'package:yarisa_doctor/models/personal_patients_model.dart';
 import 'package:yarisa_doctor/screens/main/appointment_screen.dart';
 import 'package:yarisa_doctor/screens/main/patient_detail.dart';
 import 'package:yarisa_doctor/screens/main/patients_screen.dart';
+import 'package:yarisa_doctor/screens/main/second_opinions_screen.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
 
 class HomeStatGrid extends StatelessWidget {
@@ -413,6 +414,218 @@ class HomeRecentBookings extends StatelessWidget {
                 ),
         ),
       ],
+    );
+  }
+}
+
+class HomeRecentSecondOpinions extends StatelessWidget {
+  const HomeRecentSecondOpinions({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final doctorId = FirebaseAuth.instance.currentUser?.uid;
+    if (doctorId == null) return const SizedBox.shrink();
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('Doctors')
+          .doc(doctorId)
+          .collection('SecondOpinions')
+          .snapshots(),
+      builder: (context, snapshot) {
+        final docs = (snapshot.data?.docs ?? []).where((doc) {
+          final status =
+              (doc.data()['status'] ?? '').toString().toLowerCase();
+          return status != 'pending_payment';
+        }).toList()
+          ..sort((a, b) {
+            final aPending = _isOpenStatus(a.data()['status']);
+            final bPending = _isOpenStatus(b.data()['status']);
+            if (aPending != bPending) return aPending ? -1 : 1;
+            return _soTs(b.data()['createdAt'] ?? b.data()['updatedAt'])
+                .compareTo(
+              _soTs(a.data()['createdAt'] ?? a.data()['updatedAt']),
+            );
+          });
+        final pendingCount =
+            docs.where((d) => _isOpenStatus(d.data()['status'])).length;
+        final visible = docs.take(4).toList();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DoctorSectionHeader(
+              title: pendingCount > 0
+                  ? 'Second opinions · $pendingCount pending'
+                  : 'Second opinions',
+              actionLabel: 'See all',
+              onAction: () => Get.to(() => const SecondOpinionsScreen()),
+            ),
+            if (snapshot.connectionState == ConnectionState.waiting &&
+                !snapshot.hasData)
+              const DoctorCard(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(
+                    child: CircularProgressIndicator(strokeWidth: 2.2),
+                  ),
+                ),
+              )
+            else if (snapshot.hasError)
+              DoctorCard(
+                child: Text(
+                  'Unable to load second opinion requests.',
+                  style: TextStyle(color: DoctorUi.muted, height: 1.35),
+                ),
+              )
+            else if (visible.isEmpty)
+              DoctorCard(
+                onTap: () => Get.to(() => const SecondOpinionsScreen()),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.teal.withValues(alpha: .12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        EneftyIcons.document_text_outline,
+                        color: Colors.teal,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'New second opinion requests will show here.',
+                        style: TextStyle(color: DoctorUi.muted, height: 1.35),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              DoctorCard(
+                padding: EdgeInsets.zero,
+                child: Column(
+                  children: visible.map((doc) {
+                    final data = doc.data();
+                    final name = (data['patientName'] ??
+                            data['patient_name'] ??
+                            'Patient')
+                        .toString();
+                    final concern = (data['concern'] ??
+                            data['patientQuestion'] ??
+                            '')
+                        .toString();
+                    final status = (data['status'] ?? 'pending').toString();
+                    final urgent =
+                        (data['urgency'] ?? '').toString().toLowerCase() ==
+                            'urgent';
+                    return Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SecondOpinionDetailScreen(
+                                requestId: doc.id,
+                              ),
+                            ),
+                          );
+                        },
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 2,
+                          ),
+                          leading: CircleImage(
+                            size: 42,
+                            image: (data['patientImage'] ??
+                                    data['patient_image'] ??
+                                    '')
+                                .toString(),
+                          ),
+                          title: Text(
+                            name,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          subtitle: Text(
+                            [
+                              if (urgent) 'Urgent',
+                              if (concern.isNotEmpty) concern,
+                            ].join(' · '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: DoctorUi.muted,
+                              fontSize: 12,
+                            ),
+                          ),
+                          trailing: _SoStatusChip(status: status),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  static bool _isOpenStatus(dynamic status) {
+    final value = (status ?? 'pending').toString().toLowerCase();
+    return value == 'pending' ||
+        value == 'in_review' ||
+        value == 'in-progress' ||
+        value == 'in_progress' ||
+        value == 'accepted';
+  }
+
+  static DateTime _soTs(dynamic value) {
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    return DateTime.fromMillisecondsSinceEpoch(0);
+  }
+}
+
+class _SoStatusChip extends StatelessWidget {
+  const _SoStatusChip({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = status.toLowerCase();
+    final color = switch (value) {
+      'completed' => Colors.green,
+      'declined' || 'canceled' || 'cancelled' => Colors.red,
+      'in_review' || 'in-progress' || 'in_progress' || 'accepted' =>
+        Colors.blue,
+      _ => Colors.orange,
+    };
+    final label = status.isEmpty
+        ? 'Pending'
+        : '${status[0].toUpperCase()}${status.substring(1).replaceAll('_', ' ')}';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .12),
+        borderRadius: BorderRadius.circular(50),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w700,
+          fontSize: 11,
+        ),
+      ),
     );
   }
 }

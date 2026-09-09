@@ -150,10 +150,25 @@ class DeepLinkRouter {
       return;
     }
 
-    if (type.contains('second_opinion') || type.contains('secondopinion')) {
-      nav.push(
-        MaterialPageRoute(builder: (_) => const SecondOpinionsScreen()),
-      );
+    if (type.contains('second') ||
+        type.contains('opinion') ||
+        data['secondOpinionId'] != null ||
+        data['sourceCollection']?.toString() == 'SecondOpinions') {
+      final requestId = (data['secondOpinionId'] ??
+              data['sourceId'] ??
+              '')
+          .toString();
+      if (requestId.isNotEmpty) {
+        nav.push(
+          MaterialPageRoute(
+            builder: (_) => SecondOpinionDetailScreen(requestId: requestId),
+          ),
+        );
+      } else {
+        nav.push(
+          MaterialPageRoute(builder: (_) => const SecondOpinionsScreen()),
+        );
+      }
       return;
     }
 

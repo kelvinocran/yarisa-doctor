@@ -123,9 +123,19 @@ class _DoctorNotificationsScreenState extends State<DoctorNotificationsScreen> {
         }
         break;
       case _FeedKind.secondOpinion:
-        nav.push(
-          MaterialPageRoute(builder: (_) => const SecondOpinionsScreen()),
-        );
+        if ((item.secondOpinionId ?? '').isNotEmpty) {
+          nav.push(
+            MaterialPageRoute(
+              builder: (_) => SecondOpinionDetailScreen(
+                requestId: item.secondOpinionId!,
+              ),
+            ),
+          );
+        } else {
+          nav.push(
+            MaterialPageRoute(builder: (_) => const SecondOpinionsScreen()),
+          );
+        }
         break;
       case _FeedKind.general:
         break;
@@ -193,102 +203,132 @@ class _DoctorFeedBody extends StatelessWidget {
                   .collection('Patients')
                   .snapshots(),
               builder: (context, patientsSnap) {
-                final waiting = notifSnap.connectionState ==
-                        ConnectionState.waiting &&
-                    apptSnap.connectionState == ConnectionState.waiting &&
-                    patientsSnap.connectionState == ConnectionState.waiting;
-                if (waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2.2),
-                  );
-                }
+                return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: FirebaseFirestore.instance
+                      .collection('Doctors')
+                      .doc(doctorId)
+                      .collection('SecondOpinions')
+                      .snapshots(),
+                  builder: (context, soSnap) {
+                    final waiting = notifSnap.connectionState ==
+                            ConnectionState.waiting &&
+                        apptSnap.connectionState == ConnectionState.waiting &&
+                        patientsSnap.connectionState ==
+                            ConnectionState.waiting &&
+                        soSnap.connectionState == ConnectionState.waiting;
+                    if (waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2.2),
+                      );
+                    }
 
-                final items = <_FeedItem>[];
+                    final items = <_FeedItem>[];
 
-                // 1) Server-side notifications
-                if (!notifSnap.hasError) {
-                  for (final doc in notifSnap.data?.docs ?? []) {
-                    items.add(_FeedItem.fromNotification(doc));
-                  }
-                }
+                    // 1) Server-side notifications
+                    if (!notifSnap.hasError) {
+                      for (final doc in notifSnap.data?.docs ?? []) {
+                        items.add(_FeedItem.fromNotification(doc));
+                      }
+                    }
 
-                // 2) Recent appointments (activity)
-                if (!apptSnap.hasError) {
-                  for (final doc in apptSnap.data?.docs ?? []) {
-                    items.add(_FeedItem.fromAppointment(doc));
-                  }
-                }
+                    // 2) Recent appointments (activity)
+                    if (!apptSnap.hasError) {
+                      for (final doc in apptSnap.data?.docs ?? []) {
+                        items.add(_FeedItem.fromAppointment(doc));
+                      }
+                    }
 
-                // 3) Patients who added / booked with this doctor
-                if (!patientsSnap.hasError) {
-                  for (final doc in patientsSnap.data?.docs ?? []) {
-                    items.add(_FeedItem.fromPatient(doc));
-                  }
-                }
+                    // 3) Patients who added / booked with this doctor
+                    if (!patientsSnap.hasError) {
+                      for (final doc in patientsSnap.data?.docs ?? []) {
+                        items.add(_FeedItem.fromPatient(doc));
+                      }
+                    }
 
-                // Dedupe by stable key, keep newest
-                final byKey = <String, _FeedItem>{};
-                for (final item in items) {
-                  final existing = byKey[item.key];
-                  if (existing == null ||
-                      item.at.isAfter(existing.at)) {
-                    byKey[item.key] = item;
-                  }
-                }
+                    // 4) Second-opinion requests (even before FCM history)
+                    if (!soSnap.hasError) {
+                      for (final doc in soSnap.data?.docs ?? []) {
+                        final status =
+                            (doc.data()['status'] ?? '').toString().toLowerCase();
+                        if (status == 'pending_payment') continue;
+                        items.add(_FeedItem.fromSecondOpinion(doc));
+                      }
+                    }
 
-                final feed = byKey.values.toList()
-                  ..sort((a, b) => b.at.compareTo(a.at));
+                    // Dedupe by stable key. Prefer real Notifications docs
+                    // over activity mirrors, then keep the newest.
+                    final byKey = <String, _FeedItem>{};
+                    for (final item in items) {
+                      final existing = byKey[item.key];
+                      if (existing == null) {
+                        byKey[item.key] = item;
+                        continue;
+                      }
+                      final itemIsNotif = item.notificationId != null;
+                      final existingIsNotif = existing.notificationId != null;
+                      if (itemIsNotif && !existingIsNotif) {
+                        byKey[item.key] = item;
+                      } else if (itemIsNotif == existingIsNotif &&
+                          item.at.isAfter(existing.at)) {
+                        byKey[item.key] = item;
+                      }
+                    }
 
-                // Cap list for performance
-                final visible = feed.take(80).toList();
+                    final feed = byKey.values.toList()
+                      ..sort((a, b) => b.at.compareTo(a.at));
 
-                if (visible.isEmpty) {
-                  return const DoctorEmptyState(
-                    icon: EneftyIcons.notification_outline,
-                    title: 'No alerts yet',
-                    message:
-                        'New appointments, patients, messages, and second opinions will show up here.',
-                  );
-                }
+                    // Cap list for performance
+                    final visible = feed.take(80).toList();
 
-                final unread = visible.where((i) => !i.read).length;
+                    if (visible.isEmpty) {
+                      return const DoctorEmptyState(
+                        icon: EneftyIcons.notification_outline,
+                        title: 'No alerts yet',
+                        message:
+                            'New appointments, patients, messages, and second opinions will show up here.',
+                      );
+                    }
 
-                return RefreshIndicator(
-                  color: DoctorUi.primary,
-                  onRefresh: () async {
-                    // Streams auto-refresh; short delay for pull UX.
-                    await Future<void>.delayed(
-                      const Duration(milliseconds: 400),
+                    final unread = visible.where((i) => !i.read).length;
+
+                    return RefreshIndicator(
+                      color: DoctorUi.primary,
+                      onRefresh: () async {
+                        // Streams auto-refresh; short delay for pull UX.
+                        await Future<void>.delayed(
+                          const Duration(milliseconds: 400),
+                        );
+                      },
+                      child: ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+                        itemCount: visible.length + 1,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          if (index == 0) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text(
+                                unread == 0
+                                    ? '${visible.length} update${visible.length == 1 ? '' : 's'}'
+                                    : '$unread unread · ${visible.length} total',
+                                style: TextStyle(
+                                  color: DoctorUi.muted,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            );
+                          }
+                          final item = visible[index - 1];
+                          return _NotificationTile(
+                            item: item,
+                            onTap: () => onOpen(item),
+                          );
+                        },
+                      ),
                     );
                   },
-                  child: ListView.separated(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
-                    itemCount: visible.length + 1,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Text(
-                            unread == 0
-                                ? '${visible.length} update${visible.length == 1 ? '' : 's'}'
-                                : '$unread unread · ${visible.length} total',
-                            style: TextStyle(
-                              color: DoctorUi.muted,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                            ),
-                          ),
-                        );
-                      }
-                      final item = visible[index - 1];
-                      return _NotificationTile(
-                        item: item,
-                        onTap: () => onOpen(item),
-                      );
-                    },
-                  ),
                 );
               },
             );
@@ -313,6 +353,7 @@ class _FeedItem {
     this.patientId,
     this.patientName,
     this.imageUrl,
+    this.secondOpinionId,
   });
 
   final String key;
@@ -325,6 +366,7 @@ class _FeedItem {
   final String? patientId;
   final String? patientName;
   final String? imageUrl;
+  final String? secondOpinionId;
 
   factory _FeedItem.fromNotification(
     QueryDocumentSnapshot<Map<String, dynamic>> doc,
@@ -350,9 +392,18 @@ class _FeedItem {
             nested['senderImage'] ??
             '')
         .toString();
+    final sourceCollection = (data['sourceCollection'] ?? '').toString();
+    final sourceId = (data['sourceId'] ?? nested['secondOpinionId'] ?? '')
+        .toString();
+    final secondOpinionId = (nested['secondOpinionId'] ??
+            (sourceCollection == 'SecondOpinions' ? sourceId : ''))
+        .toString();
+    final key = secondOpinionId.isNotEmpty
+        ? 'so_$secondOpinionId'
+        : 'n_${doc.id}';
 
     return _FeedItem(
-      key: 'n_${doc.id}',
+      key: key,
       kind: kind,
       title: data['title']?.toString() ?? 'Update',
       body: data['body']?.toString() ?? '',
@@ -362,6 +413,41 @@ class _FeedItem {
       patientId: patientId.isEmpty ? null : patientId,
       patientName: patientName.isEmpty ? null : patientName,
       imageUrl: image.isEmpty ? null : image,
+      secondOpinionId: secondOpinionId.isEmpty ? null : secondOpinionId,
+    );
+  }
+
+  factory _FeedItem.fromSecondOpinion(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = doc.data();
+    final name = (data['patientName'] ??
+            data['patient_name'] ??
+            'A patient')
+        .toString();
+    final status = (data['status'] ?? 'pending').toString();
+    final concern =
+        (data['concern'] ?? data['patientQuestion'] ?? '').toString();
+    final urgency = (data['urgency'] ?? '').toString();
+    final bodyParts = <String>[
+      if (concern.isNotEmpty) concern,
+      if (urgency.toLowerCase() == 'urgent') 'Urgent',
+      status,
+    ];
+
+    return _FeedItem(
+      key: 'so_${doc.id}',
+      kind: _FeedKind.secondOpinion,
+      title: urgency.toLowerCase() == 'urgent'
+          ? 'Urgent second opinion'
+          : 'Second opinion request',
+      body: bodyParts.join(' · '),
+      at: _ts(data['createdAt'] ?? data['updatedAt']),
+      read: true,
+      secondOpinionId: doc.id,
+      patientId: (data['patientId'] ?? data['patient_id'])?.toString(),
+      patientName: name,
+      imageUrl: (data['patientImage'] ?? data['patient_image'])?.toString(),
     );
   }
 

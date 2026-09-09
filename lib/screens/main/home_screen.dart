@@ -183,6 +183,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const SizedBox(height: 20),
                       HomeRecentBookings(appointments: api.userAppointments),
                       const SizedBox(height: 20),
+                      const HomeRecentSecondOpinions(),
+                      const SizedBox(height: 20),
                       const DoctorSectionHeader(title: 'Shortcuts'),
                       HomeQuickActions(
                         items: [
