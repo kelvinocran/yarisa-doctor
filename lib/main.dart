@@ -6,6 +6,7 @@ import 'package:yarisa_doctor/api/api_methods.dart';
 import 'package:yarisa_doctor/services/callkit_service.dart';
 import 'package:yarisa_doctor/services/deep_link_router.dart';
 import 'package:yarisa_doctor/services/fcm_service.dart';
+import 'package:yarisa_doctor/widgets/active_call_banner.dart';
 
 import 'services/firebase_options.dart';
 import 'theme/theme.dart';
@@ -36,6 +37,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: YarisaTheme.lightThemeData(context),
       darkTheme: YarisaTheme.darkThemeData(context),
+      builder: (context, child) => ActiveCallOverlay(
+        child: child ?? const SizedBox.shrink(),
+      ),
       home: const LoadingScreen(),
     );
   }

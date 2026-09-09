@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:yarisa_doctor/services/active_call_controller.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
 
-/// Floating chip shown while on a call / able to rejoin.
+/// Global floating chip: on-call / rejoin / peer waiting.
 class ActiveCallBanner extends StatelessWidget {
   const ActiveCallBanner({super.key});
 
@@ -12,55 +12,69 @@ class ActiveCallBanner extends StatelessWidget {
     return ListenableBuilder(
       listenable: c,
       builder: (context, _) {
-        if (c.status == ActiveCallStatus.idle) {
-          return const SizedBox.shrink();
-        }
+        if (!c.showBanner) return const SizedBox.shrink();
         final inCall = c.status == ActiveCallStatus.inCall;
-        final name = c.peerName?.trim().isNotEmpty == true
-            ? c.peerName!
-            : 'Patient';
-        final label = inCall
-            ? 'On call · $name · ${c.elapsedLabel}'
-            : 'Rejoin call · $name';
+        final waiting = c.status == ActiveCallStatus.peerWaiting;
+        final color = inCall
+            ? DoctorUi.primary
+            : waiting
+                ? Colors.teal.shade700
+                : Colors.orange.shade700;
         return SafeArea(
           child: Align(
             alignment: Alignment.topCenter,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: Material(
-                elevation: 6,
+                elevation: 8,
                 borderRadius: BorderRadius.circular(28),
-                color: inCall ? DoctorUi.primary : Colors.orange.shade700,
+                color: color,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(28),
-                  onTap: () async {
-                    if (inCall) {
-                      // Already in meeting UI; rejoin if needed.
-                      await c.rejoin();
-                    } else {
-                      await c.rejoin();
-                    }
-                  },
+                  onTap: () => c.rejoin(),
                   onLongPress: () async {
-                    await c.hangUp(reason: 'ended');
+                    final ok = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('End call?'),
+                        content: const Text(
+                          'This ends the call for you. Long-press confirms end; tap rejoins.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: const Text('Cancel'),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: const Text('End call'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (ok == true) await c.hangUp(reason: 'ended');
                   },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 10,
+                      vertical: 11,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          inCall ? Icons.call : Icons.call_missed_outgoing,
+                          inCall
+                              ? Icons.call
+                              : waiting
+                                  ? Icons.call_received
+                                  : Icons.call_missed_outgoing,
                           color: Colors.white,
                           size: 18,
                         ),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(
-                            label,
+                            c.bannerLabel,
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
@@ -69,7 +83,7 @@ class ActiveCallBanner extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         const Icon(
                           Icons.keyboard_arrow_up_rounded,
                           color: Colors.white70,
@@ -84,6 +98,24 @@ class ActiveCallBanner extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Wraps the navigator so the banner appears above every route.
+class ActiveCallOverlay extends StatelessWidget {
+  const ActiveCallOverlay({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        child,
+        const ActiveCallBanner(),
+      ],
     );
   }
 }
