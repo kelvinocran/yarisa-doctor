@@ -8,8 +8,10 @@ import 'package:yarisa_doctor/constants/yarisa_widgets.dart';
 import 'package:yarisa_doctor/models/personal_patients_model.dart';
 import 'package:yarisa_doctor/screens/main/chat_inbox_screen.dart';
 import 'package:yarisa_doctor/screens/main/lab_requests_screen.dart';
+import 'package:yarisa_doctor/screens/main/patient_health_record.dart';
 import 'package:yarisa_doctor/screens/main/prescriptions_screen.dart';
 import 'package:yarisa_doctor/services/call_permissions.dart';
+import 'package:yarisa_doctor/services/care_team_service.dart';
 import 'package:yarisa_doctor/services/call_session_service.dart';
 import 'package:yarisa_doctor/services/jitsi_call_service.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
@@ -25,6 +27,20 @@ class PatientDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    final patient = widget.patient;
+    final id = patient.patientId ?? '';
+    if (id.isNotEmpty) {
+      CareTeamService.ensureTreatingLink(
+        patientId: id,
+        patientName: patient.patientName ?? 'Patient',
+        patientImage: patient.patientImage ?? '',
+      );
+    }
+  }
+
   void _openPrescriptions() {
     Navigator.push(
       context,
@@ -296,6 +312,27 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
                     ),
                   ],
                 ),
+              const SizedBox(height: 18),
+              StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                stream: FirebaseAuth.instance.currentUser == null
+                    ? null
+                    : FirebaseFirestore.instance
+                        .collection('Doctors')
+                        .doc(FirebaseAuth.instance.currentUser!.uid)
+                        .collection('Patients')
+                        .doc(id)
+                        .snapshots(),
+                builder: (context, linkSnap) {
+                  final isPersonal = CareTeamService.isPersonalDoctor(
+                    linkSnap.data?.data(),
+                  );
+                  return PatientHealthRecord(
+                    patientId: id,
+                    patientName: name,
+                    isPersonalDoctor: isPersonal,
+                  );
+                },
+              ),
               const SizedBox(height: 18),
               DoctorCard(
                 child: Row(

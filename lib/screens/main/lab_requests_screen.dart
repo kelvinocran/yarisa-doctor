@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yarisa_doctor/api/api_methods.dart';
 import 'package:yarisa_doctor/constants/yarisa_constants.dart';
 import 'package:yarisa_doctor/models/personal_patients_model.dart';
+import 'package:yarisa_doctor/services/care_team_service.dart';
 import 'package:yarisa_doctor/ui/doctor_ui.dart';
 
 class LabRequestsScreen extends ConsumerStatefulWidget {
@@ -139,6 +140,11 @@ class _LabRequestsScreenState extends ConsumerState<LabRequestsScreen> {
         SetOptions(merge: true),
       );
       await batch.commit();
+      await CareTeamService.ensureTreatingLink(
+        patientId: patient.patientId!,
+        patientName: patient.patientName ?? 'Patient',
+        patientImage: patient.patientImage ?? '',
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Lab request created')),
